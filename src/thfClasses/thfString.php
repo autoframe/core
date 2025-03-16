@@ -517,10 +517,10 @@ class thfStrinGGGGGGGGGGGGGGGGGGGGGGGGGGGg{
 		$a=get_coordonates_by_address($adresa);
 		return array('lat'=>$a['results'][0]['geometry']['location']['lat'],'lng'=>$a['results'][0]['geometry']['location']['lng']);
 	}
-	public static function embed_map_by_address($adresa,$api_key='AIzaSyCE_JVq1AiNFNFv_Dx8pdv_c4lq6dG9cTs', $width='100%',$height='400px',$border='none',$fullscreen='allowfullscreen'){
+	public static function embed_map_by_address($adresa,$api_key='', $width='100%',$height='400px',$border='none',$fullscreen='allowfullscreen'){
 		echo '<iframe style="border:'.$border.';width:'.$width.';height:'.$height.';" src="https://www.google.com/maps/embed/v1/search?key='.$api_key.'&q='.urlencode($adresa).'" '.$fullscreen.'></iframe>'; return $a;
 	}
-	public static function embed_streetview_by_address($adresa,$api_key='AIzaSyCE_JVq1AiNFNFv_Dx8pdv_c4lq6dG9cTs', $width='100%',$height='400px',$border='none',$fullscreen='allowfullscreen',$heading=210,$pinch=10,$fov=35){
+	public static function embed_streetview_by_address($adresa,$api_key='', $width='100%',$height='400px',$border='none',$fullscreen='allowfullscreen',$heading=210,$pinch=10,$fov=35){
 		$a=get_lang_long_by_address($adresa);
 		echo '<iframe style="border:'.$border.';width:'.$width.';height:'.$height.';" src="https://www.google.com/maps/embed/v1/streetview?key='.$api_key.'&location='.$a['lat'].','.$a['lng'].'&heading='.$heading.'&pitch='.$pinch.'&fov='.$fov.'" '.$fullscreen.'></iframe>'; return $a;
 	}
