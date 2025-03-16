@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace Autoframe\Core\Arr\Export;
 
 use Autoframe\Core\DesignPatterns\Singleton\AfrSingletonAbstractClass;
+use Autoframe\Core\String\Obj\AfrClosureToStr;
 
 class AfrArrExportArrayAsStringClass extends AfrSingletonAbstractClass implements AfrArrExportArrayAsStringInterface
 {
@@ -15,6 +16,7 @@ class AfrArrExportArrayAsStringClass extends AfrSingletonAbstractClass implement
 	 * @param string $sVarName
 	 * @param int $iTab
 	 * @return string
+	 * @throws \ReflectionException
 	 */
 	public function exportPhpArrayAsString(
 		array  $aData,
@@ -54,8 +56,9 @@ class AfrArrExportArrayAsStringClass extends AfrSingletonAbstractClass implement
 	 * @param $mVal
 	 * @param string $sOut
 	 * @param string $sQuot
+	 * @throws \ReflectionException
 	 */
-	private function exportPhpArrayAsStringFormatKV(string $sVType, $mVal, string &$sOut, string $sQuot)
+	protected function exportPhpArrayAsStringFormatKV(string $sVType, $mVal, string &$sOut, string $sQuot)
 	{
 		if ($sVType === 'integer') {
 			$sOut .= $mVal;
@@ -69,6 +72,8 @@ class AfrArrExportArrayAsStringClass extends AfrSingletonAbstractClass implement
 			$sOut .= $mVal;
 		} elseif ($sVType === 'NULL') {
 			$sOut .= 'NULL';
+		} elseif ($mVal instanceof \Closure) {
+			$sOut .= AfrClosureToStr::dump($mVal);
 		} else {
 			if ($sVType !== 'string') {
 				$mVal = serialize($mVal);

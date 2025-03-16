@@ -5,6 +5,7 @@ namespace Autoframe\Core\Session;
 
 use SessionHandlerInterface;
 
+// TODO implement
 if(0){
 
 	if (in_array($this->session_status(), [PHP_SESSION_DISABLED, PHP_SESSION_ACTIVE])) {

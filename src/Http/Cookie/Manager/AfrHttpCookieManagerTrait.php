@@ -3,19 +3,19 @@ declare(strict_types=1);
 
 namespace Autoframe\Core\Http\Cookie\Manager;
 
+use Autoframe\Core\Container\Exception\AfrContainerException;
+use Autoframe\Core\Event\Exception\AfrEventException;
 use Autoframe\Core\Http\Cookie\AfrHttpCookie;
 use Autoframe\Core\Http\Cookie\AfrHttpCookieInterface;
 use Autoframe\Core\Http\Cookie\Exception\AfrHttpCookieException;
-use Autoframe\Core\Http\Request\AfrHttpRequestHttps;
+use Autoframe\Core\Http\Request\AfrRequestClass;
 
 trait AfrHttpCookieManagerTrait
 {
-    use AfrHttpRequestHttps;
-
     public bool $bAutoDomainDotNotationForAllSubdomains = false;
     public bool $bAlwaysSetToMasterDomainRatherThanSubdomain = true;
-    private static array $aIndex = [];
-    private string $sDomainAutodetect;
+    protected static array $aIndex = [];
+    protected string $sDomainAutodetect;
 
     /**
      * @param string $name
@@ -168,15 +168,17 @@ trait AfrHttpCookieManagerTrait
     }
 
 
-    /**
-     * @param string $sName
-     * @param $asPaths ['/','/myaccount/']
-     * @param $asDomains ['.example.com']
-     * @param string $sSameSite Strict|Lax|None|''
-     * @param int $iMaxLimit
-     * @return int
-     * @throws AfrHttpCookieException
-     */
+	/**
+	 * @param string $sName
+	 * @param null $asPaths ['/','/myaccount/']
+	 * @param null $asDomains ['.example.com']
+	 * @param string $sSameSite Strict|Lax|None|''
+	 * @param int $iMaxLimit
+	 * @return int
+	 * @throws AfrHttpCookieException
+	 * @throws AfrContainerException
+	 * @throws AfrEventException
+	 */
     public function forceExpireCookie(
         string $sName,
                $asPaths = null,
@@ -185,7 +187,7 @@ trait AfrHttpCookieManagerTrait
         int    $iMaxLimit = 20
     ): int
     {
-        $bSecure = $this->isHttpsRequest();
+        $bSecure = AfrRequestClass::getInstance()->isHttpsRequest();
         $this->correctSameSite($sSameSite, $bSecure);
 
         if (is_string($asPaths) && $asPaths) {
@@ -224,7 +226,7 @@ trait AfrHttpCookieManagerTrait
     /**
      * @return string[]
      */
-    private function getPathVariations(): array
+    protected function getPathVariations(): array
     {
         $sPath = !empty($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : '/';
 
@@ -252,7 +254,7 @@ trait AfrHttpCookieManagerTrait
     /**
      * @return string[]
      */
-    private function getDomainVariations(): array
+    protected function getDomainVariations(): array
     {
         $sFullHostname = !empty($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : '';
         if (!$sFullHostname || filter_var(explode(':', $sFullHostname)[0], FILTER_VALIDATE_IP)) {
@@ -366,11 +368,13 @@ trait AfrHttpCookieManagerTrait
         return $this->getAllIndexes();
     }
 
-    /**
-     * @param string $sCookieName
-     * @return false|AfrHttpCookieInterface
-     * @throws AfrHttpCookieException
-     */
+	/**
+	 * @param string $sCookieName
+	 * @return false|AfrHttpCookieInterface
+	 * @throws AfrContainerException
+	 * @throws AfrEventException
+	 * @throws AfrHttpCookieException
+	 */
     public function assumeHttpCookie(string $sCookieName)
     {
         if (isset($_COOKIE[$sCookieName]) && $_COOKIE[$sCookieName]) {
@@ -437,7 +441,7 @@ trait AfrHttpCookieManagerTrait
      * @param $iExpires_or_aOptions
      * @return int
      */
-    private function fixLifetime($iExpires_or_aOptions): int
+    protected function fixLifetime($iExpires_or_aOptions): int
     {
         $lifetime = 0;
         if (isset($iExpires_or_aOptions['expires'])) {
@@ -454,7 +458,7 @@ trait AfrHttpCookieManagerTrait
      * @param $sDomain
      * @return void
      */
-    private function fixSubdomainAvailability(&$sDomain): void
+    protected function fixSubdomainAvailability(&$sDomain): void
     {
         if (!is_string($sDomain)) {
             $sDomain = (string)$sDomain;
@@ -486,7 +490,7 @@ trait AfrHttpCookieManagerTrait
      * @param bool $bSecure
      * @return void
      */
-    private function correctSameSite(&$sSameSite, bool $bSecure): void
+    protected function correctSameSite(&$sSameSite, bool $bSecure): void
     {
         if (!$bSecure) {
             $sSameSite = '';

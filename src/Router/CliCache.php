@@ -2,51 +2,64 @@
 
 namespace Autoframe\Core\Router;
 
+use Autoframe\Core\CliTools\AfrCliHttpDetect;
 use Autoframe\Core\CliTools\AfrCliTextColors;
 use Autoframe\Core\Env\AfrEnv;
 use Autoframe\Core\Router\Contracts\AfrRouterCliInterface;
 use Autoframe\Core\Tenant\AfrTenant;
+use Autoframe\Core\Http\Request\AfrRequestInterface;
+use Closure;
 
 class CliCache implements AfrRouterCliInterface
 {
 
-	public function __construct(AfrEnv $oEnv)
+	public function __invoke(AfrRequestInterface $oRequest = null, Closure $oClosureAfterRoute = null): int
 	{
-		$oEnv->getEnv();
-	}
+		return AfrCliRouterHelper::$iCliQaHandled;
 
-	public function __invoke(): void
-	{
-		if (AfrTenant::isCli()) {
-			$aMethods = array_diff(get_class_methods($this), ['__invoke', '__construct','getCollectedResultsFromRoutes']);
-
-			$sCliMethodToCall = getopt('', ['afrCli:'])['afrCli'] ?? getopt('', ['afrCli::'])['afrCli'] ?? null;
-			if (in_array($sCliMethodToCall, $aMethods)) {
+	// todo remove ... mutat in src/Router/AfrCliRouterHelper.php
+		if ($oRequest ? $oRequest->isCli() : AfrCliHttpDetect::isCli()) {
+			$aMethods = array_diff(get_class_methods($this), ['__invoke', '__construct', 'getCollectedResultsFromRoutes']);
+			$aOpt = $oRequest ? $oRequest->getOpt('', ['afrCli::']) : getopt('', ['afrCli::']);
+			$sCliMethodToCall = $aOpt['afrCli'] ?? null;
+			if ($sCliMethodToCall && in_array($sCliMethodToCall, $aMethods)) {
 				$this->$sCliMethodToCall();
 				//TODO: de adaugat else if @class@method
 			} else {
 				$aOptions = [];
-				foreach ($aMethods as $sMethod) {
-					$aOptions[$sMethod] = function () use ($sMethod) {
-						return $this->$sMethod();
+				foreach ($this->getActions() as $sOption => $mStack) {
+					$aOptions[$sOption] = function () use ($sOption, $mStack) {
+						return AfrCliRouterHelper::handleCliQaStack($sOption, $mStack);
 					};
 				}
-	//			return;
-				while (true) {
-					if (AfrCliRouterHelper::cliQA($aOptions) === null) {
-						break;
-					}
-				}
+				AfrCliRouterHelper::handleCliQaStack(__CLASS__ . '@' . __FUNCTION__, $aOptions);
 			}
-
-
 		}
+		return AfrCliRouterHelper::$iCliQaHandled;
 	}
 
 
-	protected function clearCache(): bool
+	public function getActions(): array
 	{
-		while (true) {
+		$aActions = [];
+
+		$aActions['initTenantFileSystem'] = function () {
+			return [
+				'Init Tenant File System Directories' => function () {
+					$r = AfrTenant::initFileSystem();
+					if (count($r) > 0) {
+						AfrCliTextColors::getInstance()
+							->textAppend("\n\t")
+							->colorRed("Errors:\n" . implode("\n", $r) . "\n")
+							->textPrint();
+						return false;
+					}
+					return true;
+				},
+			];
+		};
+
+		$aActions['clearCache'] = function () {
 			$sEnvCacheFile = AfrEnv::getInstance()->getCacheFileName();
 			$sTxt = ' Cache for AfrEnv->readEnv: ' . basename($sEnvCacheFile);
 			if (is_file($sEnvCacheFile)) {
@@ -55,37 +68,19 @@ class CliCache implements AfrRouterCliInterface
 					return unlink($sEnvCacheFile);
 				};
 			} else {
-				$k = AfrCliRouterHelper::cliItalicGrey('Not found' . $sTxt);
+				$k = AfrCliTextColors::getInstance()
+					->styleItalic(true)
+					->colorGrayDark('Not found' . $sTxt)
+					->styleDefaultAllBgColor()
+					->textGet();
 				$v = false;
 			}
-			$aOptions = [$k => $v,];
-			if (AfrCliRouterHelper::cliQA($aOptions) === null) {
-				break;
-			}
+			return [$k => $v,];
+		};
+		foreach ($aActions as $sOption => $mStack) {
+			AfrCliRouterHelper::addActionGroup($sOption, $mStack,true);
 		}
-		return true;
-	}
-
-	protected function initTenantFileSystem(): bool
-	{
-		while (true) {
-			$aOptions = [
-				'Init Tenant File System Directories' => function () {
-					$r = AfrTenant::initFileSystem();
-					if (count($r) > 0) {
-						AfrCliTextColors::getInstance()
-							->textAppend("\n\t")
-							->colorRed("Errors:\n".implode("\n",$r)."\n")
-							->textPrint();
-						return false;
-					}
-					return true;
-				},];
-			if (AfrCliRouterHelper::cliQA($aOptions) === null) {
-				break;
-			}
-		}
-		return true;
+		return $aActions;
 	}
 
 

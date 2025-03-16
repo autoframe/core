@@ -7,12 +7,17 @@ namespace Autoframe\Core\Container;
 use Autoframe\Core\Container\Exception\AfrContainerException;
 use Autoframe\Core\InterfaceToConcrete\AfrInterfaceToConcreteInterface;
 use Closure;
-use ReflectionException;
 use ReflectionMethod;
 
 class AfrLiteContainer implements AfrContainerInterface
 {
+	/**
+	 * @var array of callable|string|instance
+	 */
 	protected static array $aClassMap = [];
+	/**
+	 * @var array of bool flags to register as singleton
+	 */
 	protected static array $aShared = [];
 	protected static ?AfrContainerInterface $oAfrDIContainer;
 
@@ -31,22 +36,23 @@ class AfrLiteContainer implements AfrContainerInterface
 
 	/**
 	 * @param string $id
-	 * @return mixed
+	 * @return object|mixed
 	 * @throws AfrContainerException
-	 * @throws ReflectionException
 	 */
 	public function get(string $id)
 	{
 		if ($this->has($id)) {
 			$entry = self::$aClassMap[$id];
-			if ($this->has($entry)) { //alias
-				return $this->get($entry);
+			if (is_string($entry)) {
+				return $id !== $entry && $this->has($entry) ?
+					$this->get($entry) :  //alias
+					$this->make($entry);
 			} elseif (is_object($entry) && !($entry instanceof Closure)) {
 				return $entry;
 			} elseif (is_callable($entry)) {
 				return $entry($this);
 			}
-			$id = $entry;
+			return $entry;
 		}
 		return $this->make($id);
 	}
@@ -54,9 +60,8 @@ class AfrLiteContainer implements AfrContainerInterface
 	/**
 	 * @param string $abstract
 	 * @param array $parameters
-	 * @return mixed
+	 * @return mixed|object
 	 * @throws AfrContainerException
-	 * @throws ReflectionException
 	 */
 	public function make(string $abstract, array $parameters = [])
 	{
@@ -64,8 +69,11 @@ class AfrLiteContainer implements AfrContainerInterface
 			unset(self::$aShared[$abstract]);
 			return $this->registerInstance($abstract, $this->make($abstract, $parameters));
 		}
-
-		$reflectionClass = new \ReflectionClass($abstract);
+		try {
+			$reflectionClass = new \ReflectionClass($abstract);
+		} catch (\ReflectionException $e) {
+			throw new AfrContainerException($e->getMessage(), $e->getCode(), $e);
+		}
 		if (!$reflectionClass->isInstantiable()) {
 			if (
 				method_exists($abstract, 'getInstance') &&
@@ -92,7 +100,7 @@ class AfrLiteContainer implements AfrContainerInterface
 				}
 			}
 
-			throw new AfrContainerException('Class is not instantiable: ' . $abstract);
+			throw new AfrContainerException('Class is not instantiable: ' . $abstract, 22);
 		}
 		$constructor = $reflectionClass->getConstructor();
 		if (empty($constructor)) {
@@ -133,7 +141,7 @@ class AfrLiteContainer implements AfrContainerInterface
 	 */
 	public function has(string $abstract): bool
 	{
-		return isset(self::$aClassMap[$abstract]);
+		return !empty(self::$aClassMap[$abstract]);
 	}
 
 	/**
@@ -156,10 +164,10 @@ class AfrLiteContainer implements AfrContainerInterface
 
 	/**
 	 * @param string $abstract
-	 * @param mixed $instance
-	 * @return mixed
+	 * @param object $instance
+	 * @return object
 	 */
-	public function registerInstance(string $abstract, $instance)
+	public function registerInstance(string $abstract, object $instance): object
 	{
 		return self::$aClassMap[$abstract] = $instance;
 	}
@@ -187,7 +195,6 @@ class AfrLiteContainer implements AfrContainerInterface
 	 * @param string $offset
 	 * @return mixed
 	 * @throws AfrContainerException
-	 * @throws ReflectionException
 	 */
 	#[\ReturnTypeWillChange]
 	public function offsetGet($offset)

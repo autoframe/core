@@ -34,7 +34,7 @@ class AfrEnvTest extends TestCase
 			$oEnv->readEnv(2);
 		}
 
-		$oEnv->setInlineEnvVar('ARRAY_DATA', [2]);
+		$oEnv->setEnv('ARRAY_DATA', [2]);
 		try {
 			$oEnv->ifPresent(['VALID_EXPLICIT_LOWERCASE_TRUE'])->isBoolean();
 			$oEnv->ifPresent(['VALID_LARGE'])->isInteger();
@@ -53,7 +53,7 @@ class AfrEnvTest extends TestCase
 		try {
 			$this->assertSame(true, $oEnv->isDev());
 		} catch (AfrEnvException $e) {
-			$oEnv->setInlineEnvVar('AFR_ENV','DEV');
+			$oEnv->setEnv('AFR_ENV','DEV');
 			$this->assertSame(true, $oEnv->isDev());
 		}
 
@@ -146,10 +146,10 @@ class AfrEnvTest extends TestCase
 			'LOCAL',
 			'CUSTOM',
 		]);
-		$oEnv->setInlineEnvVar('APP_ENV', 'CUSTOM');
+		$oEnv->setEnv('APP_ENV', 'CUSTOM');
 		$this->assertSame('CUSTOM', $oEnv->getEnv('APP_ENV'));
 		$this->assertSame(true, $oEnv->isDev());
-		$this->assertSame(true, $oEnv->setInlineEnvVar('AFR_ENV', 'PRODUCTION')->isProduction());
+		$this->assertSame(true, $oEnv->setEnv('AFR_ENV', 'PRODUCTION')->isProduction());
 	}
 
 

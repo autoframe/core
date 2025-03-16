@@ -44,7 +44,7 @@ interface AfrEnvInterface
      * @param $mData
      * @return $this
      */
-    public function setInlineEnvVar(string $sKey, $mData): self;
+    public function setEnv(string $sKey, $mData): self;
 
     /**
      * @param string $sFilePath
@@ -53,13 +53,14 @@ interface AfrEnvInterface
      */
     public function readEnvPhpFile(string $sFilePath): self;
 
-    /**
-     * @param int $iCacheSeconds
-     * @param array $aExtraEnvDirsFiles
-     * @return $this
-     * @throws AfrEnvException
-     */
-    public function readEnv(int $iCacheSeconds, array $aExtraEnvDirsFiles = []): self;
+	/**
+	 * @param int $iCacheSeconds
+	 * @param array $aEnvDirsFiles
+	 * @param bool $bReadEnvFromBaseDir
+	 * @return $this
+	 * @throws AfrEnvException
+	 */
+    public function readEnv(int $iCacheSeconds, array $aEnvDirsFiles = [], bool $bReadEnvFromBaseDir = true): self;
 
     /**
      * @return $this
@@ -91,6 +92,12 @@ interface AfrEnvInterface
 	 */
 	public function isDebug(): int;
 
+
+	/**
+	 * @return bool
+	 * @throws AfrEnvException
+	 */
+	public function isDevOrDebug(): bool;
 
     /**
      * @param array $aKeys

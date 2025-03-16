@@ -3,32 +3,35 @@ declare(strict_types=1);
 
 namespace Autoframe\Core\Http\CurlSimple;
 
+use Autoframe\Core\Container\Exception\AfrContainerException;
+use Autoframe\Core\DesignPatterns\Singleton\AfrSingletonAbstractClass;
+use Autoframe\Core\Event\Exception\AfrEventException;
 use Autoframe\Core\Http\CurlSimple\Exception\AfrHttpCurlSimpleException;
 use Autoframe\Core\Http\Header\Formatters\Exception\AfrHttpHeaderFormattersException;
 use Autoframe\Core\Http\Header\Formatters\AfrHttpHeaderFormatters;
 use Autoframe\Core\Http\Header\Formatters\AfrHttpHeaderFormattersCookie;
 use Autoframe\Core\Http\Url\AfrUrlUtils;
 
-trait AfrHttpCurlSimple
+//TODO: refactor to solid
+class AfrHttpCurlSimple  extends AfrSingletonAbstractClass
 {
-    use AfrHttpHeaderFormatters;
-    use AfrHttpHeaderFormattersCookie;
     use AfrHttpCurlSimpleMethods;
-    use AfrUrlUtils;
 
-    /**
-     * @param string $sUrl
-     * @param string $sMethod
-     * @param array $aPostData
-     * @param $mOptionalHeaders
-     * @param float $fTimeoutSeconds
-     * @param bool $bIgnoreErrors
-     * @param int $iMaxRedirects
-     * @param bool $bDebugList
-     * @return array
-     * @throws AfrHttpCurlSimpleException
-     * @throws AfrHttpHeaderFormattersException
-     */
+	/**
+	 * @param string $sUrl
+	 * @param string $sMethod
+	 * @param array $aPostData
+	 * @param string|array|null $mOptionalHeaders
+	 * @param float $fTimeoutSeconds
+	 * @param bool $bIgnoreErrors
+	 * @param int $iMaxRedirects
+	 * @param bool $bDebugList
+	 * @return array
+	 * @throws AfrHttpCurlSimpleException
+	 * @throws AfrHttpHeaderFormattersException
+	 * @throws AfrContainerException
+	 * @throws AfrEventException
+	 */
     public function doHttpStreamRequest(
         string $sUrl,
         string $sMethod = 'POST',
@@ -50,9 +53,9 @@ trait AfrHttpCurlSimple
                 'timeout' => $fTimeoutSeconds,
             ]];
 
-        $aOptionalHeaders = $this->formatMixedHeadersInputToKeyArray($mOptionalHeaders);
+        $aOptionalHeaders = AfrHttpHeaderFormatters::getInstance()->formatMixedHeadersInputToKeyArray($mOptionalHeaders);
         if (count($aOptionalHeaders)) {
-            $aOptions['http']['header'] = $this->formatFlattenHeaderArray($aOptionalHeaders);
+            $aOptions['http']['header'] = AfrHttpHeaderFormatters::getInstance()->formatFlattenHeaderArray($aOptionalHeaders);
         }
 
         if (count($aPostData)) {
@@ -76,22 +79,22 @@ trait AfrHttpCurlSimple
     }
 
 
-
-
-    /**
-     * @param string $sUrl full url https://...
-     * @param string $sMethod GET, POST, HEAD...
-     * @param array $aPostFields [ k=>v ]
-     * @param array $aHeaders [ 0=>'Afr: curl' | k=>v : 'Accept-Language' => 'en'   ]
-     * @param array $aSetOpt [ CURLOPT_TIMEOUT => 5 , ]
-     * @param array|string $saCookies [ k=>v, ] | lang=en; ts=1669731924
-     * @param string $sRef full url https://...
-     * @param int $iMaxRedirects zero, +int or -1 = infinite
-     * @param array $aUserPwd [0=> user, 1=> pwd]
-     * @return array used with: $aResult = $this->makeSimpleCurlRequest($aOrganizedCurlOptions)
-     * @throws AfrHttpCurlSimpleException
-     * @throws AfrHttpHeaderFormattersException
-     */
+	/**
+	 * @param string $sUrl full url https://...
+	 * @param string $sMethod GET, POST, HEAD...
+	 * @param array $aPostFields [ k=>v ]
+	 * @param array $aHeaders [ 0=>'Afr: curl' | k=>v : 'Accept-Language' => 'en'   ]
+	 * @param array $aSetOpt [ CURLOPT_TIMEOUT => 5 , ]
+	 * @param array|string $saCookies [ k=>v, ] | lang=en; ts=1669731924
+	 * @param string $sRef full url https://...
+	 * @param int $iMaxRedirects zero, +int or -1 = infinite
+	 * @param array $aUserPwd [0=> user, 1=> pwd]
+	 * @return array used with: $aResult = $this->makeSimpleCurlRequest($aOrganizedCurlOptions)
+	 * @throws AfrContainerException
+	 * @throws AfrEventException
+	 * @throws AfrHttpCurlSimpleException
+	 * @throws AfrHttpHeaderFormattersException
+	 */
     protected function prepareSimpleCurlHandle(
         string $sUrl,
         string $sMethod = 'GET', // 'GET','POST','HEAD'...
@@ -115,10 +118,10 @@ trait AfrHttpCurlSimple
         }
 
         if ($saCookies) {
-            $sCookieHeaderLine = $this->formatIntoCookieHeaderLine($saCookies, false, false);
+            $sCookieHeaderLine = AfrHttpHeaderFormattersCookie::getInstance()->formatIntoCookieHeaderLine($saCookies, false, false);
             if (!empty($aOrganizedHeaders['Cookie'])) {
                 $sCookieHeaderLine = rtrim($aOrganizedHeaders['Cookie'], '; ') . '; ' . $sCookieHeaderLine;
-                $sCookieHeaderLine = $this->formatIntoCookieHeaderLine($sCookieHeaderLine, false, false);
+                $sCookieHeaderLine = AfrHttpHeaderFormattersCookie::getInstance()->formatIntoCookieHeaderLine($sCookieHeaderLine, false, false);
             }
             $aOrganizedHeaders['Cookie'] = $sCookieHeaderLine;
         }
@@ -171,26 +174,30 @@ trait AfrHttpCurlSimple
         return $aResult;
     }
 
-    /**
-     * @param array $aOrganizedCurlOptions
-     * @param array $result
-     * @return void
-     * @throws AfrHttpHeaderFormattersException
-     */
+	/**
+	 * @param array $aOrganizedCurlOptions
+	 * @param array $result
+	 * @return void
+	 * @throws AfrContainerException
+	 * @throws AfrEventException
+	 * @throws AfrHttpHeaderFormattersException
+	 */
     private function updateSimpleCurlHandleAfterRequest(array $aOrganizedCurlOptions, array &$result)
     {
         $aSetCookie = [];
         $sLocation = '';
 
         if (!empty($result['sHeader']) && is_string($result['sHeader'])) {
-            foreach ($this->formatHttpRawHeadersToArr($result['sHeader']) as $sHeaderDirective) {
+            foreach (AfrHttpHeaderFormatters::getInstance()->formatHttpRawHeadersToArr($result['sHeader']) as $sHeaderDirective) {
                 if (substr($sHeaderDirective, 0, 12) === 'Set-Cookie: ') {
                     $aSetCookie[] = substr($sHeaderDirective, 12);
                     $this->updateCookiesInOrganizedCurlOptions($aOrganizedCurlOptions, $sHeaderDirective);
-                } elseif (substr($sHeaderDirective, 0, 10) === 'Location: ') {
-                    $sLocation = substr($sHeaderDirective, 10);
+                } elseif (substr($sHeaderDirective, 0, 9) === 'Location:') {
+                    $sLocation = trim(substr($sHeaderDirective, 9));
                     if (substr($sLocation, 0, 1) === '/') {
-                        $sLocation = $this->getUrlSchemeHostUpToPath($aOrganizedCurlOptions[CURLOPT_URL]) . $sLocation;
+                        $sLocation = AfrUrlUtils::getInstance()->getUrlSchemeHostUpToPath(
+							$aOrganizedCurlOptions[CURLOPT_URL]
+	                        ) . $sLocation;
                     }
                 }
             }
@@ -210,12 +217,12 @@ trait AfrHttpCurlSimple
      */
     private function updateCookiesInOrganizedCurlOptions(array &$aOrganizedCurlOptions, string $sHeaderDirective): void
     {
-        $aParseHeaderLineSetCookieInfo = $this->parseHeaderLineSetCookieInfo($sHeaderDirective);
+        $aParseHeaderLineSetCookieInfo = AfrHttpHeaderFormattersCookie::getInstance()->parseHeaderLineSetCookieInfo($sHeaderDirective);
         if(!$aParseHeaderLineSetCookieInfo){
             return;
         }
         $aExistingCookies = empty($aOrganizedCurlOptions[CURLOPT_COOKIE]) ? [] :
-            $this->formatCookieLineIntoAssociativeArray($aOrganizedCurlOptions[CURLOPT_COOKIE], false);
+	        AfrHttpHeaderFormattersCookie::getInstance()->formatCookieLineIntoAssociativeArray($aOrganizedCurlOptions[CURLOPT_COOKIE], false);
 
         $sCookieName = $aParseHeaderLineSetCookieInfo['sCookieName'];
         if ($aParseHeaderLineSetCookieInfo['iExpire'] < time()) {
@@ -227,7 +234,7 @@ trait AfrHttpCurlSimple
         }
 
         if (count($aExistingCookies)) {
-            $aOrganizedCurlOptions[CURLOPT_COOKIE] = $this->formatIntoCookieHeaderLine($aExistingCookies, false, false);
+            $aOrganizedCurlOptions[CURLOPT_COOKIE] = AfrHttpHeaderFormattersCookie::getInstance()->formatIntoCookieHeaderLine($aExistingCookies, false, false);
         } else {
             unset($aOrganizedCurlOptions[CURLOPT_COOKIE]);
         }
@@ -244,7 +251,7 @@ trait AfrHttpCurlSimple
     protected function makeTestRequestTo(
         string $sUrl = 'https://autoframe.ro/',
         array  $aPost = []
-    )
+    ) //TODO finish:
     {
         $aOrganizedCurlOptions = $this->prepareSimpleCurlHandle(
             $sUrl,

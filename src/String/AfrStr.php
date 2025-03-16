@@ -96,10 +96,12 @@ class AfrStr
         return $saData;
     }
 
-    /**
-     * @param string $sValueStr
-     * @return string
-     */
+	/**
+	 * @param string $sValueStr
+	 * @param string $sEncoding
+	 * @param bool $double_encode
+	 * @return string
+	 */
     static function hXml(string $sValueStr, string $sEncoding = '', bool $double_encode = true): string
     {
         if (!$sEncoding) {
@@ -153,7 +155,7 @@ class AfrStr
      * @param string $str
      * @param string $start_char
      * @param string $end_char
-     * @return array|null[]
+     * @return array
      */
     public static function extractBetween(string $str, string $start_char, string $end_char = ''): array
     {
@@ -220,6 +222,22 @@ class AfrStr
         return number_format($float, $decimals, $decSep, $thousandsSep);
     }
 
+
+	public static function round_decimal($float,$decimals=2){
+		if(is_numeric($float)){
+			$tmp=explode('.',$float);
+			if(isset($tmp[1])){
+				if(strlen($tmp[1])<$decimals){ $tmp[1].=str_repeat('0', ($decimals-strlen($tmp[1])) ); }
+				elseif(strlen($tmp[1])>$decimals){ $tmp[1]=substr($tmp[1],0,$decimals); }
+				elseif(strlen($tmp[1])==$decimals){ }
+				else{$tmp[1]=str_repeat('0', $decimals );}
+			}
+			else{$tmp[1]=str_repeat('0', $decimals );}
+			$float=$tmp[0].'.'.$tmp[1];
+		}
+		return $float;
+	}
+
     /**
      * @param string $haystack
      * @param string $needle
@@ -239,14 +257,9 @@ class AfrStr
      * @param string $str
      * @return string
      */
-    public static function clear_spaces(string $str): string
+    public static function clearSpaces(string $str): string
     {
-        $sSpaces = " \t\n\r\0\x0B";
-        $aSpaces = [];
-        for ($i = 0; $i < strlen($sSpaces); $i++) {
-            $aSpaces[] = $sSpaces[$i];
-        }
-        return str_replace($aSpaces, '', $str);
+        return str_replace([" ","\t","\n","\r","\0","\x0B",], '', $str);
     }
 
     /**

@@ -33,11 +33,7 @@ class AfrDbConnectionManagerClass extends AfrSingletonAbstractClass implements A
 			return $this->sDataLayerNamespace;
 		}
 
-		if (!empty($sDlns = Afr::app()->env()->getEnv('AFRDATALAYERNAMESPACE'))) { //set from env
-			return $this->sDataLayerNamespace = $sDlns;
-		}
-
-		return $this->sDataLayerNamespace = 'Autoframe\\DataLayer\\'; //set fallback
+		return $this->sDataLayerNamespace = Afr::app()->env()->getEnv('AFRDATALAYERNAMESPACE','Autoframe\\DataLayer\\');
 	}
 
 	/**
@@ -75,7 +71,6 @@ class AfrDbConnectionManagerClass extends AfrSingletonAbstractClass implements A
 			if (is_dir($sUpperVendorPath . $ds . 'src' . $ds . 'DataLayer')) {
 				return $this->sDataLayerPath = $sUpperVendorPath . $ds . 'src' . $ds . 'DataLayer';
 			}
-
 		}
 
 		return $this->sDataLayerPath;

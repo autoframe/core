@@ -9,7 +9,8 @@
     "composer/class-map-generator": ">=1.0",
     "psr/container": "^1.1.1|^2.0.1",
     "ext-json": "*",
-    "ext-pdo": "*"
+    "ext-pdo": "*",
+    "ext-curl": "*"
   },
   "version": "dev-1.0.0",
   "authors": [

@@ -9,6 +9,7 @@ _alfa
 error_log
 *.env
 *.env.php
+!src/Tenant/env.sample.env
 storage
 public_assets/dev
 

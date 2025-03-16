@@ -422,7 +422,7 @@ class AfrEnvParserClass extends AfrSingletonAbstractClass implements AfrEnvParse
 
 						$aData['val'] = str_replace(
 							$sNestedStart . $sNestedKey . '}',
-							($aTmp[$sNestedKey] ?? ($_ENV[$sNestedKey] ?? '')),
+							(string)($aTmp[$sNestedKey] ?? ($_ENV[$sNestedKey] ?? '')),
 							$aData['val']
 						);
 

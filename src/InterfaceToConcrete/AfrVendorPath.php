@@ -264,6 +264,12 @@ class AfrVendorPath
 	 */
 	protected static function detectVendorPath(): string
 	{
+		$oReflector = new \ReflectionClass(ClassMapGenerator::class);
+		$sClassMapGeneratorFilePath = $oReflector->getFileName();
+		if($sVendorPath = self::checkForComposerVendorPath(dirname($sClassMapGeneratorFilePath,4))){
+			return $sVendorPath;
+		}
+
 		$sDs = DIRECTORY_SEPARATOR;
 		$sDsUp = '..' . $sDs;
 		foreach ([

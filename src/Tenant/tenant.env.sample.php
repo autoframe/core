@@ -49,3 +49,7 @@ use Autoframe\Core\Tenant\AfrTenant;
 	->setEnv($sEnv)
 	->setDebug($bDebug)
 	->autoSetupAndPushTenantConfig();
+
+AfrTenant::pushDefaultTenantConfigs([
+
+]);

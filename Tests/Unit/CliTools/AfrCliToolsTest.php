@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 namespace Unit\CliTools;
 
-use Autoframe\Core\CliTools\AfrCliDetect;
+use Autoframe\Core\CliTools\AfrCliHttpDetect;
 use Autoframe\Core\CliTools\AfrCliTextColors;
 use Autoframe\Core\CliTools\AfrVendorDir;
 use PHPUnit\Framework\TestCase;
@@ -16,8 +16,8 @@ class AfrCliToolsTest extends TestCase
 	 */
 	public function isCli(): void
 	{
-		$this->assertSame(AfrCliDetect::isCli(), true);
-		$this->assertSame(AfrCliDetect::isWeb(), false);
+		$this->assertSame(AfrCliHttpDetect::isCli(), true);
+		$this->assertSame(AfrCliHttpDetect::isHttpOrHttpsProtocolRequest(), false);
 	}
 
 	/**

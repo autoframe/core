@@ -21,11 +21,11 @@ class AfrEnvEmptyTest extends TestCase
 	    try {
 		    $this->assertSame(true, $oEnv->isDev());
 	    } catch (AfrEnvException $e) {
-		    $oEnv->setInlineEnvVar('AFR_ENV', 'DEV');
+		    $oEnv->setEnv('AFR_ENV', 'DEV');
 		    $this->assertSame(true, $oEnv->isDev());
 	    }
 
-	    $oEnv->setInlineEnvVar('AFR_ENV', 'STAGING');
+	    $oEnv->setEnv('AFR_ENV', 'STAGING');
         $this->assertSame('STAGING',  $oEnv->getEnv('AFR_ENV'));
     }
 

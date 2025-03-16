@@ -411,7 +411,7 @@ class AfrCliTextColors
 
     public static function demo(): void
     {
-        if(!AfrCliDetect::insideCli()){
+        if(!AfrCliHttpDetect::isCli()){
             echo 'The script does not run inside CLI!'.PHP_EOL;
             return;
         }

@@ -22,7 +22,7 @@ class B_AfrInterfaceToConcreteClassTest extends TestCase
 		return [
 			[[], 5, true, false, true, 'DEV'],
 			[['vendor'], $thirty_years, false, false, false, 'PRODUCTION'],
-			[[__DIR__], $thirty_years, false, false, true, 'DEBUG'],
+			[[__DIR__], 60*30, false, false, true, 'DEBUG'],
 		];
 	}
 
@@ -119,7 +119,7 @@ class B_AfrInterfaceToConcreteClassTest extends TestCase
 				}
 				$i++;
 				foreach ($aDeps as $sDfqcn => $bInstantiable) {
-					$this->assertSame(true, interface_exists($sDfqcn) || class_exists($sDfqcn), 'interface|2|class~' . $sDfqcn);
+					$this->assertSame(true, interface_exists($sDfqcn) || class_exists($sDfqcn), 'interface|2|class~' . $sDfqcn.' ~~ '.$sFqcn."\n".print_r($aMap, true));
 					$this->assertSame(true, is_bool($bInstantiable), '!is_bool($bInstantiable)');
 					$i += 0.2;
 				}

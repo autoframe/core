@@ -45,7 +45,7 @@ class AfrEnv extends AfrSingletonAbstractClass implements AfrEnvInterface
 		bool $bRegisterPutEnv = false
 	): self
 	{
-		if (empty($this->aEnvData) && !$this->bValidated) {
+		if (empty($this->aEnvData)) {
 			throw new AfrEnvException(
 				'No env settings to register! ' .
 				'Run $oEnv->setBaseDir(__DIR__)->readEnv() or $oEnv->readEnvPhpFile(path)'
@@ -95,13 +95,12 @@ class AfrEnv extends AfrSingletonAbstractClass implements AfrEnvInterface
 		if (strlen($sKey)) {
 			$mVal =
 					$this->aEnvData[$sKey] ??
-					$_ENV[$sKey] ??
-					getenv($sKey) ?:
-					(defined($sKey) ? constant($sKey) : $mFallback); //TODO test fallback
-			if($sKey === 'AFR_ENV' && empty($mVal)) {
+				$_ENV[$sKey] ??
+				getenv($sKey) ?:
+				(defined($sKey) ? constant($sKey) : $mFallback);
+			if ($sKey === 'AFR_ENV' && empty($mVal)) {
 				throw new AfrEnvException('AFR_ENV is not set! Please configure and load tenant');
-			}
-			elseif($sKey === 'AFR_DEBUG' &&  strlen((string)$mVal)<1) {
+			} elseif ($sKey === 'AFR_DEBUG' && strlen((string)$mVal) < 1) {
 				throw new AfrEnvException('AFR_DEBUG is not a integer! Please configure and load tenant');
 			}
 			return $mVal;
@@ -141,7 +140,7 @@ class AfrEnv extends AfrSingletonAbstractClass implements AfrEnvInterface
 	 * @param $mData
 	 * @return self
 	 */
-	public function setInlineEnvVar(string $sKey, $mData): self
+	public function setEnv(string $sKey, $mData): self
 	{
 		$this->bValidated = false;
 		$this->aEnvData[$sKey] = $mData;
@@ -177,11 +176,12 @@ class AfrEnv extends AfrSingletonAbstractClass implements AfrEnvInterface
 	 * iCacheSeconds is the number of cache seconds before expire. Use zero for no cache
 	 * aExtraEnvDirsFiles to add extra env directories and .env files
 	 * @param int $iCacheSeconds
-	 * @param array $aExtraEnvDirsFiles
+	 * @param array $aEnvDirsFiles
+	 * @param bool $bReadEnvFromBaseDir
 	 * @return self
 	 * @throws AfrEnvException
 	 */
-	public function readEnv(int $iCacheSeconds, array $aExtraEnvDirsFiles = []): self
+	public function readEnv(int $iCacheSeconds, array $aEnvDirsFiles = [], bool $bReadEnvFromBaseDir = true): self
 	{
 		if (
 			$iCacheSeconds > 0 &&
@@ -194,7 +194,7 @@ class AfrEnv extends AfrSingletonAbstractClass implements AfrEnvInterface
 		}
 
 		$this->bValidated = false;
-		$this->aEnvDirsFiles = array_merge([$this->sBaseDir], $aExtraEnvDirsFiles);
+		$this->aEnvDirsFiles = $bReadEnvFromBaseDir ? array_merge([$this->sBaseDir], $aEnvDirsFiles) : $aEnvDirsFiles;
 		foreach ($this->aEnvDirsFiles as $sSources) {
 			if (file_exists($sSources)) {
 				if (is_file($sSources)) {
@@ -272,8 +272,16 @@ class AfrEnv extends AfrSingletonAbstractClass implements AfrEnvInterface
 	 */
 	public function isDebug(): int
 	{
-		return (int)$this->getEnv('AFR_DEBUG',0);
-		return isset($this->aEnvData['AFR_DEBUG']) ? (int)$this->aEnvData['AFR_DEBUG'] : 0;
+		return (int)$this->getEnv('AFR_DEBUG', 0);
+	}
+
+	/**
+	 * @return bool
+	 * @throws AfrEnvException
+	 */
+	public function isDevOrDebug(): bool
+	{
+		return $this->isDebug() || $this->isDev();
 	}
 
 
@@ -282,6 +290,10 @@ class AfrEnv extends AfrSingletonAbstractClass implements AfrEnvInterface
 	 */
 	protected function setCache(): void
 	{
+		if (empty($this->aEnvData)) {
+			//	$this->aEnvData = ['AFR_DEBUG' => 1];
+			return;
+		}
 		$sHeader = '<?php /* ' . gmdate('D, d M Y H:i:s') . ' GMT ->loadCache: ' .
 			str_replace('*/', '* /', print_r($this->aEnvDirsFiles, true)) .
 			"*/ \n return ";
@@ -299,7 +311,7 @@ class AfrEnv extends AfrSingletonAbstractClass implements AfrEnvInterface
 		if (empty($this->sCacheFile)) {
 			$this->sCacheFile = $this->sBaseDir .
 				DIRECTORY_SEPARATOR .
-				(AfrTenant::getTenantAlias()??'_') . '.' . $_ENV['AFR_ENV'] .
+				(AfrTenant::getTenantAlias() ?? '_') . '.' . $_ENV['AFR_ENV'] .
 				//'_' . substr(md5(serialize($this->aEnvDirsFiles)), 10, 8) .
 				'.env.php';
 		}

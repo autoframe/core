@@ -5,8 +5,8 @@ namespace Autoframe\Core\DesignPatterns\Singleton;
 
 /**
  * There are 2 methods to use the Singleton pattern:
- * - target class extends AfrSingletonAbstractClass or
- * - use AfrSingletonTrait if the target class is not extendable
+ * - child class extends AfrSingletonAbstractClass or
+ * - or use AfrSingletonTrait and implement AfrSingletonInterface
  */
 abstract class AfrSingletonAbstractClass implements AfrSingletonInterface
 {

@@ -3,14 +3,14 @@
 namespace Autoframe\Core\Container;
 
 use Autoframe\Core\Container\Exception\AfrContainerException;
-use ReflectionException;
 use ArrayAccess;
+
 
 
 interface AfrContainerInterface extends ArrayAccess
 {
 	/**
-	 * @return AfrContainerInterface
+	 * @return AfrLiteContainer|AfrContainerInterface
 	 */
 	public static function getInstance(): AfrContainerInterface;
 
@@ -18,7 +18,6 @@ interface AfrContainerInterface extends ArrayAccess
 	 * @param string $id
 	 * @return mixed
 	 * @throws AfrContainerException
-	 * @throws ReflectionException
 	 */
 	public function get(string $id);
 
@@ -27,7 +26,6 @@ interface AfrContainerInterface extends ArrayAccess
 	 * @param array $parameters
 	 * @return mixed
 	 * @throws AfrContainerException
-	 * @throws ReflectionException
 	 */
 	public function make(string $abstract, array $parameters = []);
 
@@ -48,8 +46,8 @@ interface AfrContainerInterface extends ArrayAccess
 
 	/**
 	 * @param string $abstract
-	 * @param mixed $instance
-	 * @return mixed
+	 * @param object $instance
+	 * @return object
 	 */
-	public function registerInstance(string $abstract, $instance);
+	public function registerInstance(string $abstract, object $instance):object;
 }

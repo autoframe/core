@@ -4,11 +4,13 @@ namespace Autoframe\Core\Container;
 
 use Autoframe\Core\Afr\Afr;
 use Autoframe\Core\Container\Exception\AfrContainerException;
+use Autoframe\Core\Http\Request\AfrRequestClass;
+use Autoframe\Core\Http\Request\AfrRequestInterface;
+use Autoframe\Core\Router\AfrRouter;
+use Autoframe\Core\Tenant\AfrDefaultTenantConfigsInterface;
 use Autoframe\Core\Tenant\AfrTenant;
-
 use Autoframe\Core\Router\CliCache;
 use Autoframe\Core\Router\Contracts\AfrRouterCliInterface;
-
 use Autoframe\Core\Arr\Export\AfrArrExportArrayAsStringClass;
 use Autoframe\Core\Arr\Export\AfrArrExportArrayAsStringInterface;
 use Autoframe\Core\Arr\Merge\AfrArrMergeProfileClass;
@@ -55,40 +57,48 @@ use Autoframe\Core\Session\AfrSessionInterface;
 use Autoframe\Core\Session\AfrSessionPhp;
 
 
-class AfrDefaultBindings
+class AfrDefaultBindings  implements AfrDefaultTenantConfigsInterface
 {
 	protected static array $aSet = [];
 
 	/**
 	 * @throws AfrContainerException
 	 */
-	public static function default(bool $bForce = false): void
+	public static function setAutoframeDefaultContainerBindings(bool $bForce = false): void
 	{
 		if (!empty(self::$aSet[__FUNCTION__]) && !$bForce) {
 			return;
 		}
-		static::bind(static::getDefaults(), __FUNCTION__);
+		self::$aSet[__FUNCTION__] = true;
+		static::bind(static::getDefaultContainerBindingsMap());
 	}
 
 	/**
 	 * @throws AfrContainerException
 	 */
-	public static function tenantContainerBindings(bool $bForce = false): void
+	public static function applyDefaultTenantConfig(bool $bForce = false): void
 	{
-		$sBindingsFile = AfrTenant::getTenantContainerBindingsFilePath(); //is_file was skipped
+		$sBindingsFile = AfrTenant::getAfrDefaultTenantConfigsForFqcn(static::class);
 		if (empty($sBindingsFile) || (!empty(self::$aSet[__FUNCTION__]) && !$bForce)) {
 			return;
 		}
-		static::default();
-		static::bind(include $sBindingsFile, __FUNCTION__);
+		//	static::default();
+		self::$aSet[__FUNCTION__] = true;
+		if(!file_exists($sBindingsFile)){
+			throw new AfrContainerException('Container bindings file is missing: '.$sBindingsFile);
+		}
+		static::bind(include $sBindingsFile);
 	}
 
+	public static function sampleTenantDefaultConfig(): string
+	{
+		return file_get_contents(__DIR__ . DIRECTORY_SEPARATOR . 'config.sample.AfrDefaultBindings.php');
+	}
 	/**
 	 * @throws AfrContainerException
 	 */
-	public static function bind(array $aBound, string $sSourceKey): void
+	public static function bind(array $aBound): void
 	{
-		self::$aSet[$sSourceKey] = true;
 		foreach ($aBound as $sAbstractFQCN => $mImplementationOrClosure) {
 			if (is_array($mImplementationOrClosure)) {
 				Afr::app()->container()->bind(...$mImplementationOrClosure);
@@ -108,14 +118,16 @@ class AfrDefaultBindings
 	 *
 	 * @return string[]
 	 */
-	protected static function getDefaults(): array
+	protected static function getDefaultContainerBindingsMap(): array
 	{
 
 		//README: use string keys, because  when extending / merging the bindings, the numeric keys are lost!
 		return [
 			'router' => AfrRouterCliInterface::class, //todo change :D
 			AfrRouterCliInterface::class => CliCache::class, //todo change :D
+		//	AfrRouter::class => AfrRouter::class, //todo change :D
 
+			AfrRequestInterface::class => AfrRequestClass::class,
 			AfrContainerInterface::class => [AfrContainerInterface::class, get_class(Afr::app()->container()), true], //self resolve container as singleton on first bind
 			AfrArrMergeProfileInterface::class => fn() => AfrArrMergeProfileClass::getInstance(), //singleton access using closure
 
@@ -143,4 +155,6 @@ class AfrDefaultBindings
 
 		];
 	}
+
+
 }

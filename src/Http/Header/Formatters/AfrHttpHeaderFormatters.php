@@ -3,29 +3,33 @@ declare(strict_types=1);
 
 namespace Autoframe\Core\Http\Header\Formatters;
 
+use Autoframe\Core\DesignPatterns\Singleton\AfrSingletonAbstractClass;
 use Autoframe\Core\Http\Header\Formatters\Exception\AfrHttpHeaderFormattersException;
 
 
-trait AfrHttpHeaderFormatters
+class AfrHttpHeaderFormatters extends AfrSingletonAbstractClass
 {
 
     /**
      * @param string $sHeaders raw headers
      * @return array
      */
-    protected function formatHttpRawHeadersToArr(string $sHeaders): array
+    public function formatHttpRawHeadersToArr(string $sHeaders): array
     {
         return (array)explode("\n", str_replace("\r", '', $sHeaders));
     }
 
     /**
-     * @param $mHeaders
+     * @param string|array|null $mHeaders
      * @return array
      * @throws AfrHttpHeaderFormattersException
      */
-    protected function formatMixedHeadersInputToKeyArray($mHeaders): array
+    public function formatMixedHeadersInputToKeyArray($mHeaders): array
     {
-        $aHeaders = [];
+        if($mHeaders === null){
+			return [];
+        }
+		$aHeaders = [];
         if (is_string($mHeaders) && strlen($mHeaders)) {
             $mHeaders = $this->formatHttpRawHeadersToArr($mHeaders);
         }
@@ -54,7 +58,7 @@ trait AfrHttpHeaderFormatters
      * @return array format for CURLOPT_HTTPHEADER
      * @throws AfrHttpHeaderFormattersException
      */
-    protected function formatForCurlOptHttpHeader($mHeaders): array
+    public function formatForCurlOptHttpHeader($mHeaders): array
     {
         $aHeaders = [];
         if (is_string($mHeaders) && strlen($mHeaders)) {
@@ -86,7 +90,7 @@ trait AfrHttpHeaderFormatters
      * @return string
      * @throws AfrHttpHeaderFormattersException
      */
-    protected function formatFlattenHeaderArray(array $aHeaders, string $sGlue = "\r\n"): string
+    public function formatFlattenHeaderArray(array $aHeaders, string $sGlue = "\r\n"): string
     {
         $aOut = [];
         foreach ($aHeaders as $mKey => $sVal) {
@@ -114,7 +118,7 @@ trait AfrHttpHeaderFormatters
      * @return array
      * @throws AfrHttpHeaderFormattersException
      */
-    protected function formatSplitHeaderLineInKeyVal(string $sHeaderLine): array
+    public function formatSplitHeaderLineInKeyVal(string $sHeaderLine): array
     {
         $iSplit = strpos($sHeaderLine, ':');
         if ($iSplit === false) {

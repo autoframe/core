@@ -4,6 +4,9 @@ namespace Autoframe\Core\Database\Connection;
 
 use Closure;
 
+/**
+ * https://www.php.net/manual/en/features.persistent-connections.php
+ */
 class AfrDbConnectionManagerFacade
 {
 	protected static ?AfrDbConnectionManagerInterface $oConnectionManager = null;

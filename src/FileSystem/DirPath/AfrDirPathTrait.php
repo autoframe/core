@@ -196,4 +196,30 @@ trait AfrDirPathTrait
         }
         return strtr($sPath, $sFromDs, $sToDs);
     }
+
+	/**
+	 * @param string $path
+	 * @param bool $bCheckExistence
+	 * @return false|string
+	 */
+	public function realpath(string $path, bool $bCheckExistence)
+	{
+		if(substr($path, 0, 2) === '\\\\') {
+			return $path; //widows network share
+		}
+		if($bCheckExistence){
+			return realpath($path);
+		}
+		$path = str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $path);
+		$absolutes = [];
+		foreach (array_filter(explode(DIRECTORY_SEPARATOR, $path), 'strlen') as $part) {
+			if ('.' == $part) continue;
+			if ('..' == $part) {
+				array_pop($absolutes);
+			} else {
+				$absolutes[] = $part;
+			}
+		}
+		return implode(DIRECTORY_SEPARATOR, $absolutes);
+	}
 }

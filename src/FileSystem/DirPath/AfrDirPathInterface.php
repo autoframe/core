@@ -75,4 +75,11 @@ interface AfrDirPathInterface
      * @return string
      */
     public function fixDs(string $sPath): string;
+
+	/**
+	 * @param string $path
+	 * @param bool $bCheckExistence
+	 * @return false|string
+	 */
+	public function realpath(string $path, bool $bCheckExistence);
 }

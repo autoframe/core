@@ -7,6 +7,7 @@ namespace Autoframe\Core\String\Excel;
 class AfrStrExcel
 {
     /**
+     * alias num2alphaThf
      * @param int $n
      * @return string  excel nr to 0=>A, 1=>B, 2=>C
      */

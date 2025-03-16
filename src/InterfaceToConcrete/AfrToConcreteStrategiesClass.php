@@ -5,9 +5,10 @@ namespace Autoframe\Core\InterfaceToConcrete;
 use Autoframe\Core\ClassDependency\AfrClassDependency;
 use Autoframe\Core\ClassDependency\AfrClassDependencyException;
 use Autoframe\Core\InterfaceToConcrete\Exception\AfrInterfaceToConcreteException;
+use Autoframe\Core\Tenant\AfrDefaultTenantConfigsInterface;
 use Autoframe\Core\Tenant\AfrTenant;
 
-class AfrToConcreteStrategiesClass implements AfrToConcreteStrategiesInterface
+class AfrToConcreteStrategiesClass implements AfrToConcreteStrategiesInterface, AfrDefaultTenantConfigsInterface
 {
 	//fixed solving
 	public const StrategyClosureFn = 'StrategyClosureFn';
@@ -45,7 +46,7 @@ class AfrToConcreteStrategiesClass implements AfrToConcreteStrategiesInterface
 	protected array $aContextNamespaceFilterArr = [];
 	protected array $aCache = [];
 
-	protected bool $bTenantToConcreteStrategiesConfigState = false;
+	protected bool $bApplyDefaultTenantConfig = false;
 
 	//you can change / reorder / overwrite any using $this->addPriorityRules as you see fit
 	protected array $aPriorityRules = [
@@ -265,15 +266,20 @@ class AfrToConcreteStrategiesClass implements AfrToConcreteStrategiesInterface
 		);
 	}
 
-	protected function applyTenantToConcreteStrategies(): void
+	protected function applyDefaultTenantConfig(): void
 	{
-		$this->bTenantToConcreteStrategiesConfigState = true;
-		if (!empty($sConfigFile = AfrTenant::getTenantToConcreteStrategiesFilePath())) {
+		if(!empty($this->bApplyDefaultTenantConfig)){
+			return;
+		}
+
+		$this->bApplyDefaultTenantConfig = true;
+
+		if (!empty($sConfigFile = AfrTenant::getAfrDefaultTenantConfigsForFqcn($this)) && file_exists($sConfigFile)) {
 			(include $sConfigFile)($this);
 		}
 	}
 
-	public static function sampleTenantToConcreteStrategiesFileContents(): string
+	public static function sampleTenantDefaultConfig(): ?string
 	{
 		return file_get_contents(__DIR__ . DIRECTORY_SEPARATOR . 'config.sample.AfrToConcreteStrategiesClass.php');
 	}
@@ -287,9 +293,7 @@ class AfrToConcreteStrategiesClass implements AfrToConcreteStrategiesInterface
 	 */
 	public function resolveMap(array $aMappings, string $notConcreteFQCN, bool $bCache = true): string
 	{
-		if (!$this->bTenantToConcreteStrategiesConfigState) {
-			$this->applyTenantToConcreteStrategies();
-		}
+		$this->applyDefaultTenantConfig();
 
 		$this->notConcreteFQCN = $notConcreteFQCN;
 		$sCacheKey = $this->getPriorityRule() . '|' . $this->getContext() . '|' . $notConcreteFQCN;
@@ -664,9 +668,8 @@ class AfrToConcreteStrategiesClass implements AfrToConcreteStrategiesInterface
 			/**
 			 * Returns null. The mapping fails
 			 */
-			self::StrategyFail => function (AfrToConcreteStrategiesInterface $oStrategiesInterface, array $aMap) {
-				return null;
-			},
+			//self::StrategyFail => function (AfrToConcreteStrategiesInterface $oStrategiesInterface, array $aMap) {
+			self::StrategyFail => function () { return null; },
 
 		];
 	}
@@ -680,9 +683,9 @@ class AfrToConcreteStrategiesClass implements AfrToConcreteStrategiesInterface
 	public function xetTenantToConcreteStrategiesConfigState(bool $bConfigLoaded = null)
 	{
 		if($bConfigLoaded === null){ //get
-			return $this->bTenantToConcreteStrategiesConfigState;
+			return $this->bApplyDefaultTenantConfig;
 		}
-		$this->bTenantToConcreteStrategiesConfigState = $bConfigLoaded; //set
+		$this->bApplyDefaultTenantConfig = $bConfigLoaded; //set
 		return $this;
 	}
 

@@ -1,6 +1,9 @@
 <?php
 
-class thfString{
+// see Autoframe\Core\String\AfrStr
+
+
+class thfStrinGGGGGGGGGGGGGGGGGGGGGGGGGGGg{
 
     /**
      * @var int bitwise

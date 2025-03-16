@@ -6,6 +6,9 @@ use PDO;
 use SessionHandlerInterface;
 use SessionUpdateTimestampHandlerInterface;
 
+// TODO implement
+
+
 class AfrPdoSQL implements SessionHandlerInterface
 {
 	protected ?PDO $dbh = null;
