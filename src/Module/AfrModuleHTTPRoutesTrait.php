@@ -4,6 +4,7 @@ namespace Autoframe\Core\Module;
 
 use Autoframe\Core\Afr\Afr;
 use Autoframe\Core\Container\Exception\AfrContainerException;
+use Autoframe\Core\Env\Exception\AfrEnvException;
 use Autoframe\Core\Event\AfrEvent;
 use Autoframe\Core\Event\Exception\AfrEventException;
 use Autoframe\Core\Module\Exception\AfrModuleException;
@@ -14,7 +15,7 @@ trait AfrModuleHTTPRoutesTrait
 {
 	use AfrModuleTrait;
 
-	protected ?string $sSubRoutingPath = ''; // eg: /administration
+	protected ?string $sSubRoutingPath = null; // eg: /administration
 	protected array $aDependenciesHTTPRoutesFQCN = [];
 	protected ?int $iRegisteredHTTPRoutes = null;
 
@@ -27,7 +28,7 @@ trait AfrModuleHTTPRoutesTrait
 	/**
 	 * @param string|null $sSubRoutingPath
 	 * @return string
-	 * @throws AfrEventException
+	 * @throws AfrEventException|AfrEnvException
 	 */
 	public function xetHTTPSubRoutingPath(string $sSubRoutingPath = null): string
 	{
@@ -38,10 +39,11 @@ trait AfrModuleHTTPRoutesTrait
 			}
 			$this->sSubRoutingPath = $sSubRoutingPath;
 		}
+		if($this->sSubRoutingPath === null){
+			$this->sSubRoutingPath = Afr::app()->env()->getEnv(strtoupper($this->getModuleName()) . '_' . 'SUB_ROUTING_PATH');
+		}
 		return (string)$this->sSubRoutingPath;
 	}
-
-
 
 
 	/**
@@ -50,6 +52,7 @@ trait AfrModuleHTTPRoutesTrait
 	 * @throws AfrEventException
 	 * @throws AfrModuleException
 	 * @throws \ReflectionException|AfrRouterException
+	 * @throws AfrEnvException
 	 */
 	public function registerHTTPRoutes(): int
 	{

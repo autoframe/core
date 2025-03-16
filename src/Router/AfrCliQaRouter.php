@@ -12,7 +12,7 @@ use Autoframe\Core\Event\Exception\AfrEventException;
 use Autoframe\Core\Exception\AfrException;
 use \Closure;
 
-class AfrCliRouterHelper
+class AfrCliQaRouter
 {
 
 	const UP_STACK = '🡅';
@@ -32,23 +32,21 @@ class AfrCliRouterHelper
 		string $sTitle,
 		       $aoClosureOrArray,
 		bool   $bMergeWithExisting = true
-	): void
+	): int
 	{
-
 		$bNewIsArr = is_array($aoClosureOrArray);
 		$bNewIsClosure = $aoClosureOrArray instanceof Closure;
+		$iRegistered = $bNewIsArr ? count($aoClosureOrArray) : 1;
 		if (!$bNewIsArr && !$bNewIsClosure) {
 			throw new AfrException(
 				"Invalid stack parameter type for " . __FUNCTION__ .
-				".\n Expected array of closures or Closure that returns array of closures"
+				".\n Expected array of closures OR Closure that returns array of closures"
 			);
 		}
 		if (!$bMergeWithExisting || empty(self::$aActions[$sTitle])) {
 			self::$aActions[$sTitle] = $aoClosureOrArray;
-			return;
 		}
-
-		if (is_array(self::$aActions[$sTitle]) && $bNewIsArr) {
+		elseif (is_array(self::$aActions[$sTitle]) && $bNewIsArr) {
 			self::$aActions[$sTitle] = array_merge(self::$aActions[$sTitle], $aoClosureOrArray);
 		} else {
 			$mExisting = self::$aActions[$sTitle];
@@ -59,6 +57,7 @@ class AfrCliRouterHelper
 				);
 			};
 		}
+		return $iRegistered;
 	}
 
 	/**
@@ -74,7 +73,6 @@ class AfrCliRouterHelper
 				return self::handleCliQaStack($sOption, $mStack);
 			};
 		}
-
 
 		if ($sQaIndexStack !== null) {
 			if (($aOptions[$sQaIndexStack] ?? false)) {

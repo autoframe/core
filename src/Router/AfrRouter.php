@@ -71,17 +71,16 @@ class AfrRouter extends AfrSingletonAbstractClass implements AfrRouterInterface,
 
 		$iRegistered = 0;
 		foreach ($aRoutes as $sType => $aRouteClusterInfo) {
-			if (!in_array($sType, [static::MIDDLEWARE_ROUTE, static::CODE_ROUTE, static::AFTER_ROUTE])) {
+			if (!in_array($sType, static::HTTP_ROUTE_TYPES)) {
 				throw new AfrModuleException('Invalid routes type group: ' . $sType);
-			}
-			elseif (!is_array($aRouteClusterInfo)) {
-				throw new AfrModuleException("Routes group `$sType` should be an array" );
+			} elseif (!is_array($aRouteClusterInfo)) {
+				throw new AfrModuleException("Routes group `$sType` should be an array");
 			}
 
 			foreach ($aRouteClusterInfo as $sKeyCluster => $aRoute) {
 				if (!is_string($sKeyCluster)) {
 					throw new AfrModuleException(
-						'The HTTP routes must be have a string key in order to respect '.
+						'The HTTP routes must be have a string key in order to respect ' .
 						'SOLID open/close principle when extending modules'
 					);
 				}
@@ -106,39 +105,36 @@ class AfrRouter extends AfrSingletonAbstractClass implements AfrRouterInterface,
 	}
 
 
-	public function registerCLIRoutesFromModule(array $aRoutes): int
+	public function registerCLIRoutesFromModule(
+		array $aRoutes,
+		bool $bMergeQA = true,
+		bool $bMergeInline = true,
+		bool $bMergeCons = true
+	): int
 	{
 		$iRegistered = 0;
 		foreach ($aRoutes as $sType => $aRouteClusterInfo) {
-			if (!in_array($sType, [static::MIDDLEWARE_ROUTE, static::CODE_ROUTE, static::AFTER_ROUTE])) {
+			if (!in_array($sType, [static::CLI_CRON_JOB_REQUEST, static::CLI_INLINE, static::CLI_QA_REQUEST])) {
 				throw new AfrModuleException('Invalid routes type group: ' . $sType);
+			} elseif (!is_array($aRouteClusterInfo)) {
+				throw new AfrModuleException("Routes group `$sType` should be an array");
 			}
-			elseif (!is_array($aRouteClusterInfo)) {
-				throw new AfrModuleException("Routes group `$sType` should be an array" );
-			}
-
-			foreach ($aRouteClusterInfo as $sKeyCluster => $aRoute) {
+			foreach ($aRouteClusterInfo as $sKeyCluster => $mStack) {
 				if (!is_string($sKeyCluster)) {
 					throw new AfrModuleException(
-						'The HTTP routes must be have a string key in order to respect '.
+						'The CLI routes must be have a string key in order to respect ' .
 						'SOLID open/close principle when extending modules'
 					);
 				}
-				if (!is_array($aRoute) ||
-					count($aRoute) < 2 ||
-					!is_array($aRoute[0]) ||
-					!is_string($aRoute[1]) ||
-					!$aRoute[2] instanceof \Closure ||
-					isset($aRoute[3]) && !is_array($aRoute[3])
-				) {
-					throw new AfrModuleException(
-						'Invalid route definition! Use this format: ' .
-						"'testMiddleware' => [['GET', 'POST'], '/.*', function () { return;}, ['Option1']]"
-					);
-				}
-				$this->registerRouteTypeMethods($sType, $aRoute[0], $aRoute[1], $aRoute[2], $aRoute[3] ?? []);
-				$iRegistered++;
 			}
+			// php index.php --QA=initTenantFileSystem OR php index.php QA
+			if ($sType === static::CLI_QA_REQUEST) {
+				foreach ($aRouteClusterInfo as $sKeyCluster => $mStack) {
+					// $mStack should be an array of closures OR Closure that returns array of closures
+					$iRegistered += AfrCliQaRouter::addActionGroup($sKeyCluster, $mStack, $bMergeQA);
+				}
+			}
+
 		}
 		return $iRegistered;
 	}

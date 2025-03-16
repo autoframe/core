@@ -23,14 +23,19 @@ trait AfrModuleTrait
 	 */
 	public function registerModule(array $aImplementingInterfacesFilter = null): array
 	{
+		$this->moduleNaming();
 		$aMatched = [];
-		$aImplementingInterfacesFilter ??= [
-			//	AfrModuleInterface::class => 'moduleNaming',
+		$aDefaultRegisterMethods = [
+			//	AfrModuleInterface::class => 'moduleNaming', //not deeded
 			AfrModuleHTTPRoutesInterface::class => 'registerHTTPRoutes',
 			AfrModuleCLIRoutesInterface::class => 'registerCLIRoutes',
 		];
-		$this->moduleNaming();
+		$aImplementingInterfacesFilter ??= $aDefaultRegisterMethods;
 		foreach ($aImplementingInterfacesFilter as $sInterface => $sMethod) {
+			if(is_numeric($sInterface)) {
+				$sInterface = $sMethod;
+				$sMethod = $aDefaultRegisterMethods[$sInterface];
+			}
 			if ($this instanceof $sInterface) {
 				$aMatched[$sInterface] = !empty($sMethod) ? $this->{$sMethod}() : 0;
 			}

@@ -3,4 +3,4 @@
 namespace Autoframe\Core\Event;
 
 //TODO: implement!!!
-class AfrEventListner {}
+class AfrEventListener {}

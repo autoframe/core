@@ -6,10 +6,12 @@ use Autoframe\Core\Afr\Afr;
 use Autoframe\Core\Arr\Export\AfrArrExportArrayAsStringClass;
 use Autoframe\Core\Arr\Merge\AfrArrMergeProfileClass;
 use Autoframe\Core\Container\Exception\AfrContainerException;
+use Autoframe\Core\Env\Exception\AfrEnvException;
 use Autoframe\Core\Event\AfrEvent;
 use Autoframe\Core\Event\Exception\AfrEventException;
 use Autoframe\Core\Module\Exception\AfrModuleException;
 use Autoframe\Core\Router\Contracts\AfrRouterConstantsInterface;
+use Autoframe\Core\Router\Exception\AfrRouterException;
 use Autoframe\Core\String\Obj\AfrClosureToStr;
 
 trait AfrModuleCLIRoutesTrait
@@ -27,13 +29,20 @@ trait AfrModuleCLIRoutesTrait
 
 
 	/**
+	 * @param bool $bMergeQA
+	 * @param bool $bMergeInline
+	 * @param bool $bMergeCons
 	 * @return int
 	 * @throws AfrContainerException
 	 * @throws AfrEventException
 	 * @throws AfrModuleException
-	 * @throws \ReflectionException
+	 * @throws \ReflectionException|AfrEnvException
 	 */
-	public function registerCLIRoutes(): int
+	public function registerCLIRoutes(
+		bool $bMergeQA = true,
+		bool $bMergeInline = true,
+		bool $bMergeCons = true
+	): int
 	{
 		if ($this->iRegisteredCLIRoutes !== null) {
 			return $this->iRegisteredCLIRoutes;
@@ -44,8 +53,12 @@ trait AfrModuleCLIRoutesTrait
 			AfrModuleCLIRoutesInterface::class,
 			__FUNCTION__
 		);
-		return $this->iRegisteredCLIRoutes = Afr::app()->router()->registerHTTPRoutesFromModule(
+		$sEnvPrefix = strtoupper($this->getModuleName()) . '_';
+		return $this->iRegisteredCLIRoutes = Afr::app()->router()->registerCLIRoutesFromModule(
 			$this->getCLIRoutesClosures(),
+			Afr::app()->env()->getEnv($sEnvPrefix . 'MERGE_QA', true),
+			Afr::app()->env()->getEnv($sEnvPrefix . 'MERGE_INLINE', true),
+			Afr::app()->env()->getEnv($sEnvPrefix . 'MERGE_CRON', true),
 		);
 	}
 
@@ -80,11 +93,14 @@ trait AfrModuleCLIRoutesTrait
 					);
 				}
 			}
-
 		}
 		return $aRoutes;
 	}
 
+	/**
+	 * @return string
+	 * @throws \ReflectionException
+	 */
 	public function getModuleCLIRoutesPath(): string
 	{
 		return $this->moduleNaming('sModuleCLIRoutesPath');

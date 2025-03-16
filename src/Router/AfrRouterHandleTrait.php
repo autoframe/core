@@ -3,12 +3,17 @@
 namespace Autoframe\Core\Router;
 
 use Autoframe\Core\Afr\Afr;
+use Autoframe\Core\AfrCoreModule\AfrCore;
 use Autoframe\Core\Container\Exception\AfrContainerException;
 use Autoframe\Core\Env\Exception\AfrEnvException;
 use Autoframe\Core\Event\Exception\AfrEventException;
+use Autoframe\Core\Exception\AfrException;
 use Autoframe\Core\Http\Header\AfrHttpHeader;
 use Autoframe\Core\Http\Header\Exception\AfrHttpHeaderException;
 use Autoframe\Core\Http\Request\AfrRequestInterface;
+use Autoframe\Core\Module\AfrModuleBox;
+use Autoframe\Core\Module\AfrModuleCLIRoutesInterface;
+use Autoframe\Core\Router\Contracts\AfrRouterConstantsInterface;
 use Autoframe\Core\Router\Exception\AfrRouterException;
 use Closure;
 
@@ -47,7 +52,7 @@ trait AfrRouterHandleTrait
 	 * @throws AfrEnvException
 	 * @throws AfrEventException
 	 * @throws AfrHttpHeaderException
-	 * @throws AfrRouterException
+	 * @throws AfrRouterException|AfrException|\ReflectionException
 	 */
 	protected function run(AfrRequestInterface $oRequest, Closure $oClosureAfterRoute = null): int
 	{
@@ -55,7 +60,6 @@ trait AfrRouterHandleTrait
 		//	echo '<pre>'.print_r(thfRouter::getRequestConfig(),true).'</pre>';
 
 		if ($oRequest->isCli()) {
-			//return AfrCliRouterHelper::run();
 			$bIsQa = false;
 			$sQaIndexStack = null;
 			$iQaKeyLen = strlen(self::QA_ARGV_KEY);
@@ -65,7 +69,7 @@ trait AfrRouterHandleTrait
 					break;
 				} elseif (substr($sValue, 0, $iQaKeyLen + 1) === self::QA_ARGV_KEY . '=') {
 					$bIsQa = true;
-					$sQaIndexStack = substr($sValue, $iQaKeyLen + 1);
+					$sQaIndexStack = trim(substr($sValue, $iQaKeyLen + 1));
 					break;
 				}
 			}
@@ -76,21 +80,19 @@ trait AfrRouterHandleTrait
 					$sQaIndexStack = $mQaOpt !== false && strlen((string)$mQaOpt) ? (string)$mQaOpt : null;
 				}
 			}
-			if($bIsQa){
-				(new CliCache())->getActions(); //todo remove dupa ce mut in module de QA si fac bootstrap
-				return AfrCliRouterHelper::run($sQaIndexStack);
+			if ($bIsQa) {
+				$iTotalRegistered = Afr::app()
+					->container()
+					->get(AfrModuleBox::class)
+					->registerModulesThatImplementTheInterface(AfrModuleCLIRoutesInterface::class);
+				//AfrCore::getInstance()->registerCLIRoutes();
+				return AfrCliQaRouter::run($sQaIndexStack);
 			}
-
-
-			return 0;
-			if (rand(1, 5) > 8) {
-
-
-				die('CLI TODO implemenare ' . __FILE__ . PHP_EOL); //TODO
-			}
+			die('CLI TODO implemenare ' . __FILE__ . PHP_EOL); //TODO
 			return 0;
 
 		} else {
+			AfrCore::getInstance()->registerHTTPRoutes(); //todo misca unde trebuie!!
 			return $this->dispatchHttpRoute($oRequest, $oClosureAfterRoute);
 		}
 	}

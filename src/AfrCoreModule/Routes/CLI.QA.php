@@ -3,7 +3,6 @@
 use Autoframe\Core\Afr\Afr;
 use Autoframe\Core\CliTools\AfrCliTextColors;
 use Autoframe\Core\Env\AfrEnv;
-use Autoframe\Core\Router\AfrCliRouterHelper;
 use Autoframe\Core\Tenant\AfrTenant;
 
 $aActions = [];
@@ -42,7 +41,5 @@ $aActions['clearCache'] = function () {
 	}
 	return [$k => $v,];
 };
-foreach ($aActions as $sOption => $mStack) {
-	AfrCliRouterHelper::addActionGroup($sOption, $mStack, true);
-}
+
 return $aActions;

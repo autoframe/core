@@ -6,11 +6,8 @@ use Autoframe\Core\Afr\Afr;
 use Autoframe\Core\Container\Exception\AfrContainerException;
 use Autoframe\Core\Http\Request\AfrRequestClass;
 use Autoframe\Core\Http\Request\AfrRequestInterface;
-use Autoframe\Core\Router\AfrRouter;
 use Autoframe\Core\Tenant\AfrDefaultTenantConfigsInterface;
 use Autoframe\Core\Tenant\AfrTenant;
-use Autoframe\Core\Router\CliCache;
-use Autoframe\Core\Router\Contracts\AfrRouterCliInterface;
 use Autoframe\Core\Arr\Export\AfrArrExportArrayAsStringClass;
 use Autoframe\Core\Arr\Export\AfrArrExportArrayAsStringInterface;
 use Autoframe\Core\Arr\Merge\AfrArrMergeProfileClass;
@@ -123,8 +120,8 @@ class AfrDefaultBindings  implements AfrDefaultTenantConfigsInterface
 
 		//README: use string keys, because  when extending / merging the bindings, the numeric keys are lost!
 		return [
-			'router' => AfrRouterCliInterface::class, //todo change :D
-			AfrRouterCliInterface::class => CliCache::class, //todo change :D
+		//	'router' => AfrRouterCliInterface::class, //todo change :D
+		//	AfrRouterCliInterface::class => CliCache::class, //todo change :D
 		//	AfrRouter::class => AfrRouter::class, //todo change :D
 
 			AfrRequestInterface::class => AfrRequestClass::class,

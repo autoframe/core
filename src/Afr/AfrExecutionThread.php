@@ -88,8 +88,6 @@ class AfrExecutionThread
 
 	protected array $aStep = []; //from populateSteps()
 	protected string $sBaseDirPath;
-	protected string $sRouterClass = 'Autoframe\Core\Router\CliCache';//TODO router default -> FROM BINDINGS :)
-	//protected string $sRouterClass = 'thfRouter';//TODO router default
 	protected static AfrRouterInterface $oRouterInstance; //TODO getInstanceCheck
 	protected static AfrExecutionThread $instance;
 

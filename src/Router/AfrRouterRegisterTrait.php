@@ -171,7 +171,7 @@ trait AfrRouterRegisterTrait
 	{
 		AfrEvent::dispatchEvent();
 
-		if (!in_array($sType, [static::CODE_ROUTE, static::MIDDLEWARE_ROUTE, static::AFTER_ROUTE])) {
+		if (!in_array($sType, static::HTTP_ROUTE_TYPES)) {
 			throw new AfrRouterException('Invalid route type: ' . $sType);
 		}
 
