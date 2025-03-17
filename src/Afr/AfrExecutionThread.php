@@ -9,6 +9,7 @@ use Autoframe\Core\Database\Orm\Action\CnxActionFacade;
 use Autoframe\Core\Exception\AfrException;
 use Autoframe\Core\Http\Request\AfrRequestClass;
 use Autoframe\Core\Http\Request\AfrRequestInterface;
+use Autoframe\Core\Module\AfrModuleBox;
 use Autoframe\Core\Router\Contracts\AfrRouterInterface;
 use Autoframe\Core\Session\AfrSessionPhp;
 use Autoframe\Core\Tenant\AfrTenant;
@@ -182,7 +183,9 @@ class AfrExecutionThread
 		$this->aStep[self::PHP_INI_FROM_ENV] = function () {
 			AfrPhpIni::applyPhpIniEnvConfig();
 		};
-		$this->aStep[self::MODULE_READ] = function () {};
+		$this->aStep[self::MODULE_READ] = function () {
+			AfrModuleBox::getInstance()->addOnceTenantModules();
+		};
 		$this->aStep[self::MODULE_CONTAINER_BINDINGS] = function () {};
 		$this->aStep[self::MODULE_SETTINGS] = function () {};
 

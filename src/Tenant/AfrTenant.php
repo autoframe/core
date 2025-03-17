@@ -199,7 +199,7 @@ class AfrTenant
 	}
 
 
-	public static function getTenantModuleConfigFilePath(): string { return self::$sTenantModuleConfigFilePath; }
+	public static function getTenantModulesConfigFilePath(): string { return self::$sTenantModuleConfigFilePath; }
 
 	public static function getTenantRoutesFilePath(): string { return self::$sTenantRoutesFilePath; }
 
@@ -342,6 +342,7 @@ class AfrTenant
 	/**
 	 * @param AfrTenant $oTenant
 	 * @return void
+	 * @throws AfrException
 	 */
 	protected static function processConfig(AfrTenant $oTenant): void
 	{
@@ -396,8 +397,9 @@ class AfrTenant
 
 		static::mkdir(static::$aInitSystemDirList, $aErrors);
 
-		if (!file_exists($sPath = static::getTenantModuleConfigFilePath())) {
-			file_put_contents($sPath, '<?php return [];');
+		if (!file_exists($sPath = static::getTenantModulesConfigFilePath())) {
+			file_put_contents($sPath,
+				"<?php return [];\n".'// return [ModuleClass::class => [AfrModuleInterface::class, AfrModuleHTTPRoutesInterface::class, AfrModuleCLIRoutesInterface::class],];');
 			$aErrors[] = 'Module config file blank initialized: ' . $sPath;
 		}
 

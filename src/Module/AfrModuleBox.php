@@ -37,6 +37,7 @@ class AfrModuleBox extends AfrSingletonAbstractClass
 
 	public function getModulesThatImplementTheInterface(string $sTargetInterface): array
 	{
+		$this->addOnceTenantModules();
 		foreach ($this->aModules as $sModuleFQCN => $aInterfaces) {
 			if (in_array($sTargetInterface, $aInterfaces)) {
 				$aModulesThatImplement[] = $sModuleFQCN;
@@ -54,5 +55,22 @@ class AfrModuleBox extends AfrSingletonAbstractClass
 			$iSum += $oModule->registerModule([$sTargetInterface])[$sTargetInterface] ?? 0;
 		}
 		return $iSum;
+	}
+
+	protected bool $bTenantModulesLoaded = false;
+
+	/**
+	 * @throws AfrModuleException
+	 */
+	public function addOnceTenantModules():self
+	{
+		if (!$this->bTenantModulesLoaded) {
+			$this->bTenantModulesLoaded = true;
+			$aTenantModules = include Afr::getTenantModulesConfigFilePath();
+			foreach ($aTenantModules as $sModuleFQCN =>$aImplementedInterfaces) {
+				$this->addModuleToBox($sModuleFQCN, $aImplementedInterfaces);
+			}
+		}
+		return $this;
 	}
 }
