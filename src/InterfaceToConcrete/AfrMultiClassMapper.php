@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace Autoframe\Core\InterfaceToConcrete;
 
 use Autoframe\Core\Arr\Export\AfrArrExportArrayAsStringClass;
+use Autoframe\Core\CliTools\AfrSysTempDir;
 use Autoframe\Core\FileSystem\OverWrite\AfrOverWriteClass;
 use Autoframe\Core\ClassDependency\AfrClassDependency;
 use Autoframe\Core\InterfaceToConcrete\Exception\AfrInterfaceToConcreteException;
@@ -65,7 +66,7 @@ class AfrMultiClassMapper
 					). DIRECTORY_SEPARATOR . 'AfrMultiClassMapper' ;
 			}
 			if (empty(self::$sCacheDir)) { //fallback
-				self::$sCacheDir = ((ini_get('sys_temp_dir') ?: sys_get_temp_dir()) ?: __DIR__). DIRECTORY_SEPARATOR . 'AfrMultiClassMapper' ;
+				self::$sCacheDir = ((ini_get('sys_temp_dir') ?: AfrSysTempDir::sysGetTempDir()) ?: __DIR__). DIRECTORY_SEPARATOR . 'AfrMultiClassMapper' ;
 			}
 
 			if (!is_file($gitignore = self::$sCacheDir . DIRECTORY_SEPARATOR . '.gitignore')) {

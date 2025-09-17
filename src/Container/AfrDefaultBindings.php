@@ -4,6 +4,10 @@ namespace Autoframe\Core\Container;
 
 use Autoframe\Core\Afr\Afr;
 use Autoframe\Core\Container\Exception\AfrContainerException;
+use Autoframe\Core\Cron\Log\AfrCronLogChannelDoNotLog;
+use Autoframe\Core\Cron\Log\AfrCronLogChannelInterface;
+use Autoframe\Core\Cron\Log\AfrCronLoggerClass;
+use Autoframe\Core\Cron\Log\AfrCronLoggerInterface;
 use Autoframe\Core\Http\Request\AfrRequestClass;
 use Autoframe\Core\Http\Request\AfrRequestInterface;
 use Autoframe\Core\Tenant\AfrDefaultTenantConfigsInterface;
@@ -54,7 +58,7 @@ use Autoframe\Core\Session\AfrSessionInterface;
 use Autoframe\Core\Session\AfrSessionPhp;
 
 
-class AfrDefaultBindings  implements AfrDefaultTenantConfigsInterface
+class AfrDefaultBindings implements AfrDefaultTenantConfigsInterface
 {
 	protected static array $aSet = [];
 
@@ -81,8 +85,8 @@ class AfrDefaultBindings  implements AfrDefaultTenantConfigsInterface
 		}
 		//	static::default();
 		self::$aSet[__FUNCTION__] = true;
-		if(!file_exists($sBindingsFile)){
-			throw new AfrContainerException('Container bindings file is missing: '.$sBindingsFile);
+		if (!file_exists($sBindingsFile)) {
+			throw new AfrContainerException('Container bindings file is missing: ' . $sBindingsFile);
 		}
 		static::bind(include $sBindingsFile);
 	}
@@ -91,6 +95,7 @@ class AfrDefaultBindings  implements AfrDefaultTenantConfigsInterface
 	{
 		return file_get_contents(__DIR__ . DIRECTORY_SEPARATOR . 'config.sample.AfrDefaultBindings.php');
 	}
+
 	/**
 	 * @throws AfrContainerException
 	 */
@@ -120,14 +125,16 @@ class AfrDefaultBindings  implements AfrDefaultTenantConfigsInterface
 
 		//README: use string keys, because  when extending / merging the bindings, the numeric keys are lost!
 		return [
-		//	'router' => AfrRouterCliInterface::class, //todo change :D
-		//	AfrRouterCliInterface::class => CliCache::class, //todo change :D
-		//	AfrRouter::class => AfrRouter::class, //todo change :D
+			//	'router' => AfrRouterCliInterface::class, //todo change :D
+			//	AfrRouterCliInterface::class => CliCache::class, //todo change :D
+			//	AfrRouter::class => AfrRouter::class, //todo change :D
 
 			AfrRequestInterface::class => AfrRequestClass::class,
 			AfrContainerInterface::class => [AfrContainerInterface::class, get_class(Afr::app()->container()), true], //self resolve container as singleton on first bind
-			AfrArrMergeProfileInterface::class => fn() => AfrArrMergeProfileClass::getInstance(), //singleton access using closure
 
+			AfrSessionInterface::class => AfrSessionPhp::class,
+
+			AfrArrMergeProfileInterface::class => fn() => AfrArrMergeProfileClass::getInstance(), //singleton access using closure
 			AfrArrExportArrayAsStringInterface::class => AfrArrExportArrayAsStringClass::class,
 			AfrArrSortBySubKeyInterface::class => AfrArrSortBySubKeyClass::class,
 			AfrArrXSortInterface::class => AfrArrXSortClass::class,
@@ -147,8 +154,11 @@ class AfrDefaultBindings  implements AfrDefaultTenantConfigsInterface
 			AfrDirTraversingGetAllChildrenDirsInterface::class => AfrDirTraversingGetAllChildrenDirsClass::class,
 			AfrDirMaxFileMtimeInterface::class => AfrDirMaxFileMtimeClass::class,
 			AfrLockInterface::class => AfrLockFileClass::class,
+
+			#DAEMON
+			AfrCronLogChannelInterface::class=>AfrCronLogChannelDoNotLog::class,
+			AfrCronLoggerInterface::class=>AfrCronLoggerClass::class,
 			AfrBackgroundWorkerInterface::class => AfrBackgroundWorkerClass::class,
-			AfrSessionInterface::class => AfrSessionPhp::class,
 
 		];
 	}

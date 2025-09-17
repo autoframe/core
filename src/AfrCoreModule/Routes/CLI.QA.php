@@ -10,12 +10,12 @@ $aActions = [];
 $aActions['initTenantFileSystem'] = function () {
 	return [
 		'Init Tenant File System Directories' => function () {
-			if (count($r = AfrTenant::initFileSystem()) > 0) {
+			if (count($r = AfrTenant::initFileSystem(false)) > 0) {
 				AfrCliTextColors::getInstance()
-					->textAppend("\n\t")
-					->colorRed("Errors:\n" . implode("\n", $r) . "\n")
+					->textAppend("\n 🌟 \t Messages:\n ")
+					->colorRedLight(implode("\n", $r) . "\n")
 					->textPrint();
-				return false;
+				return '';
 			}
 			return true;
 		},

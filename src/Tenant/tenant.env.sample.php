@@ -39,6 +39,7 @@ use Autoframe\Core\Tenant\AfrTenant;
 	->setTempDir()
 	->setHtmlDir()
 	->setAssetsDir()
+	->setLogsDir()
 	->autoSetupAndPushTenantConfig();
 
 (new AfrTenant('online-b2b-app'))->setProtocolDomainName([

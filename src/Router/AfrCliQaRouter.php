@@ -134,7 +134,7 @@ class AfrCliQaRouter
 			->styleItalic(false)
 			->textPrint();
 		$chosenKey = AfrCliPromptMenu::promptMenu(
-			"What to execute?",
+			"🚀 What to execute?",
 			array_keys($aOptions),
 			array_key_first($aOptions)
 		);

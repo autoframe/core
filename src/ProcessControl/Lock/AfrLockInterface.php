@@ -29,4 +29,10 @@ interface AfrLockInterface
      * @return int
      */
     public function getLockPid(): int;
+
+	/**
+	 * Returns current process id in order to prevent overload system calls with getmypid()
+	 * @return int
+	 */
+	public static function getMyPid(): int;
 }

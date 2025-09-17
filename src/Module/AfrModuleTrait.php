@@ -25,22 +25,22 @@ trait AfrModuleTrait
 	{
 		$this->moduleNaming();
 		$aMatched = [];
-		$aDefaultRegisterMethods = [
+		$aDefaultMapMethods = [
 			//	AfrModuleInterface::class => 'moduleNaming', //not deeded
 			AfrModuleHTTPRoutesInterface::class => 'registerHTTPRoutes',
 			AfrModuleCLIRoutesInterface::class => 'registerCLIRoutes',
 		];
-		$aImplementingInterfacesFilter ??= $aDefaultRegisterMethods;
+		$aImplementingInterfacesFilter ??= $aDefaultMapMethods;
 		foreach ($aImplementingInterfacesFilter as $sInterface => $sMethod) {
 			if(is_numeric($sInterface)) {
 				$sInterface = $sMethod;
-				$sMethod = $aDefaultRegisterMethods[$sInterface];
+				//if the interface is not standard, then $sMethod = $this->aModuleNaming[$sInterface]
+				$sMethod = $aDefaultMapMethods[$sInterface] ?? $this->moduleNaming($sInterface);
 			}
 			if ($this instanceof $sInterface) {
 				$aMatched[$sInterface] = !empty($sMethod) ? $this->{$sMethod}() : 0;
 			}
 		}
-
 		return $aMatched;
 	}
 
@@ -178,6 +178,27 @@ trait AfrModuleTrait
 	 */
 	protected function loadRecursiveTypeDependencies(string $sInterface, string $sDependencyRegisterFunction): void
 	{
+		//TODO !!!!!!!!!!! nu este ok in aDependenciesCLIRoutesFQCN !!!!!!!!!!!!!!!!!!!!!!!
+		//TODO !!!!!!!!!!! nu este ok in aDependenciesCLIRoutesFQCN !!!!!!!!!!!!!!!!!!!!!!!
+		//TODO !!!!!!!!!!! nu este ok in aDependenciesCLIRoutesFQCN !!!!!!!!!!!!!!!!!!!!!!!
+		//TODO !!!!!!!!!!! nu este ok in aDependenciesCLIRoutesFQCN !!!!!!!!!!!!!!!!!!!!!!!
+		//TODO !!!!!!!!!!! nu este ok in aDependenciesCLIRoutesFQCN !!!!!!!!!!!!!!!!!!!!!!!
+		//TODO !!!!!!!!!!! nu este ok in aDependenciesCLIRoutesFQCN !!!!!!!!!!!!!!!!!!!!!!!
+		//TODO !!!!!!!!!!! nu este ok in aDependenciesCLIRoutesFQCN !!!!!!!!!!!!!!!!!!!!!!!
+		//TODO !!!!!!!!!!! nu este ok in aDependenciesCLIRoutesFQCN !!!!!!!!!!!!!!!!!!!!!!!
+		//TODO !!!!!!!!!!! nu este ok in aDependenciesCLIRoutesFQCN !!!!!!!!!!!!!!!!!!!!!!!
+		//TODO !!!!!!!!!!! nu este ok in aDependenciesCLIRoutesFQCN !!!!!!!!!!!!!!!!!!!!!!!
+		//TODO !!!!!!!!!!! nu este ok in aDependenciesCLIRoutesFQCN !!!!!!!!!!!!!!!!!!!!!!!
+		//TODO !!!!!!!!!!! nu este ok in aDependenciesCLIRoutesFQCN !!!!!!!!!!!!!!!!!!!!!!!
+		//TODO !!!!!!!!!!! nu este ok in aDependenciesCLIRoutesFQCN !!!!!!!!!!!!!!!!!!!!!!!
+		//TODO !!!!!!!!!!! nu este ok in aDependenciesCLIRoutesFQCN !!!!!!!!!!!!!!!!!!!!!!!
+		//TODO !!!!!!!!!!! nu este ok in aDependenciesCLIRoutesFQCN !!!!!!!!!!!!!!!!!!!!!!!
+		//TODO !!!!!!!!!!! nu este ok in aDependenciesCLIRoutesFQCN !!!!!!!!!!!!!!!!!!!!!!!
+		//TODO !!!!!!!!!!! nu este ok in aDependenciesCLIRoutesFQCN !!!!!!!!!!!!!!!!!!!!!!!
+		//TODO !!!!!!!!!!! nu este ok in aDependenciesCLIRoutesFQCN !!!!!!!!!!!!!!!!!!!!!!!
+		//TODO !!!!!!!!!!! nu este ok in aDependenciesCLIRoutesFQCN !!!!!!!!!!!!!!!!!!!!!!!
+		//TODO !!!!!!!!!!! nu este ok in aDependenciesCLIRoutesFQCN !!!!!!!!!!!!!!!!!!!!!!!
+		//TODO !!!!!!!!!!! nu este ok in aDependenciesCLIRoutesFQCN !!!!!!!!!!!!!!!!!!!!!!!
 		foreach ($this->aDependenciesCLIRoutesFQCN as $sDependencyRoute) {
 			//a dependency has routes to register
 			$oDependency = Afr::app() ?

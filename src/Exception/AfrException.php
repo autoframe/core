@@ -52,8 +52,9 @@ if (!class_exists(__NAMESPACE__ . '\AfrException', false)) {
 		 */
 		public function __toString(): string
 		{
+			$sCode = $this->code?  "{code.{$this->code}} ":'';
 			$aClass = explode('\\', get_class($this));
-			$sMsg = end($aClass) . "{code.{$this->code}} {$this->message}";
+			$sMsg = end($aClass) . $sCode."{$this->message}";
 			if (($bIsCli = http_response_code() === false)) {
 				return
 					(\Autoframe\Core\CliTools\AfrCliTextColors::getInstance()->colorRed('')->textGet()) .
@@ -62,6 +63,5 @@ if (!class_exists(__NAMESPACE__ . '\AfrException', false)) {
 			}
 			return $sMsg;
 		}
-
 	}
 }

@@ -6,12 +6,20 @@ use Autoframe\Core\Module\AfrModuleCLIRoutesInterface;
 use Autoframe\Core\Module\AfrModuleCLIRoutesTrait;
 use Autoframe\Core\Module\AfrModuleHTTPRoutesInterface;
 use Autoframe\Core\Module\AfrModuleHTTPRoutesTrait;
+use Autoframe\Core\Module\AfrModuleCronJobsSourcesListsInterface;
+use Autoframe\Core\Module\AfrModuleCronJobsSourcesListsTrait;
 use Autoframe\Core\Module\AfrModuleInterface;
 use Autoframe\Core\Module\AfrModuleTrait;
 
-class AfrCore extends AfrSingletonAbstractClass implements AfrModuleInterface, AfrModuleHTTPRoutesInterface, AfrModuleCLIRoutesInterface
+class AfrCore extends AfrSingletonAbstractClass implements
+	AfrModuleInterface,
+	AfrModuleHTTPRoutesInterface,
+	AfrModuleCLIRoutesInterface,
+	AfrModuleCronJobsSourcesListsInterface
 {
 	use AfrModuleTrait;
 	use AfrModuleHTTPRoutesTrait;
 	use AfrModuleCLIRoutesTrait;
+	use AfrModuleCronJobsSourcesListsTrait;
+
 }

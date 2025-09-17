@@ -31,7 +31,8 @@ trait AfrSingletonTrait
 	 * Singleton's constructor should not be public. However, it can't be
 	 * private either if we want to allow subclassing.
 	 */
-	final protected function __construct() {}
+	//final protected function __construct() {}
+	protected function __construct() {}
 
 	/**
 	 * Cloning and un-serialization are not permitted for singletons.

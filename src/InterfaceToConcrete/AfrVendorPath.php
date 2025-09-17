@@ -41,11 +41,10 @@ class AfrVendorPath
 	 */
 	public static function getVendorPath(): string
 	{
-		if (!isset(self::$sVendorPath)) {
-			//self::$sVendorPath = self::detectVendorPath();
-			self::$sVendorPath = defined($c = 'AfrVendorPath_sVendorPath') ? constant($c) : self::detectVendorPath();
+		if (!isset(static::$sVendorPath)) {
+			static::$sVendorPath = defined($c = 'AfrVendorPath_sVendorPath') ? constant($c) : static::detectVendorPath();
 		}
-		return self::$sVendorPath;
+		return static::$sVendorPath;
 	}
 
 	/**
@@ -59,18 +58,10 @@ class AfrVendorPath
 	public static function getBaseDirPath(): string
 	{
 		//this may differ from the actual Tenant base path, but usually is the same
-		if (!isset(self::$sBaseDirPath)) {
-			$sVendorPath = self::getVendorPath();
-			if (!$sVendorPath) {
-				return self::$sBaseDirPath = '';
-			}
-			return self::$sBaseDirPath = substr(
-				$sVendorPath,
-				0,
-				-7 // -strlen('vendor') - 1
-			);
+		if (!isset(static::$sBaseDirPath)) {
+			return static::$sBaseDirPath = static::getVendorPath() ? dirname(static::getVendorPath()) : '';
 		}
-		return self::$sBaseDirPath;
+		return static::$sBaseDirPath;
 	}
 
 	/**
@@ -78,12 +69,12 @@ class AfrVendorPath
 	 */
 	public static function getComposerJson(): array
 	{
-		if (isset(self::$aComposerJsonData)) {
-			return self::$aComposerJsonData;
+		if (isset(static::$aComposerJsonData)) {
+			return static::$aComposerJsonData;
 		}
-		$sBasePath = self::getBaseDirPath();
+		$sBasePath = static::getBaseDirPath();
 
-		return self::$aComposerJsonData = ($sBasePath ? json_decode(
+		return static::$aComposerJsonData = ($sBasePath ? json_decode(
 			file_get_contents($sBasePath . DIRECTORY_SEPARATOR . 'composer.json'),
 			true
 		) : []);
@@ -96,10 +87,10 @@ class AfrVendorPath
 	 */
 	public static function getComposerTs(): int
 	{
-		if (!self::getVendorPath()) {
+		if (!static::getVendorPath()) {
 			return 0;
 		}
-		$sFile = self::getVendorPath() . '/composer/installed.json';
+		$sFile = static::getVendorPath() . '/composer/installed.json';
 		return is_file($sFile) ? (int)filemtime($sFile) : 0;
 	}
 
@@ -118,13 +109,13 @@ class AfrVendorPath
 	 */
 	public static function getFullClassFilesMap(): array
 	{
-		if (!self::getVendorPath()) {
+		if (!static::getVendorPath()) {
 			return [];
 		}
 		return array_merge(
-			self::getComposerAutoloadClassmap(),
-			self::getComposerAutoloadPsrX(4),
-			self::getComposerAutoloadPsrX(0)
+			static::getComposerAutoloadClassmap(),
+			static::getComposerAutoloadPsrX(4),
+			static::getComposerAutoloadPsrX(0)
 		);
 	}
 
@@ -135,7 +126,7 @@ class AfrVendorPath
 	 */
 	public static function getComposerAutoloadX(bool $bScanPsrClassMap = false): array
 	{
-		$vendorDir = self::getVendorPath();
+		$vendorDir = static::getVendorPath();
 		$iLenVendorDir = strlen($vendorDir);
 		$aOut = [
 			'vendor' => [
@@ -153,24 +144,24 @@ class AfrVendorPath
 			return $aOut;
 		}
 
-		foreach (self::getIncludedPhpArr('autoload_classmap') as $sNsCl => $sPath) {
+		foreach (static::getIncludedPhpArr('autoload_classmap') as $sNsCl => $sPath) {
 			$sVa = substr($sPath, 0, $iLenVendorDir) === $vendorDir ? 'vendor' : 'autoload';
 			$aOut[$sVa]['classmap'][$sNsCl] = $sPath;
 		}
 
 		// https://getcomposer.org/doc/articles/autoloader-optimization.md#how-to-run-it-
-		$aComposerJson = self::getComposerJson();
+		$aComposerJson = static::getComposerJson();
 		if (!empty($aComposerJson['classmap-authoritative'])) {
 			// !empty($aComposerJson['optimize-autoloader'])
 			return $aOut; //CLASS MAP HAS EVERYTHING THERE! PSR4 and PSR0 will be missed
 		}
 
 		foreach (['autoload_psr4' => 'psr4', 'autoload_namespaces' => 'psr0'] as $sPhpIncl => $sPsrX) {
-			foreach (self::getIncludedPhpArr($sPhpIncl) as $sNsCl => $aDirs) {
+			foreach (static::getIncludedPhpArr($sPhpIncl) as $sNsCl => $aDirs) {
 				foreach ($aDirs as $sPackageDir) {
 					$sVa = substr($sPackageDir, 0, $iLenVendorDir) === $vendorDir ? 'vendor' : 'autoload';
 					if ($bScanPsrClassMap) {
-						$aOut[$sVa][$sPsrX] = array_merge($aOut[$sPsrX][$sVa], self::createMap($sPackageDir));
+						$aOut[$sVa][$sPsrX] = array_merge($aOut[$sPsrX][$sVa], static::createMap($sPackageDir));
 					} else {
 						$aOut[$sVa][$sPsrX][$sNsCl][] = $sPackageDir;
 					}
@@ -190,7 +181,7 @@ class AfrVendorPath
 		$sDsReplace = DIRECTORY_SEPARATOR === '/' ? '\\' : '/';
 		foreach ($aClasses as &$sClPath) {
 			if (is_array($sClPath)) {
-				self::fixDs($sClPath);
+				static::fixDs($sClPath);
 			} else {
 				$sClPath = strtr($sClPath, $sDsReplace, DIRECTORY_SEPARATOR);
 			}
@@ -203,7 +194,7 @@ class AfrVendorPath
 	 */
 	protected static function getComposerAutoloadClassmap(): array
 	{
-		return self::getIncludedPhpArr('autoload_classmap');
+		return static::getIncludedPhpArr('autoload_classmap');
 	}
 
 
@@ -216,11 +207,11 @@ class AfrVendorPath
 		$aNsDirs = [];
 
 		if ($iPsr === 4) {
-			$aNsDirs = self::getIncludedPhpArr('autoload_psr4');
+			$aNsDirs = static::getIncludedPhpArr('autoload_psr4');
 		} elseif ($iPsr === 0) {
-			$aNsDirs = self::getIncludedPhpArr('autoload_namespaces');
+			$aNsDirs = static::getIncludedPhpArr('autoload_namespaces');
 		}
-		return self::createMapFromPsrX($aNsDirs);
+		return static::createMapFromPsrX($aNsDirs);
 
 	}
 
@@ -233,7 +224,7 @@ class AfrVendorPath
 		$aClasses = [];
 		foreach ($aNsDirs as $aDirs) {
 			foreach ($aDirs as $sPackageDir) {
-				$aClasses = array_merge(self::createMap($sPackageDir), $aClasses);
+				$aClasses = array_merge(static::createMap($sPackageDir), $aClasses);
 			}
 		}
 		return $aClasses;
@@ -247,14 +238,14 @@ class AfrVendorPath
 	protected static function getIncludedPhpArr($sPhp): array
 	{
 		$aClasses = [];
-		$sStaticMapFile = self::getVendorPath() . '/composer/' . $sPhp . '.php';
+		$sStaticMapFile = static::getVendorPath() . '/composer/' . $sPhp . '.php';
 		if (file_exists($sStaticMapFile)) {
 			$aClasses = (include $sStaticMapFile);
 			if (!is_array($aClasses)) {
 				$aClasses = [];
 			}
 		}
-		self::fixDs($aClasses);
+		static::fixDs($aClasses);
 		return $aClasses;
 	}
 
@@ -264,52 +255,24 @@ class AfrVendorPath
 	 */
 	protected static function detectVendorPath(): string
 	{
+		//use a class pah from all composer distributions, because the file surely exists under vendor dir
 		$oReflector = new \ReflectionClass(ClassMapGenerator::class);
-		$sClassMapGeneratorFilePath = $oReflector->getFileName();
-		if($sVendorPath = self::checkForComposerVendorPath(dirname($sClassMapGeneratorFilePath,4))){
+		$sVendorPath = dirname($oReflector->getFileName(), 4);
+		if (strlen($sVendorPath) > 5) {
 			return $sVendorPath;
 		}
 
-		$sDs = DIRECTORY_SEPARATOR;
-		$sDsUp = '..' . $sDs;
-		foreach ([
-			         __DIR__, //production, already installed in composer
-			         __DIR__ . $sDs . str_repeat($sDsUp, 2) . 'vendor', //local dev1
-			         __DIR__ . $sDs . str_repeat($sDsUp, 3) . 'vendor', //local dev2
-			         __DIR__ . $sDs . str_repeat($sDsUp, 4) . 'vendor', //local dev3
-			         __DIR__ . $sDs . str_repeat($sDsUp, 5) . 'vendor', //local dev4
-			         __DIR__ . $sDs . str_repeat($sDsUp, 6) . 'vendor', //local dev5
-		         ] as $sDir) {
-			$sVendorPath = self::checkForComposerVendorPath($sDir);
-			if ($sVendorPath) {
-				return $sVendorPath;
-			}
-		}
-
-		//fallback: script is loaded outside composer vendor dir or other custom path:
-		$i = 0;
-		foreach (self::getSplComposerClassMap() as $sDir) {
-			if ($i >= 10) {
-				break; //limit to 10 entries is a reasonable value before failing
-			}
-			$i++;
-			$sVendorPath = self::checkForComposerVendorPath($sDir);
-			if ($sVendorPath) {
-				return $sVendorPath;
-			}
-		}
-		return ''; //fail!
+		return static::detectVendorPathSlowUsingFileSystem();
 	}
 
 	/** Detects if composer is installed into a valid vendor path
 	 * @param string $sPath
 	 * @return string
 	 */
-	protected static function checkForComposerVendorPath(string $sPath): string
+	protected static function physicallyCheckForComposerVendorPath(string $sPath): string
 	{
 		$arRealPath = explode('vendor', (string)realpath($sPath));
-		$iParts = count($arRealPath);
-		if ($iParts < 2) {
+		if (($iParts = count($arRealPath)) < 2) {
 			return '';
 		}
 		$sChrAfterVendor = substr($arRealPath [$iParts - 1], 0, 1);
@@ -374,6 +337,40 @@ class AfrVendorPath
 			return strpos(implode('/', $aSegments) . '/', '/vendor/') !== false;
 		}
 		return false;
+	}
+
+	/**
+	 * @return string
+	 */
+	public static function detectVendorPathSlowUsingFileSystem(): string
+	{
+		//production, already installed in composer
+		if ($sVendorPath = static::physicallyCheckForComposerVendorPath(__DIR__)) {
+			return $sVendorPath;
+		}
+		//local afr dev$i
+		for ($i = 2; $i <= 6; $i++) {
+			$sDir = __DIR__ . DIRECTORY_SEPARATOR .
+				str_repeat('..' . DIRECTORY_SEPARATOR, $i) .
+				'vendor';
+			if ($sVendorPath = static::physicallyCheckForComposerVendorPath($sDir)) {
+				return $sVendorPath;
+			}
+		}
+
+
+		//fallback: script is loaded outside composer vendor dir or other custom path:
+		$i = 0;
+		foreach (static::getSplComposerClassMap() as $sDir) {
+			if ($i >= 10) {
+				break; //limit to 10 entries is a reasonable value before failing
+			}
+			$i++;
+			if ($sVendorPath = static::physicallyCheckForComposerVendorPath($sDir)) {
+				return $sVendorPath;
+			}
+		}
+		return ''; //fail!
 	}
 
 }

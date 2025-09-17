@@ -8,5 +8,4 @@ use Closure;
 interface AfrRouterInterface
 {
 	public function __invoke(AfrRequestInterface $oRequest, Closure $oClosureAfterRoute = null):int;
-
 }

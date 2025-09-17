@@ -255,4 +255,13 @@ interface AfrRequestInterface
 	 * @throws AfrException
 	 */
 	public function getoptDetectAllArgs();
+
+	/**
+	 * @param string $sArgvKey
+	 * @return array [true|false, null|$sValue];
+	 * @throws AfrContainerException
+	 * @throws AfrEventException
+	 * @throws AfrException
+	 */
+	public function detectArgvKeyPresence(string $sArgvKey): array;
 }

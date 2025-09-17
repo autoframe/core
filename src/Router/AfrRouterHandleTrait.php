@@ -13,7 +13,6 @@ use Autoframe\Core\Http\Header\Exception\AfrHttpHeaderException;
 use Autoframe\Core\Http\Request\AfrRequestInterface;
 use Autoframe\Core\Module\AfrModuleBox;
 use Autoframe\Core\Module\AfrModuleCLIRoutesInterface;
-use Autoframe\Core\Router\Contracts\AfrRouterConstantsInterface;
 use Autoframe\Core\Router\Exception\AfrRouterException;
 use Closure;
 
@@ -36,8 +35,10 @@ trait AfrRouterHandleTrait
 	 * @throws AfrContainerException
 	 * @throws AfrEnvException
 	 * @throws AfrEventException
+	 * @throws AfrException
 	 * @throws AfrHttpHeaderException
 	 * @throws AfrRouterException
+	 * @throws \ReflectionException
 	 */
 	public function __invoke(AfrRequestInterface $oRequest, Closure $oClosureAfterRoute = null): int
 	{
@@ -60,37 +61,7 @@ trait AfrRouterHandleTrait
 		//	echo '<pre>'.print_r(thfRouter::getRequestConfig(),true).'</pre>';
 
 		if ($oRequest->isCli()) {
-			$bIsQa = false;
-			$sQaIndexStack = null;
-			$iQaKeyLen = strlen(self::QA_ARGV_KEY);
-			foreach ($oRequest->getServerParam('argv', []) as $sValue) {
-				if ($sValue === self::QA_ARGV_KEY) {
-					$bIsQa = true;
-					break;
-				} elseif (substr($sValue, 0, $iQaKeyLen + 1) === self::QA_ARGV_KEY . '=') {
-					$bIsQa = true;
-					$sQaIndexStack = trim(substr($sValue, $iQaKeyLen + 1));
-					break;
-				}
-			}
-			if (!$bIsQa) {
-				$mQaOpt = $oRequest->getopt('', ['QA::'])['QA'] ?? null;
-				if ($mQaOpt !== null) {
-					$bIsQa = true;
-					$sQaIndexStack = $mQaOpt !== false && strlen((string)$mQaOpt) ? (string)$mQaOpt : null;
-				}
-			}
-			if ($bIsQa) {
-				$iTotalRegistered = Afr::app()
-					->container()
-					->get(AfrModuleBox::class)
-					->registerModulesThatImplementTheInterface(AfrModuleCLIRoutesInterface::class);
-				//AfrCore::getInstance()->registerCLIRoutes();
-				return AfrCliQaRouter::run($sQaIndexStack);
-			}
-			die('CLI TODO implemenare ' . __FILE__ . PHP_EOL); //TODO
-			return 0;
-
+			return $this->handleCliRoutes($oRequest, $oClosureAfterRoute);
 		} else {
 			AfrCore::getInstance()->registerHTTPRoutes(); //todo misca unde trebuie!!
 			return $this->dispatchHttpRoute($oRequest, $oClosureAfterRoute);

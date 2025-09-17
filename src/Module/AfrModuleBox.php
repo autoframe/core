@@ -5,9 +5,12 @@ namespace Autoframe\Core\Module;
 use Autoframe\Core\Afr\Afr;
 use Autoframe\Core\AfrCoreModule\AfrCore;
 use Autoframe\Core\DesignPatterns\Singleton\AfrSingletonAbstractClass;
+use Autoframe\Core\Exception\AfrException;
 use Autoframe\Core\Module\Exception\AfrModuleException;
+use Autoframe\Core\Tenant\AfrDefaultTenantConfigsInterface;
+use Autoframe\Core\Tenant\AfrTenant;
 
-class AfrModuleBox extends AfrSingletonAbstractClass
+class AfrModuleBox extends AfrSingletonAbstractClass implements AfrDefaultTenantConfigsInterface
 {
 	protected array $aModules = [
 		AfrCore::class => [
@@ -37,7 +40,7 @@ class AfrModuleBox extends AfrSingletonAbstractClass
 
 	public function getModulesThatImplementTheInterface(string $sTargetInterface): array
 	{
-		$this->addOnceTenantModules();
+		$this->applyDefaultTenantConfig();
 		foreach ($this->aModules as $sModuleFQCN => $aInterfaces) {
 			if (in_array($sTargetInterface, $aInterfaces)) {
 				$aModulesThatImplement[] = $sModuleFQCN;
@@ -59,18 +62,29 @@ class AfrModuleBox extends AfrSingletonAbstractClass
 
 	protected bool $bTenantModulesLoaded = false;
 
+
 	/**
+	 * @return void
 	 * @throws AfrModuleException
+	 * @throws AfrException
 	 */
-	public function addOnceTenantModules():self
+	public function applyDefaultTenantConfig():void
 	{
 		if (!$this->bTenantModulesLoaded) {
 			$this->bTenantModulesLoaded = true;
-			$aTenantModules = include Afr::getTenantModulesConfigFilePath();
+			$aTenantModules = include AfrTenant::getAfrDefaultTenantConfigsForFqcn(static::class);
+			if(empty($aTenantModules)) {
+				return;
+			}
 			foreach ($aTenantModules as $sModuleFQCN =>$aImplementedInterfaces) {
 				$this->addModuleToBox($sModuleFQCN, $aImplementedInterfaces);
 			}
 		}
-		return $this;
+	}
+
+	public static function sampleTenantDefaultConfig(): ?string
+	{
+		return file_get_contents(__DIR__ . DIRECTORY_SEPARATOR . 'config.sample.modules.php');
+
 	}
 }

@@ -23,4 +23,7 @@ interface AfrModuleCLIRoutesInterface extends AfrModuleInterface
 	 */
 	public function getModuleCLIRoutesPath(): string;
 
+	public function getDependenciesCLIRoutesFQCN(): array; //TODO: test?? aici fac numai listare cu get sau ce?
+
+
 }

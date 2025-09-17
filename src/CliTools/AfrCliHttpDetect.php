@@ -213,9 +213,9 @@ class AfrCliHttpDetect
 		if (!static::isHttpOrHttpsProtocolRequest($rq)) {
 			return $rq ? $rq->getPhpSapi() : php_sapi_name();
 		}
-		$iPort = (int)($rq ? $rq->getServerParam('SERVER_PORT',0) : ($_SERVER['SERVER_PORT'] ?? 0));
+		$iPort = (int)($rq ? $rq->getServerParam('SERVER_PORT', 0) : ($_SERVER['SERVER_PORT'] ?? 0));
 		$sPort = $iPort === 0 ? '' : ':' . $iPort;
-		$sHost = $rq ? $rq->getServerParam('HTTP_HOST','localhost') : ($_SERVER['HTTP_HOST'] ?? 'localhost');
+		$sHost = $rq ? $rq->getServerParam('HTTP_HOST', 'localhost') : ($_SERVER['HTTP_HOST'] ?? 'localhost');
 		if (static::isHttpsNativeOrForwarded($rq)) {
 			return 'https://' . $sHost . ($iPort == 443 ? '' : $sPort);
 		} else {
@@ -232,12 +232,41 @@ class AfrCliHttpDetect
 	public static function getHttpProtocolVersion(AfrRequestClass $rq = null): float
 	{
 		return floatval(trim(strtoupper(
-			$rq ? $rq->getServerParam('SERVER_PROTOCOL','0.0') : ($_SERVER['SERVER_PROTOCOL'] ?? '0.0')
+			$rq ? $rq->getServerParam('SERVER_PROTOCOL', '0.0') : ($_SERVER['SERVER_PROTOCOL'] ?? '0.0')
 		), 'HTP/ '));
 	}
 
+	public static function getEntryPoint(
+		AfrRequestClass $rq = null,
+		bool            $bIncludeArgs = true,
+		bool            $bWrapFilePathInQuotesIfItContainsSpaces = true
+	): string
+	{
+		$sEntryPoint = array_slice(debug_backtrace(2), -1, 1)[0]['file'] ?? ($_SERVER['SCRIPT_FILENAME'] ?: '');
+		if ($bWrapFilePathInQuotesIfItContainsSpaces && strpos($sEntryPoint, ' ') !== false) {
+			$sEntryPoint = '"' . $sEntryPoint . '"';
+		}
+
+		if ($bIncludeArgs) {
+			$aSerArgv = $rq ? $rq->getServerParam('argv', []) : ($_SERVER['argv'] ?? []);
+			if (empty($aSerArgv)) {
+				return $sEntryPoint;
+			}
+			$aArgv = array_slice($aSerArgv, 1);
+			foreach ($aArgv as &$v) {
+				if (strpos($v, ' ') !== false) {
+					$mEqPos = strpos($v, '=');
+					$v = ($mEqPos === false) ? escapeshellarg($v) : substr($v, 0, $mEqPos + 1) . escapeshellarg(substr($v, $mEqPos + 1));
+					//$v = ($mEqPos === false) ? '"' . $v . '"' :	substr($v, 0, $mEqPos + 1) . '"' . substr($v, $mEqPos + 1) . '"';
+				}
+			}
+			$sEntryPoint .= ' ' . implode(' ', $aArgv);
+		}
+		return $sEntryPoint;
+	}
 
 	/**
+	 * https://ipinfo.io/188.24.165.200
 	 * @param string $sUrl !!! Average response time is 150 MS!!! use with care
 	 * @return false|string
 	 */
@@ -245,5 +274,6 @@ class AfrCliHttpDetect
 	{
 		return file_get_contents($sUrl);
 	}
+
 
 }

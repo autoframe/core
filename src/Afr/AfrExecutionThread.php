@@ -104,7 +104,7 @@ class AfrExecutionThread
 		self::$instance = $this;
 		if (empty(Afr::app())) {
 			if (defined('\AFR_BASE_DIR')) {
-				new Afr();//fallback init
+				Afr::makeApp(); //fallback init
 			} else {
 				throw new AfrException('Unable to configure the base directory!');
 			}
@@ -184,7 +184,7 @@ class AfrExecutionThread
 			AfrPhpIni::applyPhpIniEnvConfig();
 		};
 		$this->aStep[self::MODULE_READ] = function () {
-			AfrModuleBox::getInstance()->addOnceTenantModules();
+			AfrModuleBox::getInstance()->applyDefaultTenantConfig();
 		};
 		$this->aStep[self::MODULE_CONTAINER_BINDINGS] = function () {};
 		$this->aStep[self::MODULE_SETTINGS] = function () {};

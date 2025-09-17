@@ -12,6 +12,10 @@ interface AfrRouterConstantsInterface {
 	const HTTP_ROUTE_TYPES = [self::MIDDLEWARE_ROUTE, self::CODE_ROUTE, self::AFTER_ROUTE];
 
 	const QA_ARGV_KEY = 'QA';
+	const CRON_DAEMON_ARGV_KEY = 'CRON_DAEMON';
+
+	const CRON_WORKER_ARGV_KEY = 'CRON_WORKER';
+
 
 
 	const HTTP_REQUEST = 'HTTP';

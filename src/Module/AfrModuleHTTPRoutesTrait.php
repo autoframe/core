@@ -22,30 +22,9 @@ trait AfrModuleHTTPRoutesTrait
 	public function getDependenciesHTTPRoutesFQCN(): array
 	{
 		//must be hardcoded :D so no setter!
+		//TODO: test?? aici fac numai listare cu get sau ce?
 		return $this->aDependenciesHTTPRoutesFQCN;
 	}
-
-	/**
-	 * @param string|null $sSubRoutingPath
-	 * @return string
-	 * @throws AfrEventException|AfrEnvException
-	 */
-	public function xetHTTPSubRoutingPath(string $sSubRoutingPath = null): string
-	{
-		if ($sSubRoutingPath !== null) { //TODO: test la setat ca si ''
-			AfrEvent::dispatchEvent();
-			if (strlen($sSubRoutingPath) > 0) {
-				$sSubRoutingPath = '/' . trim($sSubRoutingPath, '/');
-			}
-			$this->sSubRoutingPath = $sSubRoutingPath;
-		}
-		if($this->sSubRoutingPath === null){
-			$this->sSubRoutingPath = Afr::app()->env()->getEnv(strtoupper($this->getModuleName()) . '_' . 'SUB_ROUTING_PATH');
-		}
-		return (string)$this->sSubRoutingPath;
-	}
-
-
 	/**
 	 * @return int
 	 * @throws AfrContainerException
@@ -71,6 +50,31 @@ trait AfrModuleHTTPRoutesTrait
 			$this->xetHTTPSubRoutingPath()
 		);
 	}
+	/**
+	 * @param string|null $sSubRoutingPath
+	 * @return string
+	 * @throws AfrEventException|AfrEnvException
+	 */
+	public function xetHTTPSubRoutingPath(string $sSubRoutingPath = null): string
+	{
+		if ($sSubRoutingPath !== null) { //TODO: test la setat ca si ''
+			AfrEvent::dispatchEvent();
+			if (strlen($sSubRoutingPath) > 0) {
+				$sSubRoutingPath = '/' . trim($sSubRoutingPath, '/');
+			}
+			$this->sSubRoutingPath = $sSubRoutingPath;
+		}
+		if($this->sSubRoutingPath === null){
+			$this->sSubRoutingPath = (string)Afr::app()->env()->getEnv(strtoupper($this->getModuleName()) . '_' . 'SUB_ROUTING_PATH');
+		}
+		return (string)$this->sSubRoutingPath;
+	}
+
+	public function getModuleHTTPRoutesPath(): string
+	{
+		return $this->moduleNaming('sModuleHTTPRoutesPath');
+	}
+
 
 	/**
 	 * @return array
@@ -79,20 +83,17 @@ trait AfrModuleHTTPRoutesTrait
 	 * @throws AfrModuleException
 	 * @throws \ReflectionException
 	 */
-	public function getHTTPRoutesClosures(): array
+	public function getHTTPRoutesClosures(): array //TODO
 	{
 		AfrEvent::dispatchEvent();
 		return $this->mergeConfigFileWithParentsConfig(
 			AfrModuleHTTPRoutesInterface::class,
 			'sModuleHTTPRoutesPath',
-			'AfrModuleHTTPRoutes.sample.php'
+			'AfrModuleHTTPRoutes.sample.php'  //TODO remove???? sau misca in framework
 		);
 	}
 
-	public function getModuleHTTPRoutesPath(): string
-	{
-		return $this->moduleNaming('sModuleHTTPRoutesPath');
-	}
+
 
 
 

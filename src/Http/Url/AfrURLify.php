@@ -302,20 +302,21 @@ class AfrURLify extends AfrSingletonAbstractClass
 	): string
 	{
 		$text = $this->transliterate($text, $language);
-
 		if ($use_remove_list) {
 			// remove all these words from the string before urlifying
 			$text = preg_replace('/\b(' . join('|', $this->aRemoveWords) . ')\b/i', '', $text);
 		}
-
+		$text = strtr("\n\r\t\v\0", '__---', $text);
 		// if transliterate doesn't hit, the char will be stripped here
-		$remove_pattern = ($isFileName) ? '/[^_\-.\-a-zA-Z0-9\s]/u' : '/[^\s_\-a-zA-Z0-9]/u';
-		$text = preg_replace($remove_pattern, '', $text); // remove unneeded chars
+		$text = $isFileName ?
+			preg_replace('/[^_\-.a-zA-Z0-9\s]/u', '', $text) :
+			preg_replace('/[^\s_\-a-zA-Z0-9]/u', '', $text);
 		if ($treat_underscore_as_space) {
 			$text = str_replace('_', ' ', $text);             // treat underscores as spaces
 		}
 		$text = preg_replace('/^\s+|\s+$/u', '', $text);  // trim leading/trailing spaces
 		$text = preg_replace('/[-\s]+/u', '-', $text);    // convert spaces to hyphens
+		$text = preg_replace('/[.\-_]{2,}/', '-', $text); // Remove any consecutive dots or dashes or underscores
 		if ($lower_case) {
 			$text = strtolower($text);  // convert to lowercase
 		}
@@ -323,5 +324,13 @@ class AfrURLify extends AfrSingletonAbstractClass
 		return trim(substr($text, 0, $maxLength), '-');     // trim to first $length chars
 	}
 
+	public function sanitizeFilename(
+		string $text,
+		int    $maxLength = 60,
+		bool   $lower_case = true
+	): string
+	{
+		return $this->filter($text, $maxLength, '', true, false, $lower_case, true);
+	}
 
 }

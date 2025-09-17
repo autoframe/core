@@ -1,6 +1,8 @@
 <?php
 declare(strict_types=1);
 
+ignore_user_abort(true);
+
 $insideProductionVendorDir = strpos(__DIR__, DIRECTORY_SEPARATOR . 'vendor' . DIRECTORY_SEPARATOR) !== false;
 require_once(__DIR__ . ($insideProductionVendorDir ? '/../../../../../autoload.php' : '/../../../vendor/autoload.php'));
 

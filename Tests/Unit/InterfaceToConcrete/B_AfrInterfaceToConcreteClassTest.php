@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace Unit\InterfaceToConcrete;
 
 use Autoframe\Core\ClassDependency\AfrClassDependency;
+use Autoframe\Core\CliTools\AfrSysTempDir;
 use Autoframe\Core\Env\AfrEnv;
 use Autoframe\Core\Exception\AfrException;
 use Autoframe\Core\InterfaceToConcrete\AfrMultiClassMapper;
@@ -58,7 +59,7 @@ class B_AfrInterfaceToConcreteClassTest extends TestCase
 
 
 			//$aEnvSettings[AfrMultiClassMapper::CacheDir] = __DIR__ . DIRECTORY_SEPARATOR . 'cache';
-			$aEnvSettings[AfrMultiClassMapper::CacheDir] = ((ini_get('sys_temp_dir') ?: sys_get_temp_dir()) ?: __DIR__) . DIRECTORY_SEPARATOR . 'cache_B_AfrInterfaceToConcreteClassTest';
+			$aEnvSettings[AfrMultiClassMapper::CacheDir] = ((ini_get('sys_temp_dir') ?: AfrSysTempDir::sysGetTempDir()) ?: __DIR__) . DIRECTORY_SEPARATOR . 'cache_B_AfrInterfaceToConcreteClassTest';
 			if (!is_dir($aEnvSettings[AfrMultiClassMapper::CacheDir])) {
 				mkdir($aEnvSettings[AfrMultiClassMapper::CacheDir], 0755,true);
 			}

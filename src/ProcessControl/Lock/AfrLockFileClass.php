@@ -4,6 +4,8 @@ declare(strict_types=1);
 namespace Autoframe\Core\ProcessControl\Lock;
 
 
+use Autoframe\Core\CliTools\AfrSysTempDir;
+
 class AfrLockFileClass implements AfrLockInterface
 {
     protected string $sLockPath;
@@ -13,15 +15,16 @@ class AfrLockFileClass implements AfrLockInterface
 
     public function __construct(string $sLockName, array $aContextData = [])
     {
-        $sTempDir = (string)ini_get('sys_temp_dir');
+        /*$sTempDir = (string)ini_get('sys_temp_dir');
         if (!$sTempDir) {
-            $sTempDir = sys_get_temp_dir();
+            $sTempDir = sys_get_temp_dir(); //TODO: there are differences between cli env and httpd env temp directories, so we need to use the same!!
         }
         if (!$sTempDir) {
             $sTempDir = __DIR__;
-        }
+        } */
+	    $sTempDir = AfrSysTempDir::sysGetTempDir();
 
-        $sPath = rtrim($sTempDir, '\\/') .
+	    $sPath = rtrim($sTempDir, '\\/') .
             DIRECTORY_SEPARATOR .
             md5(
                 $sLockName . serialize($aContextData)
@@ -33,7 +36,7 @@ class AfrLockFileClass implements AfrLockInterface
 
     public function __destruct()
     {
-        if ($this->writeLockedFilePointer) {
+	    if ($this->writeLockedFilePointer) {
             //  $this->releaseLock(); //GC can run before script end, so isLocked will fail
             //  DEAD MAN SWITCH OFF
             register_shutdown_function(function () {
@@ -92,7 +95,7 @@ class AfrLockFileClass implements AfrLockInterface
         if (!flock($fp, LOCK_EX | LOCK_NB)) {
             return false;
         }
-        $sPid = (string)(int)getmypid();
+        $sPid = (string)self::getMyPid();
         fwrite($fp, $sPid);
         file_put_contents($this->sPidPath, $sPid);
         $this->writeLockedFilePointer = $fp;
@@ -131,9 +134,18 @@ class AfrLockFileClass implements AfrLockInterface
         if (is_file($this->sPidPath)) {
             $iPid = file_get_contents($this->sPidPath);
         } elseif ($this->writeLockedFilePointer) {
-            $iPid = getmypid();
+            $iPid = self::getMyPid();
         }
         return (int)$iPid;
     }
+
+	protected static int $iPid = -1;
+	public static function getMyPid(): int
+	{
+		if(self::$iPid === -1) {
+			self::$iPid = (int)getmypid();
+		}
+		return self::$iPid;
+	}
 
 }

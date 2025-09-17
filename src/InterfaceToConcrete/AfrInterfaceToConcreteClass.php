@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace Autoframe\Core\InterfaceToConcrete;
 
 use Autoframe\Core\ClassDependency\AfrClassDependencyException;
+use Autoframe\Core\CliTools\AfrSysTempDir;
 use Autoframe\Core\Env\AfrEnv;
 use Autoframe\Core\Env\Exception\AfrEnvException;
 use Autoframe\Core\InterfaceToConcrete\Exception\AfrInterfaceToConcreteException;
@@ -152,7 +153,7 @@ class AfrInterfaceToConcreteClass implements AfrInterfaceToConcreteInterface
 			// overwrite here or auto set by AfrMultiClassMapper::getCacheDir()
 			// realpath(__DIR__) . DIRECTORY_SEPARATOR . 'cache';
 			//AfrMultiClassMapper::CacheDir => realpath(__DIR__) . DIRECTORY_SEPARATOR . 'cache',
-			//AfrMultiClassMapper::CacheDir => sys_get_temp_dir(),
+			//AfrMultiClassMapper::CacheDir => AfrSysTempDir::sysGetTempDir(),
 			AfrMultiClassMapper::CacheDir => (fn() => AfrTenant::getTempDir()),
 
 			// Clean memory after job or keep AfrMultiClassMapper::$aNsClassMergedFromPathMap

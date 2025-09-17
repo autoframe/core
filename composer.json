@@ -35,6 +35,9 @@
   "require-dev": {
     "phpunit/phpunit": "^9.6 || ^10"
   },
+  "bin": [
+    "afr-deploy"
+  ],
   "suggest": {
     "ext-sockets": "Socket connection client - server",
     "ext-zlib": "Sock connection compression",

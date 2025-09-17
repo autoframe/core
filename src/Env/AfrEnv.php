@@ -93,8 +93,7 @@ class AfrEnv extends AfrSingletonAbstractClass implements AfrEnvInterface
 	{
 		$this->validateAll();
 		if (strlen($sKey)) {
-			$mVal =
-					$this->aEnvData[$sKey] ??
+			$mVal = $this->aEnvData[$sKey] ??
 				$_ENV[$sKey] ??
 				getenv($sKey) ?:
 				(defined($sKey) ? constant($sKey) : $mFallback);
@@ -128,8 +127,8 @@ class AfrEnv extends AfrSingletonAbstractClass implements AfrEnvInterface
 	public function setBaseDir(string $sDir): self
 	{
 
-		if (!is_dir($sDir)) {
-			throw new AfrEnvException('Unable to set the ENV word dir: ' . $sDir);
+		if (0 && !is_dir($sDir)) { //TODO uncomment zero
+			throw new AfrEnvException('Unable to set the ENV project dir: ' . $sDir);
 		}
 		$this->sBaseDir = strtr(rtrim($sDir, '\/'), DIRECTORY_SEPARATOR === '/' ? '\\' : '/', DIRECTORY_SEPARATOR);
 		return $this;

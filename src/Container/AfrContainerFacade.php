@@ -9,7 +9,8 @@ use Autoframe\Core\Exception\AfrException;
  * @method static mixed make(string $abstract, array $parameters = [])
  * @method static bool has(string $abstract)
  * @method static void bind(string $abstract, $concrete, bool $shared = false)
- * @method static mixed registerInstance(string $abstract, $instance)
+ * @method static mixed registerInstance(string $abstract, object $instance)
+ * @see AfrContainerInterface
  */
 final class AfrContainerFacade
 {

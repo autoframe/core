@@ -27,6 +27,7 @@ class AfrRouter extends AfrSingletonAbstractClass implements AfrRouterInterface,
 {
 	use AfrRouterRegisterTrait;
 	use AfrRouterHandleTrait;
+	use AfrRouterHandleCliTrait;
 
 	public static bool $haltOn405MethodNotAllowed = true;
 	protected static array $aStateHandlers = [];
@@ -109,7 +110,7 @@ class AfrRouter extends AfrSingletonAbstractClass implements AfrRouterInterface,
 		array $aRoutes,
 		bool $bMergeQA = true,
 		bool $bMergeInline = true,
-		bool $bMergeCons = true
+		bool $bMergeCrons = true
 	): int
 	{
 		$iRegistered = 0;

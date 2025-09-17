@@ -31,7 +31,7 @@ trait AfrModuleCLIRoutesTrait
 	/**
 	 * @param bool $bMergeQA
 	 * @param bool $bMergeInline
-	 * @param bool $bMergeCons
+	 * @param bool $bMergeCrons
 	 * @return int
 	 * @throws AfrContainerException
 	 * @throws AfrEventException
@@ -41,7 +41,7 @@ trait AfrModuleCLIRoutesTrait
 	public function registerCLIRoutes(
 		bool $bMergeQA = true,
 		bool $bMergeInline = true,
-		bool $bMergeCons = true
+		bool $bMergeCrons = true
 	): int
 	{
 		if ($this->iRegisteredCLIRoutes !== null) {

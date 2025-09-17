@@ -945,5 +945,38 @@ class AfrRequestClass extends AfrSingletonAbstractClass implements AfrRequestInt
 	}
 
 
+	/**
+	 * @param string $sArgvKey
+	 * @return array [true|false, null|$sValue];
+	 * @throws AfrContainerException
+	 * @throws AfrEventException
+	 * @throws AfrException
+	 */
+	public function detectArgvKeyPresence(string $sArgvKey): array
+	{
+		$bMatched = false;
+		$sDetectVal = null;
+		if ($this->isCli()) {
+			$iKeyLen = strlen($sArgvKey);
+			foreach ($this->getServerParam('argv', []) as $sBlockValue) {
+				if ($sBlockValue === $sArgvKey) {
+					$bMatched = true;
+					break;
+				} elseif (substr($sBlockValue, 0, $iKeyLen + 1) === $sArgvKey . '=') {
+					$bMatched = true;
+					$sDetectVal = trim(substr($sBlockValue, $iKeyLen + 1));
+					break;
+				}
+			}
+			if (!$bMatched) {
+				$mQaOpt = $this->getopt('', [$sArgvKey . '::'])[$sArgvKey] ?? null;
+				if ($mQaOpt !== null) {
+					$bMatched = true;
+					$sDetectVal = $mQaOpt !== false && strlen((string)$mQaOpt) ? (string)$mQaOpt : null;
+				}
+			}
+		}
+		return [$bMatched, $sDetectVal];
+	}
 }
 

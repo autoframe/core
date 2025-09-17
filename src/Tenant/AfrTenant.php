@@ -5,21 +5,28 @@ namespace Autoframe\Core\Tenant;
 use Autoframe\Core\CliTools\AfrCliHttpDetect;
 use Autoframe\Core\CliTools\AfrCliPromptMenu;
 use Autoframe\Core\CliTools\AfrGetOpt;
+use Autoframe\Core\CliTools\AfrSysTempDir;
+use Autoframe\Core\CliTools\AfrVendorDir;
 use Autoframe\Core\Container\AfrDefaultBindings;
+use Autoframe\Core\Container\Exception\AfrContainerException;
 use Autoframe\Core\Event\AfrEvent;
+use Autoframe\Core\Event\Exception\AfrEventException;
 use Autoframe\Core\Exception\AfrException;
+use Autoframe\Core\FileSystem\DirPath\AfrDirPathClass;
 use Autoframe\Core\InterfaceToConcrete\AfrToConcreteStrategiesClass;
+use Autoframe\Core\Module\AfrModuleBox;
 
 /**
- * Class AfrTenant
- *
  * This class manages configuration settings and processes for an application that supports multiple tenants.
- *
- * @package YourPackage
  */
 class AfrTenant
 {
 
+	const AFR_NO_TENANT = '!Tenant';
+	const AFR_BOOTSTRAP_PHP = 'bootstrap';
+	/**
+	 * @var AfrTenant[]
+	 */
 	protected static array $aTenantCfgIns = [];
 
 	/**
@@ -30,6 +37,7 @@ class AfrTenant
 		AfrEvent::class,
 		AfrDefaultBindings::class,
 		AfrToConcreteStrategiesClass::class,
+		AfrModuleBox::class,
 	];
 
 	public string $sTenantAlias;
@@ -37,6 +45,7 @@ class AfrTenant
 	public bool $bDebug;
 	public string $sEnv;
 	public string $sTmpDir;
+	public string $sLogsDirT;
 	public string $sHtmlDir;
 	public bool $bAssetDirMapAny;
 	public string $sAssetsDir;
@@ -52,7 +61,7 @@ class AfrTenant
 		$sTenantAlias = preg_replace('/[^ \w]+/', '_', $sTenantAlias);
 		if (empty($sTenantAlias)) {
 			throw new AfrException("Tenant '$sTenantAlias' can't be empty!");
-		} elseif (isset(self::$aTenantCfgIns[$sTenantAlias])) {
+		} elseif (isset(static::$aTenantCfgIns[$sTenantAlias])) {
 			throw new AfrException("Tenant '$sTenantAlias' is already defined!");
 		}
 		$this->sTenantAlias = $sTenantAlias;
@@ -60,10 +69,32 @@ class AfrTenant
 
 	public static function pushDefaultTenantConfigs(array $aFQCN_implementing_AfrDefaultTenantConfigsInterface)
 	{
+		if (!$aFQCN_implementing_AfrDefaultTenantConfigsInterface) {
+			return;
+		}
 		static::$aAfrDefaultTenantConfigs = array_merge(
 			static::$aAfrDefaultTenantConfigs,
 			$aFQCN_implementing_AfrDefaultTenantConfigsInterface
 		);
+	}
+
+	/**
+	 * @param bool $bCheckExistence
+	 * @return string|null
+	 * @throws AfrContainerException
+	 * @throws AfrEventException
+	 * @throws AfrException
+	 */
+	public static function getTenantArgInCli(bool $bCheckExistence = true): ?string
+	{
+		$aTenant = AfrGetOpt::getInstanceNoContainerBindings()
+			->setArgvFromArray($_SERVER['argv'] ?? [])
+			->getopt('T:', ['tenant:']);
+		$sTenant = (string)($aTenant['T'] ??
+			$aTenant['tenant'] ??
+			$_ENV['AFR_TENANT_CLI'] ??
+			getenv('AFR_TENANT_CLI'));
+		return empty($sTenant) || $bCheckExistence && empty(static::$aTenantCfgIns[$sTenant]) ? null : $sTenant;
 	}
 
 	public function setRoot(string $ROOT = '/'): self
@@ -85,7 +116,7 @@ class AfrTenant
 	public function setTempDir(string $TMP_DIR = null, bool $bSystemTemp = false): self
 	{
 		if (empty($TMP_DIR)) {
-			$TMP_DIR = ($bSystemTemp ? sys_get_temp_dir() : self::getBaseDirPath()) .
+			$TMP_DIR = ($bSystemTemp ? AfrSysTempDir::sysGetTempDir() : self::getBaseDirPath()) .
 				DIRECTORY_SEPARATOR . 'AfrTemp';
 		}
 		$this->sTmpDir = (string)$TMP_DIR;
@@ -95,10 +126,19 @@ class AfrTenant
 	public function setHtmlDir(string $HTML_DIR = null): self
 	{
 		if (empty($HTML_DIR)) {
-			$HTML_DIR = self::getBaseDirPath() . DIRECTORY_SEPARATOR . 'public_html' .
-				(count(self::$aTenantCfgIns) ? '_' . $this->sTenantAlias : '');
+			$HTML_DIR = self::getBaseDirPath() . DIRECTORY_SEPARATOR . 'public_html_' . $this->sTenantAlias;
 		}
 		$this->sHtmlDir = (string)$HTML_DIR;
+		return $this;
+	}
+
+	public function setLogsDir(string $LOGS_DIR = null): self
+	{
+		if (empty($LOGS_DIR)) {
+			$LOGS_DIR = self::getBaseDirPath() . DIRECTORY_SEPARATOR .
+				'logs' . DIRECTORY_SEPARATOR . $this->sTenantAlias;
+		}
+		$this->sLogsDirT = (string)$LOGS_DIR;
 		return $this;
 	}
 
@@ -143,7 +183,7 @@ class AfrTenant
 		if (empty($aProtocolDomain)) {
 			$aProtocolDomain = ['http://app.test', 'http://localhost:8088', 'http://localhost', 'http://127.0.0.1'];
 			if ( //first tenant on dev
-				empty(self::$aTenantCfgIns[$this->sTenantAlias]) &&
+				empty(static::$aTenantCfgIns[$this->sTenantAlias]) &&
 				!self::isCli() &&
 				isset($this->sEnv) && $this->sEnv === 'DEV'
 			) {
@@ -162,8 +202,9 @@ class AfrTenant
 		(empty($this->sRoot) ? $this->setRoot() : false);
 		(empty($this->sTmpDir) ? $this->setTempDir() : false);
 		(empty($this->sHtmlDir) ? $this->setHtmlDir() : false);
+		(empty($this->sLogsDirT) ? $this->setLogsDir() : false);
 		(empty($this->aAssetsExtraDirs) ? $this->setAssetsDir() : false);
-		return self::$aTenantCfgIns[$this->sTenantAlias] = $this;
+		return static::$aTenantCfgIns[$this->sTenantAlias] = $this;
 	}
 
 	public static function isCli(): bool
@@ -193,15 +234,15 @@ class AfrTenant
 			return null;
 		}
 		return
-			$sBDP . DIRECTORY_SEPARATOR .
+			$sBDP . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR .
 			$sTa . '.' .
 			static::fqcnToBaseName($sFQCN_implementing_AfrDefaultTenantConfigsInterface) . '.php';
 	}
 
 
-	public static function getTenantModulesConfigFilePath(): string { return self::$sTenantModuleConfigFilePath; }
+//	public static function getTenantModulesConfigFilePath(): string { return self::$sTenantModuleConfigFilePath; }
 
-	public static function getTenantRoutesFilePath(): string { return self::$sTenantRoutesFilePath; }
+//	public static function getTenantRoutesFilePath(): string { return self::$sTenantRoutesFilePath; }
 
 	public static function getPublicHtmlDir(): string { return self::$sPublicHtmlDir; }
 
@@ -221,16 +262,20 @@ class AfrTenant
 
 	public static function getStorageDir(): string { return self::$sStorageDir . DIRECTORY_SEPARATOR . self::getTenantAlias(); }
 
+	public static function getLogsDir(): string { return self::$sLogsDir; }
+
+	public static function getCronLogsDir(): string { return self::getLogsDir() . DIRECTORY_SEPARATOR . 'Cron'; }
+
 	/**
 	 * @throws AfrException
 	 */
-	public static function getTempDir(): string
+	public static function getTempDir(): string //todo: test
 	{
 		if (!isset(self::$sTempDir)) {
 			if (!empty(self::$sBaseDirPath)) {
 				self::loadConfig();
 			} else {
-				return sys_get_temp_dir();
+				return AfrSysTempDir::sysGetTempDir();
 			}
 		}
 		return self::$sTempDir . DIRECTORY_SEPARATOR . self::getTenantAlias();
@@ -238,12 +283,11 @@ class AfrTenant
 
 	public static function getWebRoot(): string { return self::$sWebRoot; }
 
-	public static function getAllTenants(): array { return self::$aTenantCfgIns; }
+	public static function getAllTenants(): array { return static::$aTenantCfgIns; }
 
-	protected static bool $bIsCli;
 	protected static string $sTenantEnvFilePath;
-	protected static string $sTenantModuleConfigFilePath;
-	protected static string $sTenantRoutesFilePath;
+//	protected static string $sTenantModuleConfigFilePath;
+//	protected static string $sTenantRoutesFilePath;
 	//protected static string $sToConcreteStrategiesFilePath;// = ''; //TODO not done: php file having a closure(AfrToConcreteStrategiesInterface)
 	//protected static string $sContainerBindingsFilePath; // php file having a closure(###  container  ###)
 	protected static string $sProtocolHost;
@@ -254,6 +298,7 @@ class AfrTenant
 	protected static string $sBaseDirPath;
 	protected static string $sAppTenantAlias;
 	protected static string $sPublicHtmlDir;
+	protected static string $sLogsDir;
 	protected static array $aPublicAssetsDirs;
 	protected static string $sPublicAssetsPath;
 	protected static string $sStorageDir;
@@ -264,7 +309,6 @@ class AfrTenant
 	protected static string $sPublicAssetsDirDataWeb;
 	protected static string $sTempDir;
 	protected static array $aInitSystemDirList = [];
-	protected static array $aInitSystemPhpList = [];
 
 
 	/**
@@ -291,26 +335,27 @@ class AfrTenant
 	 */
 	public static function loadConfig(string $sBasePath = null): void
 	{
-		static::isCli();
+		//	static::isCli();
 		if ($sBasePath) {
 			self::setBaseDirPath($sBasePath);
 		}
 
 		if (!is_file($sTf = self::getBaseDirPath() . DIRECTORY_SEPARATOR . 'tenant.env.php')) {
+			AfrDirPathClass::getInstance()->dirExistAndWritable(self::getBaseDirPath());
 			copy(__DIR__ . DIRECTORY_SEPARATOR . 'tenant.env.sample.php', $sTf);
+			echo "\nInitialized sample tenant config file: $sTf\n";
+			sleep(1);
 			include($sTf);
 			$sErrMsg = '';
+			static::$sProtocolHost = '';//fix initialization errors
 			foreach (static::$aTenantCfgIns as $oTenant) {
 				static::$sAppTenantAlias = $oTenant->sTenantAlias;
-				static::processConfig(
-					$oTenant
-				);
+				static::processConfig($oTenant);
 				try {
-					static::initFileSystem();
+					static::initFileSystem(true);
 				} catch (AfrException $e) {
 					$sErrMsg .= $e->getMessage();
 				}
-				static::$aInitSystemPhpList = [];
 				static::$aInitSystemDirList = [];
 				static::$sAppTenantAlias = '';
 			}
@@ -349,25 +394,22 @@ class AfrTenant
 		$sBaseDirPath = self::getBaseDirPath() . DIRECTORY_SEPARATOR;
 		$sTenantSubDir = DIRECTORY_SEPARATOR . static::$sAppTenantAlias;
 
-		static::$aInitSystemPhpList['env'] = static::$sTenantEnvFilePath = $sBaseDirPath . static::$sAppTenantAlias . '.' . $oTenant->sEnv . '.env';
-		static::$aInitSystemPhpList['modules'] = static::$sTenantModuleConfigFilePath = $sBaseDirPath . 'modules' . $sTenantSubDir . '.modules.php';
-		static::$aInitSystemDirList[] = $sBaseDirPath . 'modules';
-		static::$aInitSystemPhpList['routes'] = static::$sTenantRoutesFilePath = $sBaseDirPath . 'routes' . $sTenantSubDir . '.routes.php';
-		static::$aInitSystemDirList[] = $sBaseDirPath . 'routes';
-
-		/** @var $sFQCN_DTCI AfrDefaultTenantConfigsInterface */
-		foreach (static::$aAfrDefaultTenantConfigs as $sFQCN_DTCI) { //TODO: are this really used? Nope :P
-			static::$aInitSystemPhpList[static::fqcnToBaseName($sFQCN_DTCI)] = static::getAfrDefaultTenantConfigsForFqcn($sFQCN_DTCI);
-		}
-		//	static::$aInitSystemPhpList['bindings'] = static::$sContainerBindingsFilePath = $sBaseDirPath . static::$sAppTenantAlias . '.bindings.php';
-		//	static::$aInitSystemPhpList['toConcreteStrategies'] = static::$sToConcreteStrategiesFilePath = $sBaseDirPath . static::$sAppTenantAlias . '.toConcreteStrategies.php';
+		static::$sTenantEnvFilePath = $sBaseDirPath . static::$sAppTenantAlias . '.' . $oTenant->sEnv . '.env';
+		//static::$sTenantModuleConfigFilePath = $sBaseDirPath . 'modules' . $sTenantSubDir . '.modules.php';
+		//static::$aInitSystemDirList[] = $sBaseDirPath . 'modules';
+		//static::$sTenantRoutesFilePath = $sBaseDirPath . 'routes' . $sTenantSubDir . '.routes.php';
+		//static::$aInitSystemDirList[] = $sBaseDirPath . 'routes';
 
 
 		static::$sStorageDir = $sBaseDirPath . 'storage';
 		static::$sTempDir = $oTenant->sTmpDir;
+		static::$aInitSystemDirList[] = $sBaseDirPath . 'config';
 		static::$aInitSystemDirList[] = static::getStorageDir();
 		static::$aInitSystemDirList[] = static::getTempDir();
+		static::$aInitSystemDirList[] = static::getTempDir() . DIRECTORY_SEPARATOR . 'AfrMultiClassMapper';
 		static::$aInitSystemDirList[] = static::$sPublicHtmlDir = $oTenant->sHtmlDir;
+		static::$aInitSystemDirList[] = static::$sLogsDir = $oTenant->sLogsDirT;
+		static::$aInitSystemDirList[] = static::getCronLogsDir();
 
 		if (static::$sPublicAssetsPath = $oTenant->bAssetDirMapAny ? $oTenant->sAssetsDir : '') {
 			static::$aInitSystemDirList[] = static::$sPublicAssetsPath;
@@ -379,7 +421,6 @@ class AfrTenant
 		static::$sPublicAssetsDirMediaWeb = $oTenant->aAssetsExtraDirs['media'];
 		static::$sPublicAssetsDirDataWeb = $oTenant->aAssetsExtraDirs['data'];
 
-		//static::$sProtocolDomain = reset($oTenant->aProtocolDomain);
 		static::$sWebRoot = $oTenant->sRoot;
 
 		static::$aInitSystemDirList[] = $sBaseDirPath . 'DataLayer'; // AfrDbConnectionManagerClass->dataLayerPath
@@ -391,63 +432,80 @@ class AfrTenant
 	/**
 	 * @throws AfrException
 	 */
-	public static function initFileSystem(): array
+	public static function initFileSystem(bool $bThrowErrorIfActionsDetected): array
 	{
-		$aErrors = [];
+		$ds = DIRECTORY_SEPARATOR;
+		$aActionMessages = [];
+		static::mkdir(static::$aInitSystemDirList, $aActionMessages);
 
-		static::mkdir(static::$aInitSystemDirList, $aErrors);
 
-		if (!file_exists($sPath = static::getTenantModulesConfigFilePath())) {
-			file_put_contents($sPath,
-				"<?php return [];\n".'// return [ModuleClass::class => [AfrModuleInterface::class, AfrModuleHTTPRoutesInterface::class, AfrModuleCLIRoutesInterface::class],];');
-			$aErrors[] = 'Module config file blank initialized: ' . $sPath;
+		if (!is_file($sAfrBootstrapFile = static::getBaseDirPath() . $ds . self::AFR_BOOTSTRAP_PHP . '.php')) {
+			$sContents = "<?php\nrequire_once __DIR__ . DIRECTORY_SEPARATOR . ";
+			$sContents .= "'" . AfrDirPathClass::getInstance()->getRelativePath(
+					AfrVendorDir::getVendorPath() . $ds . 'autoload.php',
+					$sAfrBootstrapFile
+				) . "';\n\n";
+			$sContents .= "use Autoframe\Core\Afr\Afr;\n\n";
+			$sContents .= 'Afr::makeApp(__DIR__, null)->run();' . "\n";
+			file_put_contents($sAfrBootstrapFile, $sContents);
+			$aActionMessages[] = 'File created: ' . $sAfrBootstrapFile;
 		}
-
-
-		if (!file_exists($sPath = static::getTenantRoutesFilePath())) {
-			file_put_contents($sPath, '<?php return [];');
-			$aErrors[] = 'Routes file blank initialized : ' . $sPath;
-		}
-
 
 		/** @var $sFQCN_DTCI AfrDefaultTenantConfigsInterface */
 		foreach (static::$aAfrDefaultTenantConfigs as $sFQCN_DTCI) {
 			$sPath = static::getAfrDefaultTenantConfigsForFqcn($sFQCN_DTCI);
 			if (!empty($sPath) && !file_exists($sPath) && ($sConfigPhpInc = $sFQCN_DTCI::sampleTenantDefaultConfig())) {
-				$aErrors[] = 'Sample file initialized with status(' . ((int)file_put_contents(
+				$aActionMessages[] = 'Sample file initialized with bytes #' . ((int)file_put_contents(
 						$sPath,
 						$sConfigPhpInc
-					)) . ') ' . $sPath;
+					)) . ' -> ' . $sPath;
 			}
 		}
 
-		$ds = DIRECTORY_SEPARATOR;
+
+		foreach (static::$aTenantCfgIns as $oTenant) {
+			if (!file_exists($htaccessFile = $oTenant->sHtmlDir . DIRECTORY_SEPARATOR . '.htaccess')) {
+				copy(__DIR__ . DIRECTORY_SEPARATOR . '.htaccess.sample', $htaccessFile);
+				$aActionMessages[] = 'Sample htaccess initialized ' . $htaccessFile;
+			}
+			//TODO: tenant-alias.php
+			$tenantEntryPhp = static::getBaseDirPath() . DIRECTORY_SEPARATOR .
+				self::AFR_BOOTSTRAP_PHP . '.' . $oTenant->sTenantAlias . '.php';
+			if (!file_exists($tenantEntryPhp)) {
+				file_put_contents(
+					$tenantEntryPhp,
+					"<?php\n" .
+					'$_ENV["AFR_TENANT_CLI"] = "' . $oTenant->sTenantAlias . '";' . PHP_EOL .
+					'include(__DIR__.DIRECTORY_SEPARATOR."' . self::AFR_BOOTSTRAP_PHP . '.php");'
+				);
+				$aActionMessages[] = 'Tenant Entry php initialized ' . $tenantEntryPhp;
+			}
+		}
+
+
 		if (!is_file($f = self::getTempDir() . $ds . '.gitignore')) {
 			file_put_contents($f, "*\n!.gitignore\n");
 		}
 
-		static::mkdir([
-			self::getTempDir() . $ds . 'AfrMultiClassMapper'
-		], $aErrors);
 
 		if (!file_exists(static::getTenantEnvFilePath())) {
 			copy(__DIR__ . DIRECTORY_SEPARATOR . 'env.sample.env', static::getTenantEnvFilePath());
 			//file_put_contents(static::getTenantEnvFilePath(), "APP_ENV_ROCKET=🚀\nMULTI1=foo\nMULTI2=\${MULTI1}");
-			$aErrors[] = 'Environment file blank initialized: ' . static::getTenantEnvFilePath();
+			$aActionMessages[] = '🚀 Environment file blank initialized: ' . static::getTenantEnvFilePath();
 		}
 
-		if (!empty($aErrors)) {
-			throw new AfrException("\n" . implode("\n", $aErrors) . "\n\n");
+		if ($bThrowErrorIfActionsDetected && !empty($aActionMessages)) {
+			throw new AfrException("\n🌟 🚀 🏆\n" . implode("\n", $aActionMessages) . "\n✨ 🚀 🎉\n");
 		}
-		return $aErrors;
+		return $aActionMessages;
 	}
 
-	private static function mkdir(array $aDirs, array &$aErrors): void
+	protected static function mkdir(array $aDirs, array &$aErrors): void
 	{
 		foreach ($aDirs as $sPath) {
 			if (is_string($sPath) && !is_dir($sPath)) {
-				if (!mkdir($sPath, 0755, true)) {
-					$aErrors[] = 'Dir create error: ' . $sPath;
+				if (!AfrDirPathClass::getInstance()->dirExistAndWritable($sPath)) {
+					$aErrors[] = 'Directory initialised: ' . $sPath;
 				}
 			} elseif (is_array($sPath)) {
 				static::mkdir($sPath, $aErrors);
@@ -470,19 +528,20 @@ class AfrTenant
 					'Check ' . self::getBaseDirPath() . DIRECTORY_SEPARATOR . 'tenant.env.php'
 				);
 			}
-
 			if (!static::IsCli()) {
 				$sProtocolDomain = strtolower($_SERVER['REQUEST_SCHEME'] . '://' . $_SERVER['HTTP_HOST']);
 				/**
 				 * HTTP:
 				 * $_SERVER['SERVER_NAME'] match inside AfrTenant::HOST_LIST
 				 */
-				/** @var self $oTenant */
 				foreach (static::$aTenantCfgIns as $sAppTenantAlias => $oTenant) {
-					if (in_array($sProtocolDomain, $oTenant->aProtocolDomain)) {
+					if (
+						in_array($sProtocolDomain, $oTenant->aProtocolDomain) ||
+						$_ENV['AFR_TENANT_CLI'] ?? '' === $oTenant->sTenantAlias
+					) {
 						static::$sAppTenantAlias = $sAppTenantAlias;
-//						static::$sProtocolDomain = reset($oTenant->aProtocolDomain);
 						static::$sProtocolHost = $sProtocolDomain;
+						//
 						break;
 					}
 				}
@@ -497,24 +556,8 @@ class AfrTenant
 				 * $sTenantEnv = getenv('AFR_TENANT') ?? $_ENV['AFR_TENANT'] ?? null;
 				 * !! set using ENV, but this is not recommended for multi tenant in CLI calling
 				 */
-				if (rand(0, 1) > 2) {
-					$sTenantArg =
-						getopt('T:')['T'] ??
-						getopt('T::')['T'] ??
-						getopt('', ['tenant:'])['tenant'] ??
-						getopt('', ['tenant::'])['tenant'] ??
-						$_ENV['AFR_TENANT_CLI'] ??
-						getenv('AFR_TENANT_CLI');
-				} else {
-					$aTenant = AfrGetOpt::getInstanceNoContainerBindings()
-						->setArgvFromArray($_SERVER['argv'] ?? [])
-						->getopt('T:', ['tenant:']);
-					$sTenantArg =
-						$aTenant['T'] ??
-						$aTenant['tenant'] ??
-						$_ENV['AFR_TENANT_CLI'] ??
-						getenv('AFR_TENANT_CLI');
-				}
+
+				$sTenantArg = self::getTenantArgInCli();
 
 				if (!empty($sTenantArg) && !empty(static::$aTenantCfgIns[$sTenantArg])) {
 					static::$sAppTenantAlias = $sTenantArg;
@@ -522,13 +565,14 @@ class AfrTenant
 					if (count(static::$aTenantCfgIns) === 1) {
 						static::$sAppTenantAlias = (string)key(static::$aTenantCfgIns);
 					} else {
+						//	debug_print_backtrace();
 						$options = array_keys(static::$aTenantCfgIns);
 						static::$sAppTenantAlias = AfrCliPromptMenu::promptMenu(
 							'Or run php script.php -T="tenantName" --tenant="sub.domain.tld"',
 							$options,
 							$options[0],
 							2,
-							"What tenant to choose from this list?\nAvailable Tenants"
+							"️️What tenant to choose from this list?\n🔥 Available Tenants"
 						);
 					}
 				}

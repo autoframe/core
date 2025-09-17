@@ -55,6 +55,9 @@ class AfrEvent implements AfrDefaultTenantConfigsInterface
 	const CACHE_READ_END = 'cache.read.end';
 	const CACHE_HIT = 'cache.hit';
 	const CACHE_MISS = 'cache.miss';
+	const CRON_DAEMON = 'cron.daemon';
+	const CRON_WORKER = 'cron.worker';
+	const CRON_JOB = 'cron.job';
 
 	const X_EVT = 'evt';
 	const X_ARGS = 'args';
@@ -224,7 +227,7 @@ class AfrEvent implements AfrDefaultTenantConfigsInterface
 	 * @param array $aData
 	 * @param array $aResults
 	 * @return array
-	 * @throws AfrEventException
+	 * @throws AfrEventException|\ReflectionException
 	 */
 	protected static function callEventClosure(string $sEvent, array &$aData, array $aResults): array
 	{
