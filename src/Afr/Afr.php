@@ -46,10 +46,21 @@ class Afr
 	protected AfrEnvInterface $oAfrEnv;
 	protected AfrRequestInterface $oAfrRequest;
 
+
+	/**
+	 * @param string|null $sAppBaseDirectory
+	 * @param string|null $sContainerClass
+	 * @return Afr
+	 * @throws AfrException
+	 */
+	public static function makeApp(string $sAppBaseDirectory = null, string $sContainerClass = null): Afr
+	{
+		return static::app() ?? new static($sAppBaseDirectory, $sContainerClass);
+	}
 	/**
 	 * @throws AfrException
 	 */
-	public function __construct(
+	protected function __construct(
 		string $sAppBaseDirectory = null,
 		string $sContainerClass = null
 	)
@@ -57,7 +68,10 @@ class Afr
 		if (!empty(static::$oAfr)) {
 			throw new AfrException('Afr already initialized!');
 		}
-		if (empty($this->sAppBaseDirectory = $sAppBaseDirectory ?: (defined($c = '\AFR_BASE_DIR') ? constant($c) : ''))) {
+		$sAppBaseDirectory ??= defined($c = '\AFR_BASE_DIR') ? constant($c) :
+			dirname(AfrCliHttpDetect::getEntryPoint(null, false,false));
+
+		if (empty($this->sAppBaseDirectory = $sAppBaseDirectory)) {
 			throw new AfrException('App directory not set!');
 		}
 		AfrTenant::setBaseDirPath($this->sAppBaseDirectory);
@@ -67,8 +81,8 @@ class Afr
 
 		if ($sContainerClass) {
 			AfrContainerFacade::xetContainerClass($sContainerClass);
-		} elseif (defined('\AFR_CONTAINER')) {
-			AfrContainerFacade::xetContainerClass(constant('\AFR_CONTAINER'));
+		} elseif (defined($c = '\AFR_CONTAINER')) {
+			AfrContainerFacade::xetContainerClass(constant($c));
 		}
 		$this->oAfrContainer = AfrContainerFacade::getContainer();
 		static::$oAfr = $this; // make Afr::app() available
@@ -123,6 +137,10 @@ class Afr
 		return $this->oAfrEnv;
 	}
 
+	/**
+	 * @param AfrRequestInterface $oAfrRequest
+	 * @return $this
+	 */
 	public function setRequest(AfrRequestInterface $oAfrRequest): self
 	{
 		$this->oAfrRequest = $oAfrRequest;
@@ -155,7 +173,7 @@ class Afr
 	}
 
 	/**
-	 * TODO....
+	 * TODO.... steps
 	 */
 	public function run(...$mArgs): array
 	{
