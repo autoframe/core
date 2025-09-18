@@ -126,7 +126,7 @@ class AfrCronJobDaemon // extends AfrSingletonAbstractClass
 			$sFlags = $this->oWorkerJob->getFlags() ?? '';
 		} else {
 			$this->bIsWorker = false;
-			$sFullCommand = AfrCliHttpDetect::isCli() ? AfrCliHttpDetect::getEntryPoint() : $_SERVER['REQUEST_URI'];
+			$sFullCommand = AfrCliHttpDetect::isCli() ? self::getJobTenantEntryPoint() : $_SERVER['REQUEST_URI'];
 			$sFlags = '';
 		}
 
@@ -212,7 +212,7 @@ class AfrCronJobDaemon // extends AfrSingletonAbstractClass
 		$this->aJobs = $oJobsSources->getAllJobs($this->oCronLogger); //print_r($this->aJobs); die;
 
 		$this->log(
-			'Starting Cron Daemon watcher: JOBS(#' . count($this->aJobs) . '); ' .
+			'Starting Cron Daemon watcher: ' .
 			'SOURCES(' . implode(', ', array_keys($oJobsSources->getAllSources())) . ')'
 		);
 
@@ -356,14 +356,15 @@ class AfrCronJobDaemon // extends AfrSingletonAbstractClass
 	 */
 	protected function spawnCliWorker(AfrCronJob $oJob): void
 	{
-		$sEntryPoint = AfrCliHttpDetect::getEntryPoint();
-		$sEntryPoint .= AfrTenant::getTenantArgInCli() ? '' : ' --tenant=' . escapeshellarg(AfrTenant::getTenantAlias());
+		$sEntryPoint = $this->getJobTenantEntryPoint();
 		$sEntryPoint .= ' --' . AfrRouterConstantsInterface::CRON_WORKER_ARGV_KEY . '=' .
 			rtrim(strtr(base64_encode((string)$oJob), '+/', '@_'), '=');
 		$sCmd = $oJob->getCommand();
 		$this->log('Spawn worker [' . $this->getHash($sCmd) . '] ' . $sCmd);
 		AfrBackgroundWorkerClass::execWithArgs($sEntryPoint);
 	}
+
+
 
 	/**
 	 * @throws AfrException
@@ -408,96 +409,6 @@ class AfrCronJobDaemon // extends AfrSingletonAbstractClass
 		}
 	}
 
-	/*
-	protected function runCommandAsyncOld(array $job): void
-	{
-		$sCommand = $job[static::command];
-		$sUnixCron = $job[static::cronTime];
-		$sWorkerHash = $this->getHash($sCommand);//todo:test + lock
-		$this->log('Executing Async' . ($sUnixCron ? "($sUnixCron)" : '') . ': ' . $sCommand);
-		if (filter_var($sCommand, FILTER_VALIDATE_URL)) {
-			$iTimeoutMs = 1000;
-			$iConTimeoutMs = 2000;
-			if (Afr::app()) {
-				$iTimeoutMs = Afr::app()->env()->getEnv('AFR_CRON_DAEMON_CURL_TIMEOUT_MS', $iTimeoutMs);
-				$iConTimeoutMs = Afr::app()->env()->getEnv('AFR_CRON_DAEMON_CURL_TIMEOUT_MS', max($iConTimeoutMs, $iTimeoutMs * 2));
-			}
-			if (empty($ch = curl_init($sCommand))) {
-				$this->log('Fail to initiate cURL: ' . $sCommand, true);
-			} elseif (empty(curl_setopt_array($ch, [
-				CURLOPT_RETURNTRANSFER => false,
-				CURLOPT_HEADER => false,
-				CURLOPT_TIMEOUT_MS => $iTimeoutMs,
-				CURLOPT_CONNECTTIMEOUT_MS => $iConTimeoutMs,
-				CURLOPT_FOLLOWLOCATION => false,
-			]))) {
-				$this->log('Fail to set options cURL: ' . $sCommand, true);
-			} elseif (empty(curl_exec($ch))) {
-				$this->log('Fail to exec cURL: ' . $sCommand . "\t" . curl_error($ch), true);
-			}
-			empty($ch) ?: curl_close($ch);
-		} else {
-			AfrBackgroundWorkerClass::execWithArgs($sCommand);
-		}
-	}
-
-	protected function spawnWorkerOld(array $job)
-	{
-
-		$sEntryPoint = AfrCliHttpDetect::getEntryPoint();
-		$sEntryPoint .= ' --' . AfrRouterConstantsInterface::CRON_WORKER_ARGV_KEY . '=' .
-			rtrim(strtr(base64_encode(json_encode($job)), '+/', '@_'), '=');
-
-		$this->log('Spawn worker [' . $this->getHash($job[static::command]) . '] ' . $job[static::command]);
-
-		AfrBackgroundWorkerClass::execWithArgs($sEntryPoint);
-	}
-
-*/
-
-	/*
-		protected function parseFromJsonString(string $sJsonString): void
-		{
-			$aLines = json_decode($sJsonString, true);
-			if (!is_array($aLines)) {
-				$this->log("Failed to parse json string: $sJsonString", true);
-				return;
-			}
-			$oGetLine = fn($key, $m) => "`$key` ➔ " . str_replace(["\r\n", "\r", "\n"], ' ', print_r($m, true));
-			foreach ($aLines as $key => $aLine) {
-				if (empty($aLine[static::cronTime]) || empty($aLine[static::command])) {
-					$this->log('Failed to validate json set: ' . $oGetLine($key, $aLine), true);
-				} elseif (!empty($aLine[static::skipped])) {
-					$this->log('Skipped: ' . $oGetLine($key, $aLine));
-				} else {
-					$this->aJobs[] = $aLine;
-				}
-			}
-		}*/
-
-	/*
-		protected function parseCronFromTextLines($lines): void
-		{
-			foreach ($lines as $line) {
-				$line = trim($line);
-				if (strpos($line, '#') === 0) {
-					$this->log("Skipped:  $line");
-					continue; // Skip comments
-				}
-
-				$parts = explode(' ', $line);
-				if (count($parts) < 6) {
-					$this->log("Invalid cron format: $line", true);
-					continue;
-				}
-
-				$this->aJobs[] = [
-					static::cronTime => trim(implode(' ', array_slice($parts, 0, 5))),
-					static::command => trim(implode(' ', array_slice($parts, 5))),
-				];
-			}
-		}*/
-
 	/**
 	 * @param string $sEndCmd
 	 * @return void
@@ -515,7 +426,7 @@ class AfrCronJobDaemon // extends AfrSingletonAbstractClass
 		} elseif ($sEndCmd == static::RESPAWN) {
 			$iS = 60 - intval(date('s'));
 			if (AfrCliHttpDetect::isCli()) {
-				$sEntryPoint = AfrCliHttpDetect::getEntryPoint();
+				$sEntryPoint = self::getJobTenantEntryPoint();
 				$this->log("Respawn in $iS seconds: $sEntryPoint");
 				register_shutdown_function(function () use ($sEntryPoint) {
 					AfrBackgroundWorkerClass::execWithArgs($sEntryPoint);
@@ -675,111 +586,18 @@ class AfrCronJobDaemon // extends AfrSingletonAbstractClass
 		return $r;
 	}
 
-
-
-
-
-
-	/*
-		protected function setCronJobsDataInputSource(string $sSource, bool $bAsync = false): self
-		{
-			$x = AfrRouterConstantsInterface::CRON_DAEMON_ARGV_KEY;//todo
-			$this->bAsync = $bAsync;
-			$this->sCronJobsDataInputSource = $sSource;
-			$this->bHttpInputSource = substr($sSource, 0, 8) === 'https://' || substr($sSource, 0, 7) === 'http://';
-			if ($this->bHttpInputSource && strpos(get_headers($sSource)[0] ?? '', '200') === false) {
-				//TODO: md5 remote source backup
-				$this->log("Cron url not accessible: $sSource", true);
-			} elseif (!$this->bHttpInputSource && !file_exists($sSource)) {
-				$this->log("Cron file not found: $sSource", true);
-			}
-			return $this;
-		}
-		*/
-
-	/*
-		protected function loadCronJobsFromFile(): int
-		{
-			if (!file_exists($this->sCronJobsDataInputSource)) {
-				$this->iCronFileNotFoundSafeguard++;
-				if ($this->iCronFileNotFoundSafeguard > static::$iCronNotFoundSafeguardMax) {
-					$this->log(
-						'Cron file not readable ' .
-						static::$iCronNotFoundSafeguardMax .
-						' times! ' . $this->sCronJobsDataInputSource,
-						true
-					);
-				} else {
-					$this->log('Cron file disappeared: ' . $this->sCronJobsDataInputSource, true);
-				}
-				return 0;
-			}
-			$iFmTime = filemtime($this->sCronJobsDataInputSource);
-			if ($iFmTime + 2 >= time()) {
-				return 0; //cron file was just written, so we wait
-			}
-
-			if ($this->iCronLoadTime < $iFmTime) {
-				$this->iCronLoadTime = $iFmTime;
-			} else { //	$this->log("Cron file not changed");
-				return 0;
-			}
-
-			$this->aJobs = [];//reset
-			$this->parseCronTextInput(file_get_contents($this->sCronJobsDataInputSource));
-			if (count($this->aJobs)) {
-				$this->iCronFileNotFoundSafeguard = 0; //reset
-			}
-			return count($this->aJobs);
-		}
-	*/
-
-	/*
-		protected function loadCronJobsFromHttp(): int
-		{
-			$sContents = @file_get_contents($this->sCronJobsDataInputSource);
-			if ($sContents === false) {
-				if ($error = error_get_last()['message'] ?? null) {
-					$this->log($error, true);
-				}
-			}
-			if ($sContents === false || strlen($sContents) < 1) {
-				$this->iCronFileNotFoundSafeguard++;
-				if ($this->iCronFileNotFoundSafeguard > static::$iCronNotFoundSafeguardMax) {
-					$this->log(
-						'Cron url not readable ' .
-						static::$iCronNotFoundSafeguardMax .
-						' times! ' . $this->sCronJobsDataInputSource,
-						true
-					);
-				} else {
-					$this->log('Cron url is empty: ' . $this->sCronJobsDataInputSource, true);
-				}
-				return 0;
-			}
-			$this->iCronLoadTime = time();
-			$this->aJobs = [];//reset
-			$this->parseCronTextInput(file_get_contents($this->sCronJobsDataInputSource));
-			if (count($this->aJobs)) {
-				$this->iCronFileNotFoundSafeguard = 0; //reset
-			}
-			return count($this->aJobs);
-		}*/
-	/*
-		protected function parseCronTextInput(string $sText): void
-		{
-			//TODO: aici se facea push in aJobs, deci trebe refacut!!!
-			in_array(substr($sText, 0, 1), ['{', '[']) ?
-				$this->parseFromJsonString($sText) :
-				$this->parseCronFromTextLines(
-					array_filter(
-						explode("\n", str_replace(["\r\n", "\r"], "\n", $sText)),
-						fn($line) => trim($line) !== ''
-					)
-				);
-		}
-
-	*/
+	/**
+	 * @return string
+	 * @throws AfrContainerException
+	 * @throws AfrEventException
+	 * @throws AfrException
+	 */
+	public function getJobTenantEntryPoint(): string
+	{
+		$sEntryPoint = AfrCliHttpDetect::getEntryPoint();
+		$sEntryPoint .= AfrTenant::getTenantArgInCli() ? '' : ' --tenant=' . escapeshellarg(AfrTenant::getTenantAlias());
+		return $sEntryPoint;
+	}
 
 
 }
