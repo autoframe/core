@@ -7,6 +7,7 @@ use Autoframe\Core\CliTools\AfrCliTextColors;
 use Autoframe\Core\Container\Exception\AfrContainerException;
 use Autoframe\Core\Cron\AfrConJobSources;
 use Autoframe\Core\Cron\AfrCronJobDaemon;
+use Autoframe\Core\Cron\Log\Channel\AfrCronLogChannelSharedLogBuffer;
 use Autoframe\Core\Event\Exception\AfrEventException;
 use Autoframe\Core\Exception\AfrException;
 use Autoframe\Core\Http\Request\AfrRequestInterface;
@@ -44,9 +45,14 @@ trait AfrRouterHandleCliTrait
 			}
 			return $iCalled;
 		}
+
+		list($bIsCronLiveLogViewer, $sCronLiveLogViewer) = $oRequest->detectArgvKeyPresence(self::CRON_LIVE_LOGS_ARGV_KEY);
 		list($bIsCron, $sCronIndexStack) = $oRequest->detectArgvKeyPresence(self::CRON_DAEMON_ARGV_KEY);
 		list($bIsCronWorker, $sWorkerValue) = $oRequest->detectArgvKeyPresence(self::CRON_WORKER_ARGV_KEY);
-		if ($bIsCron || $bIsCronWorker) {
+		if($bIsCronLiveLogViewer){
+			AfrCronLogChannelSharedLogBuffer::getInstance()->viewLogs($sCronLiveLogViewer);
+		}
+		elseif ($bIsCron || $bIsCronWorker) {
 			//TODO: add aici cumva, cron job-uri din module / framework / servicii!!!
 			//TODO: add aici lock check! si posibilitate reboot la adaugare / stergere lista cronuri / cronuri individuale
 			if ($bIsCronWorker && empty($sWorkerValue)) {

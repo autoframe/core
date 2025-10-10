@@ -14,40 +14,44 @@ trait AfrBackgroundWorkerTrait
 	 * Returns /usr/bin/php or C:\xampp\php\php.exe or php
 	 * @return string
 	 */
-	public static function getPhpBin(): string
+	public static function getPhpBin(bool $bStartInBackgroundOnWindows = false): string
 	{
-		if (static::$sPhpBin) {
-			return static::$sPhpBin;
-		}
-		$php = 'php';
-		if (DIRECTORY_SEPARATOR === '\\') { //Windows
-			$ini = php_ini_loaded_file(); //assuming that php.exe is in the same folder as php.ini
-			$exe = $ini ? (substr($ini, 0, -3) . 'exe') : '';
-			if ($exe && is_file($exe)) {
-				$php = $exe;
+		if (empty(static::$sPhpBin)) {
+			static::$sPhpBin = defined('PHP_BINARY') && is_file(PHP_BINARY) ? PHP_BINARY : 'php';
+			if (static::$sPhpBin === 'php') { //fallback detect
+				if (DIRECTORY_SEPARATOR === '\\') { //Windows
+					$ini = php_ini_loaded_file(); //assuming that php.exe is in the same folder as php.ini
+					$exe = $ini ? (substr($ini, 0, -3) . 'exe') : '';
+					if ($exe && is_file($exe)) {
+						static::$sPhpBin = $exe;
+					}
+				} else { //Unix
+					if (is_file($phpBin = '/usr/bin/php')) {
+						static::$sPhpBin = $phpBin;
+					}
+				}
 			}
-			return static::$sPhpBin = 'start /B ' . $php;
-		} else { //Unix
-			if (is_file($phpBin = '/usr/bin/php')) {
-				return static::$sPhpBin = $phpBin;
-			}
 		}
-		return static::$sPhpBin = $php;
+		return ($bStartInBackgroundOnWindows && DIRECTORY_SEPARATOR === '\\' ? 'start /B ' : '') . static::$sPhpBin;
 	}
 
 	/**
 	 * !!! IMPORTANT !!! called script should have `ignore_user_abort(true);` for the script to run in Background!
 	 * Calls: php $execFileArgs > /dev/null & or widows equivalent
 	 * @param string $execFileArgs
+	 * @param bool $bStartInBackground
 	 * @return void
 	 * @throws AfrException
 	 */
-	public static function execWithArgs(string $execFileArgs): void
+	public static function execWithArgs(string $execFileArgs, bool $bStartInBackground = true): void
 	{
 		if (substr($execFileArgs, 0, 4) === 'php ') {
 			$execFileArgs = substr($execFileArgs, 4);
 		}
-		$call = static::getPhpBin() . ' ' . trim($execFileArgs);
+		$call = static::getPhpBin($bStartInBackground) . ' ' . trim($execFileArgs);
+		if(DIRECTORY_SEPARATOR !=='\\'){
+			$call.= ' > /dev/null &';
+		}
 		static::dispatchExec($call);
 	}
 
@@ -75,7 +79,7 @@ trait AfrBackgroundWorkerTrait
 			if (!AfrCheckExec::isExecAvailable()) {
 				throw new AfrException('exec function not available in php.ini ➔ disable_functions');
 			}
-			exec($call . ' > /dev/null &');
+			exec($call);
 		}
 	}
 

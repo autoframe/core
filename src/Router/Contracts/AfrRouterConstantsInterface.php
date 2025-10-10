@@ -15,6 +15,7 @@ interface AfrRouterConstantsInterface {
 	const CRON_DAEMON_ARGV_KEY = 'CRON_DAEMON';
 
 	const CRON_WORKER_ARGV_KEY = 'CRON_WORKER';
+	const CRON_LIVE_LOGS_ARGV_KEY = 'CRON_LIVE_LOGS';
 
 
 

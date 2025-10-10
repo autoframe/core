@@ -12,6 +12,7 @@ class AfrGetOpt extends AfrSingletonAbstractClass
 	const OPTIONAL = 'optional';
 	const NONE = 'none';
 	protected ?array $argv = null;
+	protected array $aDetectCache = [];
 
 	/**
 	 * @param string $input = 'test.php -f \'value for f\' --required value --optional="optional value"';
@@ -101,8 +102,11 @@ class AfrGetOpt extends AfrSingletonAbstractClass
 	 */
 	public function getopt(string $short_options, array $long_options = [], int &$rest_index = null, array &$remaining_args = []): array
 	{
-		if (empty($this->argv)) {
+		if (!isset($this->argv)) {
 			throw new AfrException('The arguments must be set before calling getopt() using setArgvFromRequest() or setArgvFromArray() or tokenizeCliLineInput(). The first argument is like `path/script.php`');
+		}
+		if (empty($this->argv) || count($this->argv) < 2) {
+			return [];
 		}
 		$args = array_slice($this->argv, 1);
 		$options = [];
@@ -228,7 +232,7 @@ class AfrGetOpt extends AfrSingletonAbstractClass
 	 */
 	protected function pushOption(array $options, $key, $value): array
 	{
-		$value = substr($value, 0, 1) === '=' ? substr($value, 1) : $value;
+		$value = substr((string)$value, 0, 1) === '=' ? substr($value, 1) : $value;
 		if (isset($options[$key])) {
 			if (!is_array($options[$key])) {
 				$options[$key] = [$options[$key]];
@@ -292,22 +296,67 @@ class AfrGetOpt extends AfrSingletonAbstractClass
 
 	/**
 	 * @param array|null $arguments
+	 * @param bool $bWildcardAnyArg
 	 * @return array
 	 * @throws AfrException
 	 */
-	public function getoptDetectAllArgs(array $arguments = null): array
+	public function getoptDetectAllArgs(array $arguments = null, bool $bWildcardAnyArg = false): array
 	{
 		if ($arguments !== null) {
 			$this->setArgvFromArray($arguments);
+		} elseif (!isset($this->argv)) {
+			$this->setArgvFromArray(
+				AfrCliHttpDetect::isCli() ? ($_SERVER['argv'] ?? ['']) : ['']
+			);
 		}
 
 		// Remove the script name (first argument)
 		$arguments = array_slice($this->argv, 1);
+		if (empty($arguments)) {
+			return [];
+		}
 
+		$sDetectCacheKey = md5(serialize($arguments));
+		if (!isset($this->aDetectCache[$sDetectCacheKey])) {
+			$this->aDetectCache[$sDetectCacheKey] = $this->doDetectAllArgs($arguments);
+		}
+		$aOpt = $this->aDetectCache[$sDetectCacheKey];
 
+		if ($bWildcardAnyArg) {
+			foreach ($arguments as $arg) {
+				if (!$arg || substr($arg, 0, 1) == '-' || is_numeric($arg)) {
+					continue; //skip standard args
+				}
+				$sDetectVal = false;
+				if (($iEqPos = strpos($arg, '=')) !== false) {
+					$sDetectVal = substr($arg, $iEqPos + 1);
+					$arg = substr($arg, 0, $iEqPos);
+				}
+				$aOpt = $this->pushOption($aOpt, $arg, $sDetectVal);
+			}
+		}
+		return $aOpt;
+	}
+
+	protected function addParsedUniqueOption(string $flagMix, array &$aOptionStack): void
+	{
+		$key = rtrim($flagMix, ':');
+		if (empty($aOptionStack[$key])) {
+			$aOptionStack[$key] = $flagMix;
+			return;
+		}
+		$aOptionStack[$key] = strlen($aOptionStack[$key]) < strlen($flagMix) ? $flagMix : $aOptionStack[$key];
+	}
+
+	/**
+	 * @param array $arguments
+	 * @return array
+	 * @throws AfrException
+	 */
+	protected function doDetectAllArgs(array $arguments): array
+	{
 		$aShortOptions = [];
 		$longOptions = [];
-
 		foreach ($arguments as $index => $arg) {
 			if (preg_match('/^-([a-zA-Z0-9])$/', $arg, $matches)) {
 				// Short option without value
@@ -337,11 +386,11 @@ class AfrGetOpt extends AfrSingletonAbstractClass
 						$this->addParsedUniqueOption($sShortOptionList[$j], $aShortOptions);
 					}
 				}
-			} elseif (preg_match('/^--([a-zA-Z][a-zA-Z0-9-]*)$/', $arg, $matches)) {
+			} elseif (preg_match('/^--([a-zA-Z][a-zA-Z0-9-_]*)$/', $arg, $matches)) {
 				// Long option without value
 				//$longOptions[] = $matches[1];
 				$this->addParsedUniqueOption($matches[1], $longOptions);
-			} elseif (preg_match('/^--([a-zA-Z][a-zA-Z0-9-]*)=(.+)$/', $arg, $matches)) {
+			} elseif (preg_match('/^--([a-zA-Z][a-zA-Z0-9-_]*)=(.+)$/', $arg, $matches)) {
 				// Long option with required value
 				//$longOptions[] = $matches[1] . '::';
 				$this->addParsedUniqueOption($matches[1] . '::', $longOptions);
@@ -355,16 +404,6 @@ class AfrGetOpt extends AfrSingletonAbstractClass
 			}
 		}
 		return $this->getopt(implode('', $aShortOptions), array_values($longOptions));
-	}
-
-	protected function addParsedUniqueOption(string $flagMix, array &$aOptionStack): void
-	{
-		$key = rtrim($flagMix, ':');
-		if (empty($aOptionStack[$key])) {
-			$aOptionStack[$key] = $flagMix;
-			return;
-		}
-		$aOptionStack[$key] = strlen($aOptionStack[$key]) < strlen($flagMix) ? $flagMix : $aOptionStack[$key];
 	}
 
 }

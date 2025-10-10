@@ -11,6 +11,8 @@ use Autoframe\Core\Exception\AfrException;
 use Autoframe\Core\Module\AfrModuleBox;
 use Autoframe\Core\Module\AfrModuleCLIRoutesInterface;
 use Autoframe\Core\Module\AfrModuleInterface;
+use Autoframe\Core\CliTools\AfrSysTempDir;
+
 
 final class AfrConJobSources extends AfrSingletonAbstractClass
 {
@@ -18,10 +20,10 @@ final class AfrConJobSources extends AfrSingletonAbstractClass
 	const URL_S = 'curl';
 	const CLOSURE_FN = 'closure';
 	protected array $aSources = [];
-	protected array $aJobs = [];
+	protected ?array $aJobs = null;
 	protected array $aCronSourceNotFoundSafeguard = [];
 	protected array $aCronLoadTime = [];
-	public static int $iCronNotFoundSafeguardMax = 60;
+	public static int $iCronNotFoundSafeguardMax = 60 * 12;
 	public static array $aDefaultCurlSetOpt; //curl_setopt_array
 
 	protected ?AfrCronLoggerInterface $oAfrCronLogger = null;
@@ -116,14 +118,18 @@ final class AfrConJobSources extends AfrSingletonAbstractClass
 
 
 	/**
-	 * @return array Layered array of having key aliases for class AfrCronJob
+	 * @return array Layered array of having key aliases for class AfrCronJobDaemon
 	 * @throws AfrEnvException
 	 */
-	public function getAllJobs(?AfrCronLoggerInterface $oAfrCronLogger): array
+	public function getAllJobs(?AfrCronLoggerInterface $oAfrCronLogger = null, bool $bForceFreshLoad = false): array
 	{
 		if ($oAfrCronLogger) {
 			$this->setAfrCronLogger($oAfrCronLogger);
 		}
+		if (!$bForceFreshLoad && !empty($this->aJobs)) {
+			return $this->aJobs;
+		}
+		$this->aJobs = [];
 		foreach ($this->aSources as $sAliasKey => $aSources) {
 			$sType = $aSources[0];
 			if ($sType === self::CLOSURE_FN) {
@@ -209,7 +215,9 @@ final class AfrConJobSources extends AfrSingletonAbstractClass
 				unset($oJob); //destruct
 			}
 		}
-		$this->aJobs[$sSourceAlias] = [];
+		if (isset($this->aJobs[$sSourceAlias])) {
+			unset($this->aJobs[$sSourceAlias]);
+		}
 		$this->aCronLoadTime[$sSourceAlias] ??= -1;
 		return $this;
 	}
@@ -311,20 +319,32 @@ final class AfrConJobSources extends AfrSingletonAbstractClass
 			return 0;
 		}
 
+		$sTempCache = AfrSysTempDir::sysGetTempDirAliasSubDir(
+				array_slice(explode('\\', __CLASS__), -1, 1)[0]
+			) . DIRECTORY_SEPARATOR . md5($sUrl) . '.url';
+
+
 		$this->aCronSourceNotFoundSafeguard[$sUrl] ??= 0;
 
-		$sErrMsg = null;
+		$sErrMsg = $bCacheFileExists = null;
 		$sContents = $this->getUrlData($sUrl, $aCurlSettings);
 		if ($sContents !== false) {
 			$this->aCronLoadTime[$sSourceAlias] = time();
 			$this->aCronSourceNotFoundSafeguard[$sUrl] = 0; //reset
+			file_put_contents($sTempCache, $sContents);
 		} else {
 			$this->aCronSourceNotFoundSafeguard[$sUrl]++;
-			$sErrMsg = trim(
-				'Unable open job file: ' . $sSourceAlias . ', ' . $sUrl .
-				' since Ts(' . $this->aCronLoadTime[$sSourceAlias] . ')' .
-				(error_get_last()['message'] ?? '')
-			);
+			if($bCacheFileExists = is_file($sTempCache)) {
+				$sContents = file_get_contents($sTempCache);
+			}
+			else{
+				$sErrMsg = trim(
+					'Unable open job file: ' . $sSourceAlias . ', ' . $sUrl .
+					' since Ts(' . $this->aCronLoadTime[$sSourceAlias] . ')' .
+					(error_get_last()['message'] ?? '')
+				);
+			}
+
 		}
 
 		if ($this->aCronSourceNotFoundSafeguard[$sUrl] > self::$iCronNotFoundSafeguardMax) {
@@ -332,12 +352,15 @@ final class AfrConJobSources extends AfrSingletonAbstractClass
 				$this->aCronSourceNotFoundSafeguard[$sUrl] .
 				' times, ' . ' since Ts(' . $this->aCronLoadTime[$sSourceAlias] . ')' .
 				$sSourceAlias . ', ' . $sUrl;
+			if($bCacheFileExists) {
+				$sErrMsg = 'Using fallback jobs cache! '.$sErrMsg;
+			}
 		}
 		if ($sErrMsg) {
 			$this->log($sErrMsg, true);
 			return 0;
 		}
-
+		$iExistingJobs = count($this->aJobs[$sSourceAlias] ?? []);
 		$this->flushJobsForAlias($sSourceAlias);
 		if (strlen($sContents) < 10) {
 			$iLoaded = 0;
@@ -366,6 +389,7 @@ final class AfrConJobSources extends AfrSingletonAbstractClass
 		}
 		try {
 			$sContents = $oClosure();
+			$this->aCronLoadTime[$sSourceAlias] = time();
 		} catch (\Throwable $ex) {
 			$this->log(
 				'CORRUPTED cron job Closure method: ' . $sSourceAlias . ': ' .

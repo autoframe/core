@@ -10,6 +10,7 @@ use Autoframe\Core\InterfaceToConcrete\AfrVendorPath;
 
 //TODO: set_time_limit
 //TODO: set connection time limit
+
 /**
  * AfrCronJob Flags only for JSON lines:
  * Startup S; Startup S(someValue);
@@ -21,6 +22,8 @@ use Autoframe\Core\InterfaceToConcrete\AfrVendorPath;
 final class AfrCronJob
 {
 	protected array $aJob = [
+		//TODO: set_time_limit
+		//TODO: set connection time limit
 		AfrCronJobDaemon::flags => null, //
 		AfrCronJobDaemon::cronTime => null, //unix * * * * *
 		AfrCronJobDaemon::command => null, //executed with exec()
@@ -42,7 +45,14 @@ final class AfrCronJob
 		if ($sFirstChar === '#') {
 			$aJob[AfrCronJobDaemon::skipped] = true;
 			$sLine = substr($sLine, 1);
+			$sFirstChar = substr($sLine, 0, 1);
 		}
+		if ($sFirstChar === '<' && strpos($sLine, '>') !== false) {
+			$sFlags = explode('>', substr($sLine, 1))[0];
+			$aJob[AfrCronJobDaemon::flags] = $sFlags;
+			$sLine = ltrim(substr($sLine, strlen($sFlags) + 2));
+		}
+
 		$parts = explode(' ', $sLine);
 		if (count($parts) >= 6) {
 			$aJob += [
@@ -277,8 +287,9 @@ final class AfrCronJob
 	}
 
 	/**
-	 * /someDir/xEnd22Status.php
+	 * /someDir/xEnd22Status.php OR php /someDir/xEnd22Status.php
 	 * http://localhost:808/core/src/exec.php
+	 * CLI:C:\Windows\System32\mspaint.exe
 	 * @param string|null $sCmd
 	 * @return $this
 	 */
@@ -326,6 +337,12 @@ final class AfrCronJob
 	public function toArray(): array
 	{
 		return $this->aJob;
+	}
+
+	public function getHash(): ?string
+	{
+		$cmd = $this->getCommand();
+		return $cmd ? AfrCronJobDaemon::computeHash($cmd) : null;
 	}
 
 }

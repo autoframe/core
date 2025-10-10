@@ -40,6 +40,13 @@ class AfrSysTempDir
 		}
 		return static::$sysGetTempDir;
 	}
+	public static function sysGetTempDirAliasSubDir(string $sAliasSubDir): string
+	{
+		$sAliasSubDir =
+			static::sysGetTempDir() . DIRECTORY_SEPARATOR .
+			preg_replace('/[^A-Za-z0-9_-]/', '_', $sAliasSubDir);
+		return static::existAndWritable($sAliasSubDir) ? $sAliasSubDir : static::sysGetTempDir();
+	}
 
 	protected static function getCurrentHash(): string
 	{

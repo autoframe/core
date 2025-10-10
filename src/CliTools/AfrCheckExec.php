@@ -39,6 +39,14 @@ final class AfrCheckExec
 		}
 		return self::$bPOpenClose;
 	}
+	public static function isProcOpenCloseAvailable(): bool
+	{
+		if (self::$bPOpenClose === null) {
+			self::$bPOpenClose = self::isFunctionEnabled('proc_open') && self::isFunctionEnabled('proc_close');
+		}
+		return self::$bPOpenClose;
+	}
+
 
 	public static function isShellExecAvailable(): bool
 	{

@@ -2,8 +2,9 @@
 
 namespace Autoframe\Core\Cron\Log;
 
-use Autoframe\Core\Cron\Log\Channel\AfrCronLogChannelLogInlineCli;
 use Autoframe\Core\DesignPatterns\Singleton\AfrSingletonAbstractClass;
+use Autoframe\Core\Cron\Log\Channel\AfrCronLogChannelLogInlineCli;
+use Autoframe\Core\Cron\Log\Channel\AfrCronLogChannelSharedLogBuffer;
 use Autoframe\Core\Cron\Log\Channel\AfrCronLogChannelInterface;
 use Autoframe\Core\Cron\Log\Channel\AfrCronLogChannelDistinctFile;
 
@@ -18,6 +19,7 @@ class AfrCronLoggerClass extends AfrSingletonAbstractClass implements AfrCronLog
 	public static array $aDefaultFallback = [
 		AfrCronLogChannelDistinctFile::class,
 		AfrCronLogChannelLogInlineCli::class,
+		AfrCronLogChannelSharedLogBuffer::class,
 		//	AfrCronLogChannelDoNotLog::class
 	];
 	protected ?string $sFullCommand = null;
@@ -61,8 +63,22 @@ class AfrCronLoggerClass extends AfrSingletonAbstractClass implements AfrCronLog
 		return $this;
 	}
 
+	protected function detectError(string $sMessage, bool &$bError, $exitCode): void
+	{
+		if($bError) return;
+		if(
+			$exitCode ||
+			(strpos($sMessage, 'Fatal error:') !== false || strpos($sMessage, 'Uncaught Error:') !== false) &&
+			(strpos($sMessage, '.php:') !== false || strpos($sMessage, '.php on line ') !== false) ||
+			strpos($sMessage, '500 Internal Server Error') !== false
+		) {
+			$bError = true;
+		}
+	}
+
 	public function log(string $sMessage, bool $bError = false, int $exitCode = null): void
 	{
+		$this->detectError($sMessage, $bError, $exitCode);
 		$this->sMessage = $sMessage;
 		$this->bError = $bError;
 		$this->exitCode = $exitCode;

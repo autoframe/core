@@ -175,7 +175,7 @@ class AfrStr
         if ($start_char === $end_char) {
             $i = 0;
             while ($i < $parts) {
-                $arr[] = $str[$i + 1];
+                $arr[] = $str[$i + 1]??null;
                 $i += 2;
             }
         } else {

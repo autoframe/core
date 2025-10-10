@@ -95,7 +95,9 @@ class AfrHttpImplicitFlush extends AfrSingletonAbstractClass
 	 */
 	protected function tearDownPhpBuffers(): void
 	{
-		while (ob_get_level() > 0) {
+		$iFailsafe = 100; // levels
+		while (ob_get_level() > 0 && $iFailsafe>0) {
+			$iFailsafe--;
 			// Some handlers may refuse; suppress warnings, and bail if we stop making progress
 			$levelBefore = ob_get_level();
 			@ob_end_flush();

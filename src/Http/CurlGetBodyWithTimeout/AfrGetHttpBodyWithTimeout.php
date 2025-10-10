@@ -2,7 +2,7 @@
 
 namespace Autoframe\Core\Http\CurlGetBodyWithTimeout;
 
-class GetHttpBodyWithTimeout
+class AfrGetHttpBodyWithTimeout
 {
 	private const OVERHEAD_MS = 50;
 	private const MAX_REDIRECTS = 3;

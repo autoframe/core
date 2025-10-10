@@ -3,6 +3,7 @@
 namespace Autoframe\Core\Cron;
 
 use Autoframe\Core\Afr\Afr;
+use Autoframe\Core\CliTools\AfrCheckExec;
 use Autoframe\Core\CliTools\AfrCliHttpDetect;
 use Autoframe\Core\CliTools\AfrCliTextColors;
 use Autoframe\Core\Container\Exception\AfrContainerException;
@@ -12,6 +13,7 @@ use Autoframe\Core\Env\Exception\AfrEnvException;
 use Autoframe\Core\Event\AfrEvent;
 use Autoframe\Core\Event\Exception\AfrEventException;
 use Autoframe\Core\Exception\AfrException;
+use Autoframe\Core\Http\Buffer\AfrHttpImplicitFlush;
 use Autoframe\Core\ProcessControl\Lock\AfrLockFileClass;
 use Autoframe\Core\ProcessControl\Worker\Background\AfrBackgroundWorkerClass;
 use Autoframe\Core\Router\Contracts\AfrRouterConstantsInterface;
@@ -20,7 +22,7 @@ use Autoframe\Core\CliTools\AfrGetOpt;
 use Autoframe\Core\Cron\Log\AfrCronLoggerInterface;
 use Autoframe\Core\String\AfrStr;
 use Autoframe\Core\Cron\Log\AfrCronLoggerClass;
-use Autoframe\Core\Http\CurlGetBodyWithTimeout\GetHttpBodyWithTimeout;
+use Autoframe\Core\Http\CurlGetBodyWithTimeout\AfrGetHttpBodyWithTimeout;
 
 class AfrCronJobDaemon // extends AfrSingletonAbstractClass
 {
@@ -37,11 +39,7 @@ class AfrCronJobDaemon // extends AfrSingletonAbstractClass
 	/** @var AfrCronJob[] */
 	protected array $aJobs = [];
 
-//	protected string $sCronJobsDataInputSource;
-//	protected bool $bHttpInputSource = false;
 	protected int $iLastExecutedMinute = -1;
-	protected int $iCronFileNotFoundSafeguard = 0;
-	protected int $iCronLoadTime = -1;
 
 	protected bool $bRunCommandAsyncUsingDaemonInsteadOfWorkers = false;
 	protected bool $bIsWorker;
@@ -49,7 +47,7 @@ class AfrCronJobDaemon // extends AfrSingletonAbstractClass
 	protected AfrCronLoggerInterface $oCronLogger;
 	private string $sLockName;
 	private string $sAliasName;
-	private array $aHashCache = [];
+	private static array $aHashCache = [];
 	protected ?AfrCronJob $oWorkerJob = null;
 	protected ?AfrLockFileClass $oLockWorker = null;
 
@@ -84,6 +82,7 @@ class AfrCronJobDaemon // extends AfrSingletonAbstractClass
 	 */
 	public function run()
 	{
+		AfrHttpImplicitFlush::getInstance()->setHttpImplicitFlush();
 		set_time_limit(0);
 		ignore_user_abort(true);
 		if (!($this->bIsWorker && $this->oWorkerJob->isAllowParallelRun())) {
@@ -98,9 +97,12 @@ class AfrCronJobDaemon // extends AfrSingletonAbstractClass
 				$this->oLockWorker->releaseLock();
 				return;
 			} else {
-				$this->log('Thread: pid(' . $this->oLockWorker->getLockPid() . ") lock single thread execution » $sLockName");
+				$this->log($sLockName . '» Locked by PID(' . $this->oLockWorker->getLockPid() . ") single instance");
 			}
+		} else {
+			$this->log("Parallel / multithreading allowed on " . $this->getLockName());
 		}
+
 		$this->bIsWorker ? $this->rundWorker() : $this->runDaemon();
 	}
 
@@ -114,7 +116,7 @@ class AfrCronJobDaemon // extends AfrSingletonAbstractClass
 	 */
 	protected function prepareDaemonWorkerLogger($saDSJW = null)
 	{
-		$amWorkerDataJsonArr = $saDSJW ? static::decodeWorkerInitDataFromCliArgvOrRequest($saDSJW):null;
+		$amWorkerDataJsonArr = $saDSJW ? static::decodeWorkerInitDataFromCliArgvOrRequest($saDSJW) : null;
 		if (!empty($amWorkerDataJsonArr[static::command])) {
 			$amWorkerDataJsonArr[static::cronTime] ??= '* * * * *';//worker force valid if command exists
 			$this->oWorkerJob = new AfrCronJob($amWorkerDataJsonArr);
@@ -143,37 +145,6 @@ class AfrCronJobDaemon // extends AfrSingletonAbstractClass
 		}
 
 
-	}
-
-
-	/**
-	 * @throws AfrEventException
-	 * @throws AfrContainerException
-	 */
-	protected function setLogger(AfrCronLoggerInterface $oCronLogger = null): self
-	{
-		if (!empty($oCronLogger)) {//set
-			$this->oCronLogger = $oCronLogger;
-		} elseif (empty($this->oCronLogger)) {//init
-			$this->oCronLogger = Afr::app() ?
-				Afr::app()->container()->get(AfrCronLoggerInterface::class) :
-				AfrCronLoggerClass::getInstance();
-		}
-		return $this;
-	}
-
-	/**
-	 * @return AfrCronLoggerClass|AfrCronLoggerInterface
-	 */
-	public function getLogger(): AfrCronLoggerInterface
-	{
-		return $this->oCronLogger;
-	}
-
-	public function log(string $message, bool $bError = false, int $exitCode = null): self
-	{
-		$this->getLogger()->log($message, $bError, $exitCode);
-		return $this;
 	}
 
 
@@ -209,7 +180,8 @@ class AfrCronJobDaemon // extends AfrSingletonAbstractClass
 		//todo run mised crons ?
 		//todo run startup crons + locks
 		$oJobsSources = AfrConJobSources::getInstance();
-		$this->aJobs = $oJobsSources->getAllJobs($this->oCronLogger); //print_r($this->aJobs); die;
+		$this->aJobs = $oJobsSources->getAllJobs($this->oCronLogger);
+		// print_r($this->aJobs);		die;
 
 		$this->log(
 			'Starting Cron Daemon watcher: ' .
@@ -227,7 +199,7 @@ class AfrCronJobDaemon // extends AfrSingletonAbstractClass
 				$this->callDisplaySpinnerAndSleep();
 				continue;
 			}
-			$this->aJobs = $oJobsSources->getAllJobs($this->oCronLogger);
+			$this->aJobs = $oJobsSources->getAllJobs($this->oCronLogger, true);
 			$this->iLastExecutedMinute = $iMinute;
 			//TODO reload new jobs
 			/*	if ($this->sCronJobsDataInputSource) {
@@ -239,8 +211,8 @@ class AfrCronJobDaemon // extends AfrSingletonAbstractClass
 			$aToDispatch = [];
 			foreach ($this->aJobs as $sGroupAlias => $aGroup) {
 				foreach ($aGroup as $oJob) {
-					if(!$oJob instanceof AfrCronJob) {
-						$this->log('Corrupted JOB: ' . print_r($oJob,true), true);
+					if (!$oJob instanceof AfrCronJob) {
+						$this->log('Corrupted JOB: ' . print_r($oJob, true), true);
 						continue;
 					}
 					if ($oJob->isSkipped()) {
@@ -295,37 +267,119 @@ class AfrCronJobDaemon // extends AfrSingletonAbstractClass
 		$this->log("Lock release: " . ($this->oLockWorker->releaseLock() ? 'true' : 'false') . ' ' . $this->getLockName());
 	}
 
-	/**
-	 * @throws AfrEventException
-	 */
+
 	protected function rundWorker(): void
 	{
 		AfrEvent::dispatchEvent(AfrEvent::CRON_WORKER, [__FUNCTION__]);
 //		usleep(1000 * 10 * rand(0, 250));
 		$sCommand = $this->oWorkerJob->getCommand();
+		$this->oWorkerJob->isAlwaysRunService();
+		$this->oWorkerJob->isAllowParallelRun();
+		$this->oWorkerJob->isRunOnStartup();
+		//	$this->oWorkerJob->setAlwaysRunService(true);
+		//	$this->oWorkerJob->setAllowParallelRun(true);
+		//	file_put_contents(__DIR__.'/'.$this->getLogger()->getHash(),$this->oWorkerJob);
+		//TODO:  SERVICE / RESPAWN / TURN OFF LOG, etc
+		//TODO:  SERVICE / RESPAWN / TURN OFF LOG, etc
+		//TODO:  SERVICE / RESPAWN / TURN OFF LOG, etc
+		//TODO:  SERVICE / RESPAWN / TURN OFF LOG, etc
+		// $this->>runCommandSync($this->oWorkerJob);
+		// $this->>runCommandSync($this->oWorkerJob);
+		// $this->>runCommandSync($this->oWorkerJob);
+		// $this->>runCommandSync($this->oWorkerJob);
+		// $this->>runCommandSync($this->oWorkerJob);
+		// $this->>runCommandSync($this->oWorkerJob);
+		// $this->>runCommandSync($this->oWorkerJob);
+
 		//$this->sCommandHash = $this->getCommandHash($sCommand);
-		$this->log('Worker running: ' . $sCommand);
+
 		if (filter_var($sCommand, FILTER_VALIDATE_URL)) {
+			$this->log('Worker opening url: ' . $sCommand);
 			$sData = @file_get_contents($sCommand);
 			if ($sData === false) {
-				$this->log('Fail to get data from URL: ' . $sCommand . ' ➔ ' . trim(error_get_last()['message'] ?? ''), true);
+				$this->log(
+					"Fail to get data from URL:  $sCommand ➔ " . trim(error_get_last()['message'] ?? ''),
+					true
+				);
 			} else {
 				$this->log(
 					'Data from URL: ' . $sCommand .
 					($this->oWorkerJob->isTurnOffLog() ? '✓' : " ➔ $sData")
 				);
 			}
+			return;
+		}
+
+		$bCliCmd = substr($sCommand, 0, 4) === 'CLI:';
+		$sCommand = $bCliCmd ?
+			trim(substr($sCommand, 4)) :
+			AfrBackgroundWorkerClass::getPhpBin(false) . ' ' . trim($sCommand);
+		if (AfrCheckExec::isProcOpenCloseAvailable()) {
+			$spec = [
+				0 => ['pipe', 'w'], // parent writes -> child STDIN
+				1 => ['pipe', 'r'], // parent reads  <- child STDOUT
+				2 => ['pipe', 'r'], // parent reads  <- child STDERR
+			];
+			if ($rProcess = proc_open($sCommand, $spec, $pipes)) {
+				$aStatus = proc_get_status($rProcess);
+				//$this->log(print_r($aStatus, true));
+
+				stream_set_blocking($pipes[1], false);
+				stream_set_blocking($pipes[2], false);
+				if (empty($aStatus['running'])) {
+					$exitCode = proc_close($rProcess);
+					$this->log("Worker failed to register running status! Exit code:`$exitCode` for " . $sCommand, true);
+					return;
+				}
+				$iPid = intval($aStatus['pid'] ?? 0);
+				$this->log("Worker started PID($iPid): " . $sCommand);
+
+				usleep(90_000);
+				$sOutput = $sError = '';
+				// Example: read partial output without waiting for exit
+				$sOutput .= stream_get_contents($pipes[1]) ?: '';
+				$sError .= stream_get_contents($pipes[2]) ?: '';
+				while ($aStatus['running']) {
+					usleep(75_000);
+					//sleep(2);
+					$sOutput .= stream_get_contents($pipes[1]) ?: '';
+					$sError .= stream_get_contents($pipes[2]) ?: '';
+					$aStatus = proc_get_status($rProcess);
+					//$this->log(print_r($aStatus, true));
+				}
+				foreach ($pipes as $pipe) {
+					@fclose($pipe);
+				}
+				$exitCodeInStatus = intval($aStatus['exitcode']);
+				$exitCode = proc_close($rProcess);
+				$exitCode = $exitCodeInStatus > -1 ? $exitCodeInStatus : $exitCode;
+				$this->log('Data from CLI: ' . $sCommand . " (#$exitCode)➔ $sOutput", (bool)$exitCode);
+				if ($sError) {
+					$this->log("$sCommand (#$exitCode)➔ $sError", true);
+				}
+			}
+
+
 		} else {
+			//TODO complete / refactor::
+			//TODO complete / refactor::
+			//TODO complete / refactor::
+			/*			$bCliCmd ?
+							AfrBackgroundWorkerClass::execCli($sCommand):
+							AfrBackgroundWorkerClass::execWithArgs($sCommand);*/
 			$output = $result_code = null;
-			//error_clear_last();
-			$sFData = exec(AfrBackgroundWorkerClass::getPhpBin() . ' ' . trim($sCommand), $output, $result_code);
+			//todo: test run exe cmd
+			error_clear_last();
+			$sFData = exec($sCommand, $output, $result_code);
 			if ($sFData === false) {
 				$this->log('Fail to execute: ' . $sCommand . " (#$result_code)➔ " . trim(error_get_last()['message'] ?? ''), true);
 			} else {
-				$this->log('Data from CLI: ' . $sCommand . " (#$result_code)➔ $sFData");
+				$output = !empty($output) && is_array($output) ? implode("\n", $output) : $sFData;
+				$this->log('Data from CLI: ' . $sCommand . " (#$result_code)➔ $output");
 			}
 		}
 	}
+
 
 	/**
 	 * @param array $aToDispatch
@@ -344,7 +398,7 @@ class AfrCronJobDaemon // extends AfrSingletonAbstractClass
 				[__FUNCTION__]
 			);
 			$this->bRunCommandAsyncUsingDaemonInsteadOfWorkers ?
-				$this->runCommandAsync($oJob) :
+				$this->runCommandAsyncDirectlyFromDaemon($oJob) :
 				$this->spawnCliWorker($oJob);
 		}
 	}
@@ -361,17 +415,17 @@ class AfrCronJobDaemon // extends AfrSingletonAbstractClass
 			rtrim(strtr(base64_encode((string)$oJob), '+/', '@_'), '=');
 		$sCmd = $oJob->getCommand();
 		$this->log('Spawn worker [' . $this->getHash($sCmd) . '] ' . $sCmd);
-		AfrBackgroundWorkerClass::execWithArgs($sEntryPoint);
+		AfrBackgroundWorkerClass::execWithArgs($sEntryPoint, true); //background deteched pid
 	}
-
 
 
 	/**
 	 * @throws AfrException
 	 * @throws AfrEnvException
 	 */
-	protected function runCommandAsync(AfrCronJob $oJob): void //TODO test GetHttpBodyWithTimeout|curl
+	protected function runCommandAsyncDirectlyFromDaemon(AfrCronJob $oJob): void //TODO test GetHttpBodyWithTimeout|curl
 	{
+		//TODO: max execution time from job
 		$sCommand = $oJob->getCommand();
 		$sUnixCron = $oJob->getCronTime();
 		$this->log('Executing Async' . ($sUnixCron ? "($sUnixCron)" : '') . '» ' . $sCommand);
@@ -383,7 +437,7 @@ class AfrCronJobDaemon // extends AfrSingletonAbstractClass
 				$iConTimeoutMs = Afr::app()->env()->getEnv('AFR_CRON_DAEMON_CURL_TIMEOUT_MS', max($iConTimeoutMs, $iTimeoutMs * 2));
 			}
 			//TODO: test GetHttpBodyWithTimeout vs curl
-			GetHttpBodyWithTimeout::get($sCommand, max($iTimeoutMs, $iConTimeoutMs), false);
+			AfrGetHttpBodyWithTimeout::get($sCommand, max($iTimeoutMs, $iConTimeoutMs), false);
 			return;
 			if (empty($ch = curl_init($sCommand))) {
 				$this->log('Fail to initiate cURL: ' . $sCommand, true);
@@ -459,7 +513,7 @@ class AfrCronJobDaemon // extends AfrSingletonAbstractClass
 		}
 		//	$d= AfrRouterConstantsInterface::CRON_DAEMON_ARGV_KEY;	$w= AfrRouterConstantsInterface::CRON_WORKER_ARGV_KEY;
 		if (is_null($saDSJW)) {
-			if (AfrCliHttpDetect::isCli() && ($aArgsLst = AfrGetOpt::getInstance()->getoptDetectAllArgs($_SERVER['argv']))) {
+			if (AfrCliHttpDetect::isCli() && ($aArgsLst = AfrGetOpt::getInstance()->getoptDetectAllArgs($_SERVER['argv'], false))) {
 				$saDSJW = $aArgsLst[AfrRouterConstantsInterface::CRON_WORKER_ARGV_KEY] ?? null;
 			}/* elseif (!AfrCliHttpDetect::isCli() && !empty($_REQUEST[AfrRouterConstantsInterface::CRON_WORKER_ARGV_KEY])) {
 			//todo security over http:)
@@ -519,22 +573,24 @@ class AfrCronJobDaemon // extends AfrSingletonAbstractClass
 	}
 
 
-	protected function getHash(string $sCommand = '', string $sGetTenantName = null): string //ok
+	protected function getHash(): string //ok
 	{
-		if (empty($sCommand)) {
-			$sCommand = $this->bIsWorker ?
-				$this->oWorkerJob->getCommand() :
-				'Daemon@' . ($sGetTenantName ?? $this->getTenantName());
+		return $this->bIsWorker ?
+			$this->oWorkerJob->getHash() :
+			static::computeHash('Daemon@' . $this->getTenantName());
+	}
+
+	public static function computeHash(string $sCommand): string //ok
+	{
+		if (!empty(self::$aHashCache[$sCommand])) return self::$aHashCache[$sCommand];
+
+		$md5 = md5($sCommand);
+		$mod = 0;
+		for ($i = 0; $i < 32; $i++) {
+			$mod = ($mod * 16 + hexdec($md5[$i])) % 3656158440062976;
 		}
-		if (empty($this->aHashCache[$sCommand])) {
-			$md5 = md5($sCommand);
-			$mod = 0;
-			for ($i = 0; $i < 32; $i++) {
-				$mod = ($mod * 16 + hexdec($md5[$i])) % 3656158440062976;
-			}
-			$this->aHashCache[$sCommand] = str_pad(base_convert($mod, 10, 36), 10, '_', STR_PAD_LEFT);
-		}
-		return $this->aHashCache[$sCommand];
+		return self::$aHashCache[$sCommand] =
+			str_pad(base_convert($mod, 10, 36), 10, '_', STR_PAD_LEFT);
 	}
 
 	protected function callDisplaySpinnerAndSleep(): void
@@ -599,5 +655,35 @@ class AfrCronJobDaemon // extends AfrSingletonAbstractClass
 		return $sEntryPoint;
 	}
 
+
+	/**
+	 * @throws AfrEventException
+	 * @throws AfrContainerException
+	 */
+	protected function setLogger(AfrCronLoggerInterface $oCronLogger = null): self
+	{
+		if (!empty($oCronLogger)) {//set
+			$this->oCronLogger = $oCronLogger;
+		} elseif (empty($this->oCronLogger)) {//init
+			$this->oCronLogger = Afr::app() ?
+				Afr::app()->container()->get(AfrCronLoggerInterface::class) :
+				AfrCronLoggerClass::getInstance();
+		}
+		return $this;
+	}
+
+	/**
+	 * @return AfrCronLoggerClass|AfrCronLoggerInterface
+	 */
+	public function getLogger(): AfrCronLoggerInterface
+	{
+		return $this->oCronLogger;
+	}
+
+	public function log(string $message, bool $bError = false, int $exitCode = null): self
+	{
+		$this->getLogger()->log($message, $bError, $exitCode);
+		return $this;
+	}
 
 }

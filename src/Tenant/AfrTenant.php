@@ -15,6 +15,7 @@ use Autoframe\Core\Exception\AfrException;
 use Autoframe\Core\FileSystem\DirPath\AfrDirPathClass;
 use Autoframe\Core\InterfaceToConcrete\AfrToConcreteStrategiesClass;
 use Autoframe\Core\Module\AfrModuleBox;
+use Autoframe\Core\Router\Contracts\AfrRouterConstantsInterface;
 
 /**
  * This class manages configuration settings and processes for an application that supports multiple tenants.
@@ -558,16 +559,15 @@ class AfrTenant
 				 */
 
 				$sTenantArg = self::getTenantArgInCli();
-
 				if (!empty($sTenantArg) && !empty(static::$aTenantCfgIns[$sTenantArg])) {
 					static::$sAppTenantAlias = $sTenantArg;
 				} else {
+
 					if (count(static::$aTenantCfgIns) === 1) {
 						static::$sAppTenantAlias = (string)key(static::$aTenantCfgIns);
 					} else {
-						//	debug_print_backtrace();
 						$options = array_keys(static::$aTenantCfgIns);
-						static::$sAppTenantAlias = AfrCliPromptMenu::promptMenu(
+						static::$sAppTenantAlias = self::getAutoTenantSelectArgvFlags() ?? AfrCliPromptMenu::promptMenu(
 							'Or run php script.php -T="tenantName" --tenant="sub.domain.tld"',
 							$options,
 							$options[0],
@@ -611,6 +611,38 @@ class AfrTenant
 		}
 		return $oTenant;
 
+	}
+
+	public static function getAutoTenantSelectArgvFlags(): ?string
+	{
+		if (empty(static::$aTenantCfgIns)) {
+			return null;
+		}
+
+		$aFramework = [
+			AfrRouterConstantsInterface::CRON_LIVE_LOGS_ARGV_KEY => '::first',
+		];
+		if (defined('AutoTenantSelectArgvFlags') && is_array(constant('AutoTenantSelectArgvFlags'))) {
+			$aFramework = array_merge($aFramework, constant('AutoTenantSelectArgvFlags'));
+		}
+
+		$aTenantsAliases = array_keys(static::$aTenantCfgIns);
+		$aCliArgs = AfrGetOpt::getInstanceNoContainerBindings()
+			->getoptDetectAllArgs($_SERVER['argv'] ?? [], true);
+
+		foreach ($aFramework as $sArgKey => $sModify) {
+			if (isset($aCliArgs[$sArgKey])) {
+				if ($sModify === '::last' || $sModify == -1) {
+					return array_pop($aTenantsAliases);
+				} elseif (in_array($sModify, $aTenantsAliases)) {
+					return $sModify;
+				} elseif (!empty($aTenantsAliases[$sModify])) {
+					return $aTenantsAliases[$sModify];
+				}
+				return array_shift($aTenantsAliases);
+			}
+		}
+		return null;
 	}
 
 

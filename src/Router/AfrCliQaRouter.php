@@ -74,7 +74,7 @@ class AfrCliQaRouter
 			};
 		}
 
-		if ($sQaIndexStack !== null) {
+		if (!empty($sQaIndexStack)) {
 			if (($aOptions[$sQaIndexStack] ?? false)) {
 				self::handleCliQaStack($sQaIndexStack, $aOptions[$sQaIndexStack]);
 				return self::$iCliQaHandled;

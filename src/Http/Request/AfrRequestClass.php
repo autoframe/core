@@ -109,6 +109,7 @@ class AfrRequestClass extends AfrSingletonAbstractClass implements AfrRequestInt
 		);
 
 	}
+
 	/**
 	 * @throws AfrContainerException
 	 * @throws AfrEnvException
@@ -116,13 +117,13 @@ class AfrRequestClass extends AfrSingletonAbstractClass implements AfrRequestInt
 	 * @throws AfrException
 	 */
 	public static function makeNewHttpRequestInstance(
-		?array              $cookie = null,
-		?array              $post = null,
-		?array              $files = null,
-		?array              $get = null,
-		?array              $server = null,
-		?array              $request = null,
-		?string             $php_sapi_name = null
+		?array  $cookie = null,
+		?array  $post = null,
+		?array  $files = null,
+		?array  $get = null,
+		?array  $server = null,
+		?array  $request = null,
+		?string $php_sapi_name = null
 	): AfrRequestInterface
 	{
 		return static::setupHttpRequest(
@@ -136,6 +137,7 @@ class AfrRequestClass extends AfrSingletonAbstractClass implements AfrRequestInt
 			$php_sapi_name
 		);
 	}
+
 	/**
 	 * @param string $sClassFQCN
 	 * @return AfrRequestInterface|null
@@ -862,10 +864,10 @@ class AfrRequestClass extends AfrSingletonAbstractClass implements AfrRequestInt
 	public function getPhpInput(): ?string
 	{
 		//TODO: https://www.php.net/manual/en/function.stream-wrapper-register.php
-		if(isset($this->aMock['php://input'])){
+		if (isset($this->aMock['php://input'])) {
 			return $this->aMock['php://input'];
 		}
-		if(AfrCliHttpDetect::isCli()){
+		if (AfrCliHttpDetect::isCli()) {
 			return null;
 		}
 		return ($mData = file_get_contents('php://input')) === false ? null : $mData;
@@ -941,7 +943,7 @@ class AfrRequestClass extends AfrSingletonAbstractClass implements AfrRequestInt
 		if (!$this->isCli()) {
 			return false;
 		}
-		return AfrGetOpt::getInstance()->setArgvFromRequest($this)->getoptDetectAllArgs();
+		return AfrGetOpt::getInstance()->setArgvFromRequest($this)->getoptDetectAllArgs(null, true);
 	}
 
 
@@ -957,6 +959,11 @@ class AfrRequestClass extends AfrSingletonAbstractClass implements AfrRequestInt
 		$bMatched = false;
 		$sDetectVal = null;
 		if ($this->isCli()) {
+
+			$aAllArgs = AfrGetOpt::getInstance()->setArgvFromRequest($this)->getoptDetectAllArgs(null, true);
+			return [array_key_exists($sArgvKey,$aAllArgs), $aAllArgs[$sArgvKey] ?? null];
+			//TODO: cleanup dupa ce testez cu AfrGetOpt la detect cu whildcard
+
 			$iKeyLen = strlen($sArgvKey);
 			foreach ($this->getServerParam('argv', []) as $sBlockValue) {
 				if ($sBlockValue === $sArgvKey) {
