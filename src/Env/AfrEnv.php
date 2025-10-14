@@ -387,6 +387,9 @@ class AfrEnv extends AfrSingletonAbstractClass implements AfrEnvInterface
 	{
 		if (!$this->bValidated) {
 			$this->bValidated = $this->xetAfrEnvValidator()->validateAll($this->aEnvData);
+			print_r(__CLASS__.'$this->aEnvData:');
+			print_r($this->aEnvData);
+			debug_print_backtrace(DEBUG_BACKTRACE_PROVIDE_OBJECT);
 		}
 		if (!$this->bValidated) {
 			throw new AfrEnvException('Validation for ENV settings failed!');
@@ -396,6 +399,8 @@ class AfrEnv extends AfrSingletonAbstractClass implements AfrEnvInterface
 	/**
 	 * @param AfrEnvParserInterface|null $oEnvParser
 	 * @return AfrEnvParserInterface
+	 * @throws \Autoframe\Core\Container\Exception\AfrContainerException
+	 * @throws \Autoframe\Core\Event\Exception\AfrEventException
 	 */
 	public function xetAfrEnvParser(AfrEnvParserInterface $oEnvParser = null): AfrEnvParserInterface
 	{
