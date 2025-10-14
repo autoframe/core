@@ -149,7 +149,8 @@ trait AfrSingletonTrait
 			return false;
 		}
 		if(static::$bCheckObjectInstanceType){ //TODO: add here integrity checks from interfaces
-			return $mixedToCheck instanceof (static::class);
+			$sClass = static::class;
+			return $mixedToCheck instanceof $sClass;
 		}
 		return true;
 	}
