@@ -151,6 +151,7 @@ class AfrEnvTest extends TestCase
 		$this->assertSame('CUSTOM', $oEnv->getEnv('APP_ENV'));
 		$this->assertSame(true, $oEnv->isDev());
 		$this->assertSame(true, $oEnv->setEnv('AFR_ENV', 'PRODUCTION')->isProduction());
+		$oEnv->flush();
 	}
 
 
