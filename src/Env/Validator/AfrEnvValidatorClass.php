@@ -25,7 +25,7 @@ class AfrEnvValidatorClass implements AfrEnvValidatorInterface
 				if (!$mResponse) {
 					throw new AfrEnvException(
 						'Validation failed in ' .
-						__CLASS__ . '@' . $aRule[2] . ' for env key: ' .
+						__CLASS__ . '@' . ($aRule[2]??'empty($aRule[2])') . ' for env key: ' .
 						$sKey . ' » `' . $this->aDataSet[$sKey] . '`'
 					);
 				}
