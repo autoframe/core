@@ -2,6 +2,7 @@
 
 use Autoframe\Core\Afr\Afr;
 use Autoframe\Core\CliTools\AfrCliTextColors;
+use Autoframe\Core\Cron\Log\Channel\AfrCronLogChannelSharedLogBuffer;
 use Autoframe\Core\Env\AfrEnv;
 use Autoframe\Core\Tenant\AfrTenant;
 
@@ -40,6 +41,17 @@ $aActions['clearCache'] = function () {
 		$v = false;
 	}
 	return [$k => $v,];
+};
+
+$aActions['cronJobs'] = function () {
+
+	return [
+		'View live logs' => function () {
+			AfrCronLogChannelSharedLogBuffer::getInstance()->viewLogs(2,false);
+			//return '';
+			return true;
+		},
+	];
 };
 
 return $aActions;
