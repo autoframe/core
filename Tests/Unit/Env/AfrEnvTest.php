@@ -78,6 +78,7 @@ class AfrEnvTest extends TestCase
 		$this->assertSame(true, $_SERVER['NVAR2'] === 'World!');
 		$this->assertSame(true, $_ENV['NVAR2'] === 'World!');
 		$this->assertSame(true, getenv('NVAR2') === 'World!');
+		$oEnv->unrequire(['NVAR2']);
 
 		$aEnv = $oEnv->getEnv(); //print_r($aEnv); die;
 
