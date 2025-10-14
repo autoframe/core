@@ -33,6 +33,7 @@ $_SERVER['REQUEST_TIME_FLOAT'] ??= microtime(true);
  */
 class Afr
 {
+	public static bool $bIgnoreUserAbort = false;
 	protected static self $oAfr;
 	protected string $sAppBaseDirectory;
 
@@ -65,9 +66,12 @@ class Afr
 		string $sContainerClass = null
 	)
 	{
+		$this->checkUserAbort();
+
 		if (!empty(static::$oAfr)) {
 			throw new AfrException('Afr already initialized!');
 		}
+
 		$sAppBaseDirectory ??= defined($c = '\AFR_BASE_DIR') ? constant($c) :
 			dirname(AfrCliHttpDetect::getEntryPoint(null, false,false));
 
@@ -189,6 +193,18 @@ class Afr
 	public static function __callStatic($name, $arguments)
 	{
 		return AfrTenant::$name(...$arguments);
+	}
+
+	protected function checkUserAbort(): void
+	{
+		$sArgs = implode(' ', $_SERVER['argv'] ?? []);
+		if (
+			static::$bIgnoreUserAbort ||
+			strpos($sArgs, '--AFR_IGNORE_USER_ABORT') !== false ||
+			strpos($sArgs, '--CRON_DAEMON') !== false
+		) {
+			ignore_user_abort(true);
+		}
 	}
 
 

@@ -107,7 +107,8 @@ class AfrCronJobDaemon // extends AfrSingletonAbstractClass
 				$this->oLockWorker = new AfrLockFileClass($sLockName);
 			}
 			if ($this->oLockWorker->isLocked()) {
-				$this->log("Already running! Lock PID(" . $this->oLockWorker->getLockPid() . ") $sLockName");
+				$sCmd = $this->oWorkerJob ? $this->oWorkerJob->getCommand() : AfrCliHttpDetect::getEntryPoint();
+				$this->log("Already running! Lock PID(" . $this->oLockWorker->getLockPid() . ") $sLockName; CMD: ".$sCmd);
 				return false;
 			} elseif (!$this->oLockWorker->obtainLock()) {
 				$this->log("Fail to obtain lock $sLockName", true);

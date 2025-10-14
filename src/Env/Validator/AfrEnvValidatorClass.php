@@ -19,9 +19,12 @@ class AfrEnvValidatorClass implements AfrEnvValidatorInterface
 	public function validateAll(array $aDataSet): bool
 	{
 		$this->aDataSet = $aDataSet;
-		print_r(__CLASS__.'@'.__FUNCTION__.'$this->aDataSet:');
-		print_r($this->aDataSet);
-		debug_print_backtrace(DEBUG_BACKTRACE_PROVIDE_OBJECT);
+		if(0){
+			print_r(__CLASS__.'@'.__FUNCTION__.'$this->aDataSet:'); //todo remove debug
+			print_r($this->aDataSet);//todo remove debug
+			debug_print_backtrace();//todo remove debug
+		}
+
 		foreach ($this->aQueue as $sKey => $aRules) {
 			foreach ($aRules as $aRule) {
 				$mResponse = $aRule[0](...$aRule[1]);
