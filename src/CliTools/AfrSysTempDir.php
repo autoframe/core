@@ -40,12 +40,24 @@ class AfrSysTempDir
 		}
 		return static::$sysGetTempDir;
 	}
-	public static function sysGetTempDirAliasSubDir(string $sAliasSubDir): string
+
+	/**
+	 * @param string|object $soAliasSubDir
+	 * @return string
+	 */
+	public static function sysGetTempDirAliasSubDir($soAliasSubDir): string
 	{
-		$sAliasSubDir =
+		$soAliasSubDir = is_object($soAliasSubDir) ? get_class($soAliasSubDir) : (string)$soAliasSubDir;
+		$soAliasSubDir = trim(trim($soAliasSubDir),'\\');
+		if(strpos($soAliasSubDir, '\\') !== false) { //handle class names
+			$soAliasSubDir = array_slice(explode('\\', $soAliasSubDir), -1, 1)[0];
+		}
+		if(empty($soAliasSubDir)) return static::sysGetTempDir();
+
+		$soAliasSubDir =
 			static::sysGetTempDir() . DIRECTORY_SEPARATOR .
-			preg_replace('/[^A-Za-z0-9_-]/', '_', $sAliasSubDir);
-		return static::existAndWritable($sAliasSubDir) ? $sAliasSubDir : static::sysGetTempDir();
+			preg_replace('/[^A-Za-z0-9_-]/', '_', $soAliasSubDir);
+		return static::existAndWritable($soAliasSubDir) ? $soAliasSubDir : static::sysGetTempDir();
 	}
 
 	protected static function getCurrentHash(): string
@@ -90,10 +102,9 @@ class AfrSysTempDir
 	}
 
 
-
 	protected static function sysGetTempDirCheck(): string
 	{
-		if (!empty(static::$aTempDirs) &&  !empty($d = static::getFromSelfTempDirs())) { //loaded and validated on first run
+		if (!empty(static::$aTempDirs) && !empty($d = static::getFromSelfTempDirs())) { //loaded and validated on first run
 			return $d;
 		}
 
@@ -108,7 +119,7 @@ class AfrSysTempDir
 				!empty($d = static::getFromSelfTempDirs())
 			) {
 				if (rand(1, 100) == 8 && !file_exists($f2)) { //1% chance
-					if(static::existAndWritable(dirname($f2))){
+					if (static::existAndWritable(dirname($f2))) {
 						copy($f, $f2);//restore to temp dir after clear all temp
 					}
 				}
@@ -116,11 +127,10 @@ class AfrSysTempDir
 			}
 		}
 		if ($bf2 = file_exists($f2)) {
-			if(!$bf){
+			if (!$bf) {
 				$sPrevLoaded = null;
 				copy($f2, $f); //restore from temp dir when composer update
-			}
-			else{
+			} else {
 				$sPrevLoaded = json_encode(static::$aTempDirs);
 			}
 			static::extendSettings($f2);
@@ -129,7 +139,7 @@ class AfrSysTempDir
 			}
 			if (!empty($d2 = static::getFromSelfTempDirs())) {
 				if (!empty(static::$aTempDirs[self::getCurrentHash()][self::CONTEXT][static::get_sys_get_temp_dir()])) {
-					if(!$bf || $sPrevLoaded === json_encode(static::$aTempDirs)){
+					if (!$bf || $sPrevLoaded === json_encode(static::$aTempDirs)) {
 						return $d2; //load backup from file, dir exists because it contains $f2
 					}
 				}

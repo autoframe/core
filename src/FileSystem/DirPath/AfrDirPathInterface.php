@@ -83,7 +83,7 @@ interface AfrDirPathInterface
 	 */
 	public function realpath(string $path, bool $bCheckExistence);
 
-	public function dirExistAndWritable(string $dir, bool $bCreate = true, int $expectedPermissions = null): bool;
+	public function dirExistAndWritable(string $dir, bool $bCreate = true, ?int $expectedPermissions = null, bool $bClearStatCache = false): bool;
 
 	public function getExpectedDirPermissions(): int;
 

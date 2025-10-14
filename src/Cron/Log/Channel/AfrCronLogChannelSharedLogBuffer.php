@@ -38,7 +38,7 @@ class AfrCronLogChannelSharedLogBuffer extends AfrSingletonAbstractClass impleme
 		return true;
 	}
 
-	public function viewLogs($iReadTimeout = null): void
+	public function viewLogs($iReadTimeout = null, bool $bFlushAfterRead = true): void
 	{
 		//null timeout is the default
 		if (is_bool($iReadTimeout) || empty($iReadTimeout)) {
@@ -57,7 +57,7 @@ class AfrCronLogChannelSharedLogBuffer extends AfrSingletonAbstractClass impleme
 			styleDefaultAllBgColor("\n")->
 			textPrint();
 			while (true) {
-				$aLines = $this->getAfrCronLogSharedLogBuffer()->readLog(true);
+				$aLines = $this->getAfrCronLogSharedLogBuffer()->readLog($bFlushAfterRead);
 				foreach ($aLines as $line) {
 					$aLineFormatters = $this->getLineInfo($line);
 					$line = trim(substr($line, 1));

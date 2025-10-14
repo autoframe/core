@@ -6,6 +6,7 @@ use Autoframe\Core\Afr\Afr;
 use Autoframe\Core\CliTools\AfrCheckExec;
 use Autoframe\Core\CliTools\AfrCliHttpDetect;
 use Autoframe\Core\CliTools\AfrCliTextColors;
+use Autoframe\Core\CliTools\AfrSysTempDir;
 use Autoframe\Core\Container\Exception\AfrContainerException;
 use Autoframe\Core\Cron\Log\Channel\AfrCronLogChannelDoNotLog;
 use Autoframe\Core\DesignPatterns\Singleton\AfrSingletonAbstractClass;
@@ -23,6 +24,7 @@ use Autoframe\Core\Cron\Log\AfrCronLoggerInterface;
 use Autoframe\Core\String\AfrStr;
 use Autoframe\Core\Cron\Log\AfrCronLoggerClass;
 use Autoframe\Core\Http\CurlGetBodyWithTimeout\AfrGetHttpBodyWithTimeout;
+use Autoframe\Core\Error\AfrError;
 
 class AfrCronJobDaemon // extends AfrSingletonAbstractClass
 {
@@ -34,9 +36,10 @@ class AfrCronJobDaemon // extends AfrSingletonAbstractClass
 	const alias = 'alias';
 	const KILL_ALL_PHP_INSTANCES = 'KILL_ALL_PHP_INSTANCES';
 	const EXIT_DAEMON = 'EXIT_DAEMON';
-	const RESPAWN = 'RESPAWN';
+	const RESPAWN_DAEMON = 'RESPAWN_DAEMON';
+	const REFRESH_JOBS = 'REFRESH_JOBS';
 
-	/** @var AfrCronJob[] */
+	/** @var AfrCronJob[][] */
 	protected array $aJobs = [];
 
 	protected int $iLastExecutedMinute = -1;
@@ -80,32 +83,56 @@ class AfrCronJobDaemon // extends AfrSingletonAbstractClass
 	 * @throws AfrEventException
 	 * @throws AfrException
 	 */
-	public function run()
+	public function run(): void
 	{
 		AfrHttpImplicitFlush::getInstance()->setHttpImplicitFlush();
 		set_time_limit(0);
 		ignore_user_abort(true);
-		if (!($this->bIsWorker && $this->oWorkerJob->isAllowParallelRun())) {
-			$this->oLockWorker = new AfrLockFileClass($sLockName = $this->getLockName());
+		if (!$this->lock()) {
+			return;
+		}
+		error_clear_last();
+		$this->bIsWorker ? $this->runWorker() : $this->runDaemon();
+		if ($snErr = AfrError::getLastErrorReadable([E_DEPRECATED, E_USER_DEPRECATED])) {
+			$this->log($snErr, true);
+		}
 
+	}
+
+	protected function lock(bool $bForce = false): bool
+	{
+		$sLockName = $this->getLockName();
+		if ($bForce || !($this->bIsWorker && $this->oWorkerJob->isAllowParallelRun())) {
+			if (empty($this->oLockWorker)) {
+				$this->oLockWorker = new AfrLockFileClass($sLockName);
+			}
 			if ($this->oLockWorker->isLocked()) {
-				$this->log("Already running! Lock pid(" . $this->oLockWorker->getLockPid() . ")\t$sLockName");
-				//echo $this->getLatestLogBytes(1024 * 5); //TODO
-				return;
+				$this->log("Already running! Lock PID(" . $this->oLockWorker->getLockPid() . ") $sLockName");
+				return false;
 			} elseif (!$this->oLockWorker->obtainLock()) {
 				$this->log("Fail to obtain lock $sLockName", true);
 				$this->oLockWorker->releaseLock();
-				return;
+				return false;
 			} else {
-				$this->log($sLockName . '» Locked by PID(' . $this->oLockWorker->getLockPid() . ") single instance");
+				$this->log($sLockName . '» Locked at PID(' . $this->oLockWorker->getLockPid() . ")");
 			}
 		} else {
-			$this->log("Parallel / multithreading allowed on " . $this->getLockName());
+			$this->log("Parallel / multithreading allowed on " . $sLockName);
 		}
-
-		$this->bIsWorker ? $this->rundWorker() : $this->runDaemon();
+		return true;
 	}
 
+	protected function unlock(): void
+	{
+		if ($this->oLockWorker && $this->oLockWorker->isLocked()) {
+			$sId = $this->oLockWorker->getLockPid();
+			$bRelease = $this->oLockWorker->releaseLock();
+			if (!$bRelease) {
+				$this->log($this->getLockName() . "» Unlocked ERROR  at PID($sId)", true);
+			}
+			usleep(20_000);
+		}
+	}
 
 	/**
 	 * @param string|null|false|array $saDSJW CLI worker data AfrRouterConstantsInterface::CRON_WORKER_ARGV_KEY
@@ -143,6 +170,7 @@ class AfrCronJobDaemon // extends AfrSingletonAbstractClass
 		if ($this->bIsWorker && $this->oWorkerJob->isTurnOffLog()) {
 			$this->getLogger()->resetChannels()->pushChannel(AfrCronLogChannelDoNotLog::getInstance());
 		}
+		AfrConJobSources::getInstance()->setAfrCronLogger($this->getLogger());
 
 
 	}
@@ -165,7 +193,7 @@ class AfrCronJobDaemon // extends AfrSingletonAbstractClass
 		// The default setting is -1, which means that max_execution_time is used instead.
 		// Set to 0 to allow unlimited time.
 		//TODO: log folder for DEAMON / WORKERS tenant sensitive???
-		//TODO: RESPAWN if older than TS! atat pentru deamon, cat si pentru worker
+		//TODO: RESPAWN_DAEMON if older than TS! atat pentru deamon, cat si pentru worker --implementat altcumva
 		//TODO: !!! JOBS venite din module / CORE JOBS ca si LOADER static
 		//TODO: worker incarca url https din backup md5 facut de deamon
 		//TODO: CRON ENTRY POINT PHP file : trebuie sa fie replaceble in comanda: |AFR.DEAMOM.ENTRY.FILE.PHP|
@@ -179,14 +207,13 @@ class AfrCronJobDaemon // extends AfrSingletonAbstractClass
 		//todo: wget http - test
 		//todo run mised crons ?
 		//todo run startup crons + locks
-		$oJobsSources = AfrConJobSources::getInstance();
-		$this->aJobs = $oJobsSources->getAllJobs($this->oCronLogger);
+		$this->setAllDaemonJobsAndCache(false);
 		// print_r($this->aJobs);		die;
 
-		$this->log(
-			'Starting Cron Daemon watcher: ' .
-			'SOURCES(' . implode(', ', array_keys($oJobsSources->getAllSources())) . ')'
-		);
+		//TODO: fac cache initial jobs,
+		// apoi ii fac update periodic prin rularea unui thread diferit,
+		// care va putea sa fie citit de catre workeri si verificat allive status la jobs,
+		// apoi schimbarile noi trebuie sa se reflecte si in daemon preferabil din cache, sau din surse incomplete
 
 
 		$bWhile = true;
@@ -199,15 +226,7 @@ class AfrCronJobDaemon // extends AfrSingletonAbstractClass
 				$this->callDisplaySpinnerAndSleep();
 				continue;
 			}
-			$this->aJobs = $oJobsSources->getAllJobs($this->oCronLogger, true);
 			$this->iLastExecutedMinute = $iMinute;
-			//TODO reload new jobs
-			/*	if ($this->sCronJobsDataInputSource) {
-					$this->bHttpInputSource ?
-						$this->loadCronJobsFromHttp() :
-						$this->loadCronJobsFromFile();
-				}*/
-			// $this->aJobs = $oJobsSources->getAllJobs($this->oCronLogger);
 			$aToDispatch = [];
 			foreach ($this->aJobs as $sGroupAlias => $aGroup) {
 				foreach ($aGroup as $oJob) {
@@ -225,9 +244,20 @@ class AfrCronJobDaemon // extends AfrSingletonAbstractClass
 					if (!$oJob->canTrigger($aNow)) {
 						continue;
 					}
-					//TODO: check
+					if ($oJob->isAlwaysRunService()) {
+						$sJobLockName = $this->getLockNameForJob($oJob);
+						$oJobLock = new AfrLockFileClass($sJobLockName);
+						if ($oJobLock->isLocked()) {
+							$this->log(
+								"Service is already running on lock $sJobLockName PID(" .
+								$oJobLock->getLockPid() . ") " . $oJob->getCommand()
+							);
+							continue;
+						}
+					}
+
 					$sCmd = strtoupper($oJob->getCommand());
-					if (in_array($sCmd, [static::KILL_ALL_PHP_INSTANCES, static::EXIT_DAEMON, static::RESPAWN])) {
+					if (in_array($sCmd, [static::KILL_ALL_PHP_INSTANCES, static::EXIT_DAEMON, static::RESPAWN_DAEMON])) {
 						$this->log('Ending soon because of command: ' . $oJob->getCronTime() . ' ' . $oJob->getCommand());
 						$bWhile = false;
 						$sEndCmd = $sCmd;
@@ -242,7 +272,7 @@ class AfrCronJobDaemon // extends AfrSingletonAbstractClass
 				$this->log('Empty Job Queue', true);
 			}
 			//dispatch jobs
-			if ($bWhile || $sEndCmd === static::RESPAWN) {
+			if ($bWhile || $sEndCmd === static::RESPAWN_DAEMON) {
 				$this->daemonDispatchJobs($aToDispatch);
 			}
 
@@ -254,25 +284,40 @@ class AfrCronJobDaemon // extends AfrSingletonAbstractClass
 			) {
 				$this->log('Respawning soon because of framework update / clear cache in file ' . $sEnvCache);
 				$bWhile = false;
-				$sEndCmd = static::RESPAWN;
+				$sEndCmd = static::RESPAWN_DAEMON;
 			}
 			$this->callDisplaySpinnerAndSleep();
-
+			$this->setAllDaemonJobsFromLatestCacheVersion(); //read the latest cache version
 		}
 
 		$this->log("Daemon jobs loop ended by [$sEndCmd]");
 		if ($sEndCmd) {
 			$this->endCmdDaemon($sEndCmd);
 		}
-		$this->log("Lock release: " . ($this->oLockWorker->releaseLock() ? 'true' : 'false') . ' ' . $this->getLockName());
+		$this->unlock();
 	}
 
 
-	protected function rundWorker(): void
+	/**
+	 * @throws AfrEventException
+	 * @throws AfrException
+	 */
+	protected function runWorker(): void
 	{
 		AfrEvent::dispatchEvent(AfrEvent::CRON_WORKER, [__FUNCTION__]);
-//		usleep(1000 * 10 * rand(0, 250));
+		//TODO: effective execution time tEnd - tStart in log in microtime
+
 		$sCommand = $this->oWorkerJob->getCommand();
+		if ($sCommand === static::REFRESH_JOBS) {
+			try {
+				$this->setAllDaemonJobsAndCache(true);
+			} catch (\Throwable $e) {
+				$this->log('Exception when ' . static::REFRESH_JOBS . ': ' . $e->getMessage(), true);
+				die(99);
+			}
+			die(0); //stop framework because the jobs are refreshed
+		}
+
 		$this->oWorkerJob->isAlwaysRunService();
 		$this->oWorkerJob->isAllowParallelRun();
 		$this->oWorkerJob->isRunOnStartup();
@@ -314,52 +359,15 @@ class AfrCronJobDaemon // extends AfrSingletonAbstractClass
 		$sCommand = $bCliCmd ?
 			trim(substr($sCommand, 4)) :
 			AfrBackgroundWorkerClass::getPhpBin(false) . ' ' . trim($sCommand);
+
+		//TODO: numai pentru servicii la care am nevoie de process control / restart
+		//TODO: numai pentru servicii la care am nevoie de process control / restart
+		//TODO: cand se schimba fila de env|composer version restartez serviciile dupa setare din job DECI FLAG NOU cu S(*****)
+		//TODO: cand se schimba fila de env restartez serviciile?
+
+
 		if (AfrCheckExec::isProcOpenCloseAvailable()) {
-			$spec = [
-				0 => ['pipe', 'w'], // parent writes -> child STDIN
-				1 => ['pipe', 'r'], // parent reads  <- child STDOUT
-				2 => ['pipe', 'r'], // parent reads  <- child STDERR
-			];
-			if ($rProcess = proc_open($sCommand, $spec, $pipes)) {
-				$aStatus = proc_get_status($rProcess);
-				//$this->log(print_r($aStatus, true));
-
-				stream_set_blocking($pipes[1], false);
-				stream_set_blocking($pipes[2], false);
-				if (empty($aStatus['running'])) {
-					$exitCode = proc_close($rProcess);
-					$this->log("Worker failed to register running status! Exit code:`$exitCode` for " . $sCommand, true);
-					return;
-				}
-				$iPid = intval($aStatus['pid'] ?? 0);
-				$this->log("Worker started PID($iPid): " . $sCommand);
-
-				usleep(90_000);
-				$sOutput = $sError = '';
-				// Example: read partial output without waiting for exit
-				$sOutput .= stream_get_contents($pipes[1]) ?: '';
-				$sError .= stream_get_contents($pipes[2]) ?: '';
-				while ($aStatus['running']) {
-					usleep(75_000);
-					//sleep(2);
-					$sOutput .= stream_get_contents($pipes[1]) ?: '';
-					$sError .= stream_get_contents($pipes[2]) ?: '';
-					$aStatus = proc_get_status($rProcess);
-					//$this->log(print_r($aStatus, true));
-				}
-				foreach ($pipes as $pipe) {
-					@fclose($pipe);
-				}
-				$exitCodeInStatus = intval($aStatus['exitcode']);
-				$exitCode = proc_close($rProcess);
-				$exitCode = $exitCodeInStatus > -1 ? $exitCodeInStatus : $exitCode;
-				$this->log('Data from CLI: ' . $sCommand . " (#$exitCode)➔ $sOutput", (bool)$exitCode);
-				if ($sError) {
-					$this->log("$sCommand (#$exitCode)➔ $sError", true);
-				}
-			}
-
-
+			$this->runWorkerProcOpen($sCommand);
 		} else {
 			//TODO complete / refactor::
 			//TODO complete / refactor::
@@ -369,7 +377,6 @@ class AfrCronJobDaemon // extends AfrSingletonAbstractClass
 							AfrBackgroundWorkerClass::execWithArgs($sCommand);*/
 			$output = $result_code = null;
 			//todo: test run exe cmd
-			error_clear_last();
 			$sFData = exec($sCommand, $output, $result_code);
 			if ($sFData === false) {
 				$this->log('Fail to execute: ' . $sCommand . " (#$result_code)➔ " . trim(error_get_last()['message'] ?? ''), true);
@@ -377,7 +384,9 @@ class AfrCronJobDaemon // extends AfrSingletonAbstractClass
 				$output = !empty($output) && is_array($output) ? implode("\n", $output) : $sFData;
 				$this->log('Data from CLI: ' . $sCommand . " (#$result_code)➔ $output");
 			}
+
 		}
+		$this->unlock();
 	}
 
 
@@ -408,13 +417,29 @@ class AfrCronJobDaemon // extends AfrSingletonAbstractClass
 	 * @return void
 	 * @throws AfrException
 	 */
-	protected function spawnCliWorker(AfrCronJob $oJob): void
+	protected function spawnCliWorker(AfrCronJob $oJob, bool $bRespawnNew = false): void
 	{
 		$sEntryPoint = $this->getJobTenantEntryPoint();
-		$sEntryPoint .= ' --' . AfrRouterConstantsInterface::CRON_WORKER_ARGV_KEY . '=' .
-			rtrim(strtr(base64_encode((string)$oJob), '+/', '@_'), '=');
+		$sCronWorkerArgvKey = ' --' . AfrRouterConstantsInterface::CRON_WORKER_ARGV_KEY . '=';
+		$sJobData = rtrim(strtr(base64_encode((string)$oJob), '+/', '@_'), '=');
+		if (strpos($sEntryPoint, $sCronWorkerArgvKey) !== false) {
+			//TODO TEST repalce ' --' . AfrRouterConstantsInterface::CRON_WORKER_ARGV_KEY . '='
+			$aParts = explode($sCronWorkerArgvKey, $sEntryPoint);
+			if (strpos($aParts[1], ' ') !== false) {// there are other parameters after CRON_WORKER_ARGV_KEY
+				$aTailParts = explode(' ', $aParts[1]);
+				$aTailParts[0] = $sJobData;// replace old job data
+				$aParts[1] = implode(' ', $aTailParts);
+			} else {
+				$aParts[1] = $sJobData;
+			}
+			$sEntryPoint = implode($sCronWorkerArgvKey, $aParts);
+
+		} else {
+			$sEntryPoint .= $sCronWorkerArgvKey . $sJobData;
+		}
 		$sCmd = $oJob->getCommand();
-		$this->log('Spawn worker [' . $this->getHash($sCmd) . '] ' . $sCmd);
+		$this->log(($bRespawnNew ? 'RESPAWN' : 'Spawn') . ' worker [' . static::computeHash($sCmd) . '] ' . $sCmd);
+		//	$this->log('C:\xampp\php\php.exe '.$sEntryPoint);
 		AfrBackgroundWorkerClass::execWithArgs($sEntryPoint, true); //background deteched pid
 	}
 
@@ -471,13 +496,13 @@ class AfrCronJobDaemon // extends AfrSingletonAbstractClass
 	protected function endCmdDaemon(string $sEndCmd): void
 	{
 		if ($sEndCmd == static::EXIT_DAEMON) {
-			$this->log("Lock release: " . ($this->oLockWorker->releaseLock() ? '1' : '0') . ' ' . $this->getLockName());
-			exit;
+			$this->unlock();
+			return;
 		} elseif ($sEndCmd == static::KILL_ALL_PHP_INSTANCES) {
 			$this->log('KILLING ALL PHP INSTANCES...');
 			$this->log(static::killAllPHPProcesses());
 			exit;
-		} elseif ($sEndCmd == static::RESPAWN) {
+		} elseif ($sEndCmd == static::RESPAWN_DAEMON) {
 			$iS = 60 - intval(date('s'));
 			if (AfrCliHttpDetect::isCli()) {
 				$sEntryPoint = self::getJobTenantEntryPoint();
@@ -545,12 +570,20 @@ class AfrCronJobDaemon // extends AfrSingletonAbstractClass
 	protected function getLockName(): string //ok
 	{
 		if (empty($this->sLockName)) {
-			$this->sLockName = 'Cron' .
+			/*$this->sLockName = 'Cron' .
 				($this->bIsWorker ? 'Worker_' : 'Daemon_') .
 				$this->getTenantName() . '_' .
-				$this->getHash();
+				$this->getHash();*/
+			$this->sLockName = $this->bIsWorker ?
+				$this->getLockNameForJob($this->oWorkerJob) :
+				'CronDaemon_' . $this->getTenantName() . '_' . $this->getHash();
 		}
 		return $this->sLockName;
+	}
+
+	protected function getLockNameForJob(AfrCronJob $oJob): string //ok
+	{
+		return 'CronWorker_' . $this->getTenantName() . '_' . $oJob->getHash();
 	}
 
 
@@ -685,5 +718,237 @@ class AfrCronJobDaemon // extends AfrSingletonAbstractClass
 		$this->getLogger()->log($message, $bError, $exitCode);
 		return $this;
 	}
+
+
+	protected function getJobCacheLocation(): string
+	{
+		return AfrSysTempDir::sysGetTempDirAliasSubDir(__CLASS__) .
+			DIRECTORY_SEPARATOR . preg_replace(
+				'/[^A-Za-z0-9_-]/', '_',
+				(Afr::getTenantAlias() ?? AfrTenant::AFR_NO_TENANT)
+			) . '.cache';
+	}
+
+	/**
+	 * @throws AfrEventException
+	 * @throws AfrEnvException
+	 * @throws AfrContainerException
+	 */
+	protected function setAllDaemonJobsAndCache(bool $bRefreshInstanceCache = false): int
+	{
+		$oJobsSources = AfrConJobSources::getInstance();
+		$this->aJobs = $oJobsSources->getAllJobs($bRefreshInstanceCache);
+
+		$i = 0;
+		foreach ($this->aJobs as $aJobs) {
+			foreach ($aJobs as $oJob) {
+				$i++;
+			}
+		}
+		file_put_contents($this->getJobCacheLocation(), serialize($this->aJobs));
+		$this->log(
+			'Loaded #' . $i . ' JOBS from ' .
+			'SOURCES(' . implode(', ', array_keys($oJobsSources->getAllSources())) . ')'
+		);
+
+		return $i;
+	}
+
+
+	/**
+	 * @throws AfrEventException
+	 * @throws AfrContainerException
+	 * @throws AfrEnvException
+	 */
+	protected function setAllDaemonJobsFromLatestCacheVersion(): void
+	{
+		$aFromCache = null;
+		$sCacheFile = $this->getJobCacheLocation();
+		if (is_file($sCacheFile) && is_readable($sCacheFile) && filemtime($sCacheFile) > time() - 3600) {
+			$aFromCache = unserialize(file_get_contents($this->getJobCacheLocation()));
+		}
+		if (is_array($aFromCache)) {
+			$this->aJobs = $aFromCache;
+		} else {
+			$this->setAllDaemonJobsAndCache(true);
+		}
+	}
+
+
+	/**
+	 * @param string $sCommand
+	 * @return array|void
+	 * @throws AfrException
+	 */
+	protected function runWorkerProcOpen(string $sCommand): void
+	{
+		// services will always restart automatically if a crash occurs
+		$onNewJob = $this->oWorkerJob->isAlwaysRunService() ? $this->oWorkerJob : null;
+		$this->log('$this->oWorkerJob->isAlwaysRunService()?' . (
+			$this->oWorkerJob->isAlwaysRunService() ? 1 : 0
+			) . '@ ' . $this->oWorkerJob->exportLine());
+		$sPipeFilePrefix = AfrSysTempDir::sysGetTempDirAliasSubDir(__CLASS__) .
+			DIRECTORY_SEPARATOR . $this->getLockName() . '_P' . ((int)getmypid()) . '.pipe';
+		$sPipeFileOutput = $sPipeFilePrefix . '.out';
+		$sPipeFileError = $sPipeFilePrefix . '.err';
+		touch($sPipeFileOutput);
+		touch($sPipeFileError);
+		$fh1 = fopen($sPipeFileOutput, 'w');
+		$fh2 = fopen($sPipeFileError, 'w');
+
+		$cleanup = function () use (&$sPipeFileOutput, &$sPipeFileError, &$fh1, &$fh2) {
+			is_resource($fh1) && fclose($fh1);
+			is_resource($fh2) && fclose($fh2);
+			is_file($sPipeFileOutput) && unlink($sPipeFileOutput);
+			is_file($sPipeFileError) && unlink($sPipeFileError);
+		};
+
+		$spec = [1 => $fh1, 2 => $fh2];
+
+		if (DIRECTORY_SEPARATOR === '\\') { //windows
+			$rProcess = proc_open($sCommand, $spec, $pipes, null, null, [
+				'bypass_shell' => true,
+				'create_new_console' => false,
+				//	'blocking_pipes' => false,
+				//	'create_process_group' => true,
+				//	'suppress_errors' => true,
+			]);
+		} else {
+			$rProcess = proc_open($sCommand, $spec, $pipes);
+		}
+		if ($rProcess) {
+			$aStatus = proc_get_status($rProcess);
+			if (empty($aStatus['running'])) {
+				$exitCode = proc_close($rProcess);
+				$this->log("Worker failed to register running status! Exit code:`$exitCode` for " . $sCommand, true);
+				$cleanup();
+				return;
+			}
+			$iPid = intval($aStatus['pid'] ?? 0);
+			$this->log("Worker thread PID($iPid): " . $sCommand);
+			$sTargetLoopSecondForAliveChecks = rand(0, 59);
+			$bExpiredJob = false;
+			usleep(20_000);
+
+			while ($aStatus['running'] && !$bExpiredJob) {
+				$aStatus = proc_get_status($rProcess);
+				if (!empty($aStatus['running']) && intval(date('s')) === $sTargetLoopSecondForAliveChecks) {
+					//$this->log('MakrK: ' . $sTargetLoopSecondForAliveChecks); //TODO: remove!!!!!!
+					//substract one sec
+					$sTargetLoopSecondForAliveChecks = ($sTargetLoopSecondForAliveChecks + 59) % 60;
+					$this->WorkerProcOpenReadJobChangesEveryMinute($bExpiredJob, $onNewJob);
+					$bExpiredJob && usleep(50_000);
+				} else {
+					usleep(100_000);
+				}
+			}
+			$this->log('$bExpiredJob-outsideWhile: ' . intval($bExpiredJob), true);
+
+			is_resource($fh1) && fclose($fh1);
+			is_resource($fh2) && fclose($fh2);
+			!$bExpiredJob && usleep(50_000);
+
+			if ($bExpiredJob && $aStatus['running']) { //terminated by process execution TODO XXX
+				$this->log('JOB force close for ' . $sCommand);
+				$exitCode = 'KILL:';
+				$aStatusTerm = is_resource($rProcess) ? proc_get_status($rProcess) : null;
+				if (is_resource($rProcess)) {
+					if (!empty($aStatusTerm['running'])) {
+						$exitCode .= proc_terminate($rProcess, 15) ? 'proc_terminate-TRUE' : 'proc_terminate-FALSE'; // SIGTERM hard kill on Windows
+					} else {
+						$exitCode = proc_close($rProcess);
+					}
+				}
+				usleep(75_000);
+				$aStatusTerm = is_resource($rProcess) ? proc_get_status($rProcess) : null;
+				if (!empty($aStatusTerm['running'])) {
+					is_resource($rProcess) && proc_terminate($rProcess, 9); // SIGKILL
+				}
+				if (!empty($aStatusTerm['running']) && $iPid && function_exists('posix_kill')) {
+					$exitCode .= posix_kill($iPid, 2) ? ' posix_kill-TRUE' : ' posix_kill-FALSE'; //SIGINT
+
+				}
+				if (strpos($exitCode, '-TRUE') !== false) $exitCodeInStatus = 0;
+				elseif (strpos($exitCode, '-FALSE') !== false) $exitCodeInStatus = 1;
+				else $exitCodeInStatus = intval($exitCode);
+				$this->log('JOB exited: ' . $sCommand . " (#$exitCode)", (bool)$exitCodeInStatus, $exitCodeInStatus);
+
+			} else {
+				$exitCodeInStatus = intval($aStatus['exitcode']);
+				$exitCode = proc_close($rProcess);
+				$exitCode = $exitCodeInStatus > -1 ? $exitCodeInStatus : $exitCode;
+				$this->log('JOB completed: ' . $sCommand . " (#$exitCode)", (bool)$exitCode, intval($exitCode));
+			}
+
+			foreach ([$sPipeFileOutput => (bool)$exitCode, $sPipeFileError => true] as $f => $e) {
+				if (is_file($f)) {
+					$sPipe = file_get_contents($f, false, null, 0, 1024 * 1024);
+					if ($sPipe && strlen($sPipe)) $this->log($sPipe, $e);
+				}
+				unset($sPipe);
+			}
+		} else {
+			sleep(120); //something went wrong here... wait 2 minutes and retry
+		}
+		$cleanup();
+		$this->unlock();
+
+		if ($onNewJob) { //open the new execution thread if needed
+			$this->spawnCliWorker($onNewJob, true);
+		}
+	}
+
+	protected function WorkerProcOpenReadJobChangesEveryMinute(bool &$bExpiredJob, &$onNewJob): void
+	{
+		$this->aJobs = [];
+		/** @var AfrCronJob[] $aNewJobs */
+		$aNewJobs = [];
+		try {
+			$this->setAllDaemonJobsFromLatestCacheVersion();
+		} catch (\Throwable $e) {
+			$this->log('Exception @setAllDaemonJobsFromLatestCacheVersion: ' . $e->getMessage());
+		}
+		foreach ($this->aJobs as $aAlias => $aJobs) {
+			foreach ($aJobs as $oJob) {
+				if ($this->oWorkerJob->getHash() === $oJob->getHash() && !$oJob->isSkipped()) {
+					$aNewJobs[] = $oJob; //push the newly job to a hash compare queue
+				}
+			}
+		}
+		//$this->log('$aNewJobs: '.print_r($aNewJobs,true));
+
+		if (count($aNewJobs) > 1) { //Why???
+			$oChosen = null;
+			foreach ($aNewJobs as $oNewJob) {
+				if ($this->oWorkerJob->getCronTime() === $oNewJob->getCronTime()) {
+					$oChosen = $oNewJob;
+				}
+			}
+			$aNewJobs = [$oChosen ?: array_slice($aNewJobs, 0, 1)]; //selected ot get first
+		} elseif (count($aNewJobs) === 1) {
+			$oJobToCheck = array_pop($aNewJobs);
+			if ($oJobToCheck->isAlwaysRunService()) {
+				$onNewJob = $oJobToCheck; //take new service settings for the next respawn
+				if (serialize($onNewJob) !== serialize($this->oWorkerJob)) {
+					$bExpiredJob = true;
+				}
+			}
+			//TODO: on restart condition?
+			//TODO: on framework update?
+			return; //nothing to change, because the same command is executed
+		}
+
+		//job was totally removed, so we stop the current service
+		//any other job that is not a service can continue to run
+		if (empty($aNewJobs)) {
+			if ($this->oWorkerJob->isAlwaysRunService()) {
+				$bExpiredJob = true;
+				return;
+			}
+		}
+
+
+	}
+
 
 }

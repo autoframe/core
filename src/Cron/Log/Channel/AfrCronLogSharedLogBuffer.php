@@ -100,6 +100,7 @@ final class AfrCronLogSharedLogBuffer
 		}
 	}
 
+	protected array $aReaded = [];
 	/**
 	 * Read and optionally flush the buffer atomically.
 	 * @return string[] Array of log lines.
@@ -125,19 +126,25 @@ final class AfrCronLogSharedLogBuffer
 				$count = count($aFiles);
 				$start = max(0, $count - max(0, self::$maxLines));
 				for ($i = $start; $i < $count; $i++) {
-					$f = $aFiles[$i];
-					$c = @file_get_contents($f,false,null,0,8192);
+					if(!empty($this->aReaded[$aFiles[$i]])){
+						continue;
+					}
+					$c = @file_get_contents($aFiles[$i],false,null,0,8192);
 					if ($c !== false) {
 						$lines[] = rtrim($c, "\r\n");
 					}
 				}
-				if($bFLushLogsAfterRead){
-					foreach ($aFiles as $f) {
+
+				foreach ($aFiles as $f) {
+					$this->aReaded[$f] = 1;
+					if ($bFLushLogsAfterRead) {
 						@unlink($f);
 					}
-				}
 
+				}
 			}
+
+
 
 			flock($fp, LOCK_UN);
 			fclose($fp);
@@ -201,6 +208,7 @@ final class AfrCronLogSharedLogBuffer
 		$toDelete = $count - $max;
 		for ($i = 0; $i < $toDelete; $i++) {
 			@unlink($files[$i]);
+			unset($this->aReaded[$i]);
 		}
 	}
 }

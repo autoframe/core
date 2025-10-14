@@ -11,21 +11,54 @@ use Autoframe\Core\Tenant\AfrTenant;
 class AfrError
 {
 
+	public static function getLastErrorReadable(array $aIgnoreTypes = []): ?string
+	{
+		if (empty($error = error_get_last())) return null;
+		if ($aIgnoreTypes && in_array($error['type'], $aIgnoreTypes)) return null;
+
+		$typeMap = [
+			E_ERROR => "Fatal Error",
+			E_WARNING => "Warning",
+			E_PARSE => "Parse Error",
+			E_NOTICE => "Notice",
+			E_CORE_ERROR => "Core Error",
+			E_CORE_WARNING => "Core Warning",
+			E_COMPILE_ERROR => "Compile Error",
+			E_COMPILE_WARNING => "Compile Warning",
+			E_USER_ERROR => "User Error",
+			E_USER_WARNING => "User Warning",
+			E_USER_NOTICE => "User Notice",
+			E_STRICT => "Strict Notice",
+			E_RECOVERABLE_ERROR => "Recoverable Error",
+			E_DEPRECATED => "Deprecated",
+			E_USER_DEPRECATED => "User Deprecated",
+		];
+
+		$type = $typeMap[$error['type']] ?? "Unknown error type ({$error['type']})";
+
+		return sprintf(
+			"PHP [%s] %s in %s on line %d",
+			$type,
+			$error['message'],
+			$error['file'],
+			$error['line']
+		);
+	}
+
 	public function initErrorHandler()
 	{
 		// This storage is freed on error (case of allowed memory exhausted)
 		$this->memory = str_repeat('*', 1024 * 2024);
 
-		register_shutdown_function(function()
-		{
+		register_shutdown_function(function () {
 			$this->memory = null;
-			if ((!is_null($err = error_get_last())) && (!in_array($err['type'], array (E_NOTICE, E_WARNING))))
-			{
+			if ((!is_null($err = error_get_last())) && (!in_array($err['type'], array(E_NOTICE, E_WARNING)))) {
 				// $this->emergencyMethod($err);
 			}
 		});
 		return $this;
 	}
+
 	const message_type_PHP_system_logger = 0;
 	const message_type_email_to_destination = 1;
 	const message_type_no_log = 2;
@@ -121,10 +154,10 @@ class AfrError
 			$dir = __DIR__;
 		}
 		if (!$dir) {
-			$dir = '.'.DIRECTORY_SEPARATOR;
+			$dir = '.' . DIRECTORY_SEPARATOR;
 		}
 
-		$aOut = AfrRequestClass::getInstance()->getRequestedFullData(true,true,true,true,true,true);
+		$aOut = AfrRequestClass::getInstance()->getRequestedFullData(true, true, true, true, true, true);
 
 		$sFilename = date('Y-m-d_H-i-s_') .
 			microtime() . '_' .

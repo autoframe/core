@@ -1,11 +1,12 @@
-#* * * * * EXIT_DAEMON
-*/9 * * * * EXIT_DAEMON
-#*/7 * * * * RESPAWN
+#*/9 * * * * EXIT_DAEMON
+32 * * * * EXIT_DAEMON
+#*/7 * * * * RESPAWN_DAEMON
 #* * * * * some.php args
+* * * * * REFRESH_JOBS
 #* * * * * CLI:C:\Windows\System32\mspaint.exe
 #* * * * * CLI:C:\Windows\System32\cmd.exe
 #<P>* * * * * http://localhost:808/core/src/multiexec.php
-<A(10)>* * * * * C:\xampp\htdocs\core\xEnd22Status.php
+<A(263336)>* * * * * C:\xampp\htdocs\core\xEnd22Status.php
 #* * * * * C:\xampp\htdocs\core\xSomeTxt.php
 #* * * * * C:\xampp\htdocs\core\xNoFeedback.php
 #* * * * * C:\xampp\htdocs\core\index.php AfrCronJobDaemon::demo

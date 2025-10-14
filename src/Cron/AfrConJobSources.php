@@ -12,6 +12,7 @@ use Autoframe\Core\Module\AfrModuleBox;
 use Autoframe\Core\Module\AfrModuleCLIRoutesInterface;
 use Autoframe\Core\Module\AfrModuleInterface;
 use Autoframe\Core\CliTools\AfrSysTempDir;
+use Autoframe\Core\Tenant\AfrTenant;
 
 
 final class AfrConJobSources extends AfrSingletonAbstractClass
@@ -23,9 +24,12 @@ final class AfrConJobSources extends AfrSingletonAbstractClass
 	protected ?array $aJobs = null;
 	protected array $aCronSourceNotFoundSafeguard = [];
 	protected array $aCronLoadTime = [];
-	public static int $iCronNotFoundSafeguardMax = 60 * 12;
+	public static int $iCronNotFoundSafeguardMax = 60;
 	public static array $aDefaultCurlSetOpt; //curl_setopt_array
 
+	/**
+	 * @var AfrCronLoggerClass|AfrCronLoggerInterface|null
+	 */
 	protected ?AfrCronLoggerInterface $oAfrCronLogger = null;
 
 	/**
@@ -116,17 +120,14 @@ final class AfrConJobSources extends AfrSingletonAbstractClass
 		return $this->aSources;
 	}
 
-
 	/**
-	 * @return array Layered array of having key aliases for class AfrCronJobDaemon
+	 * @param bool $bRefreshInstanceCache
+	 * @return AfrCronJob[][] Layered array of having key aliases for class AfrCronJobDaemon
 	 * @throws AfrEnvException
 	 */
-	public function getAllJobs(?AfrCronLoggerInterface $oAfrCronLogger = null, bool $bForceFreshLoad = false): array
+	public function getAllJobs(bool $bRefreshInstanceCache = false): array
 	{
-		if ($oAfrCronLogger) {
-			$this->setAfrCronLogger($oAfrCronLogger);
-		}
-		if (!$bForceFreshLoad && !empty($this->aJobs)) {
+		if (!$bRefreshInstanceCache && !empty($this->aJobs)) {
 			return $this->aJobs;
 		}
 		$this->aJobs = [];
@@ -319,52 +320,50 @@ final class AfrConJobSources extends AfrSingletonAbstractClass
 			return 0;
 		}
 
-		$sTempCache = AfrSysTempDir::sysGetTempDirAliasSubDir(
-				array_slice(explode('\\', __CLASS__), -1, 1)[0]
-			) . DIRECTORY_SEPARATOR . md5($sUrl) . '.url';
+		$sTempCache = AfrSysTempDir::sysGetTempDirAliasSubDir(__CLASS__) .
+			DIRECTORY_SEPARATOR . md5($sUrl) . '.url';
 
 
-		$this->aCronSourceNotFoundSafeguard[$sUrl] ??= 0;
-
-		$sErrMsg = $bCacheFileExists = null;
+		$sErrMsg = $bLoadedFromCacheFile = null;
 		$sContents = $this->getUrlData($sUrl, $aCurlSettings);
 		if ($sContents !== false) {
 			$this->aCronLoadTime[$sSourceAlias] = time();
 			$this->aCronSourceNotFoundSafeguard[$sUrl] = 0; //reset
 			file_put_contents($sTempCache, $sContents);
 		} else {
+			$this->aCronSourceNotFoundSafeguard[$sUrl] ??= 0; //init null
 			$this->aCronSourceNotFoundSafeguard[$sUrl]++;
-			if($bCacheFileExists = is_file($sTempCache)) {
+			if (is_file($sTempCache)) {
+				$this->aCronLoadTime[$sSourceAlias] = filemtime($sTempCache);
 				$sContents = file_get_contents($sTempCache);
-			}
-			else{
+				$bLoadedFromCacheFile = true;
+			} else {
+				$sSinceTs = !empty($this->aCronLoadTime[$sSourceAlias]) ? date('Y-m-d H:i:sO', $this->aCronLoadTime[$sSourceAlias]) : 'NEVER';
 				$sErrMsg = trim(
-					'Unable open job file: ' . $sSourceAlias . ', ' . $sUrl .
-					' since Ts(' . $this->aCronLoadTime[$sSourceAlias] . ')' .
-					(error_get_last()['message'] ?? '')
+					'Unable open job file: ' . $sSourceAlias . ', ' . $sUrl . ' since Ts(' . $sSinceTs .	')' . (error_get_last()['message'] ?? '')
 				);
 			}
-
 		}
 
-		if ($this->aCronSourceNotFoundSafeguard[$sUrl] > self::$iCronNotFoundSafeguardMax) {
+		if ($bLoadedFromCacheFile) {
+			$this->log('Using fallback jobs cache for url ' . $sUrl);
+		} elseif ($this->aCronSourceNotFoundSafeguard[$sUrl] > self::$iCronNotFoundSafeguardMax) {
+			$sSinceTs = !empty($this->aCronLoadTime[$sSourceAlias]) ? date('Y-m-d H:i:sO', $this->aCronLoadTime[$sSourceAlias]) : 'NEVER';
 			$sErrMsg = 'Cron jobs url source not accessible: ' .
 				$this->aCronSourceNotFoundSafeguard[$sUrl] .
-				' times, ' . ' since Ts(' . $this->aCronLoadTime[$sSourceAlias] . ')' .
+				' times, ' . ' since Ts(' . $sSinceTs . ')' .
 				$sSourceAlias . ', ' . $sUrl;
-			if($bCacheFileExists) {
-				$sErrMsg = 'Using fallback jobs cache! '.$sErrMsg;
-			}
 		}
 		if ($sErrMsg) {
 			$this->log($sErrMsg, true);
 			return 0;
 		}
-		$iExistingJobs = count($this->aJobs[$sSourceAlias] ?? []);
 		$this->flushJobsForAlias($sSourceAlias);
 		if (strlen($sContents) < 10) {
 			$iLoaded = 0;
-			$this->log('Cron jobs url source is empty: ' . $sUrl . ' B64:' . base64_encode($sContents), true);
+			if(!$bLoadedFromCacheFile){
+				$this->log('Cron jobs url source is empty: ' . $sUrl . ' B64:' . base64_encode($sContents), true);
+			}
 		} else {
 			$this->aJobs[$sSourceAlias] = AfrCronJob::parseLines($sContents);
 			if (($iLoaded = count($this->aJobs[$sSourceAlias])) < 1) {

@@ -4,8 +4,8 @@ namespace Autoframe\Core\Container;
 
 use Autoframe\Core\Afr\Afr;
 use Autoframe\Core\Container\Exception\AfrContainerException;
-use Autoframe\Core\Cron\Log\AfrCronLogChannelDoNotLog;
-use Autoframe\Core\Cron\Log\AfrCronLogChannelInterface;
+use Autoframe\Core\Cron\Log\Channel\AfrCronLogChannelDoNotLog;
+use Autoframe\Core\Cron\Log\Channel\AfrCronLogChannelInterface;
 use Autoframe\Core\Cron\Log\AfrCronLoggerClass;
 use Autoframe\Core\Cron\Log\AfrCronLoggerInterface;
 use Autoframe\Core\Http\Request\AfrRequestClass;

@@ -10,7 +10,6 @@ use function filetype;
 use function opendir;
 use function substr;
 use function substr_count;
-use function in_array;
 use function rtrim;
 use function array_diff;
 use function count;
@@ -49,7 +48,7 @@ trait AfrDirPathTrait
 			} else {
 				$resource = opendir($sDirPath);
 			}
-		} catch (\Exception $ex) {
+		} catch (\Throwable $ex) {
 			throw new AfrFileSystemDirPathException('Unable to open directory: ' . $sDirPath);
 		}
 		return $resource;
@@ -225,36 +224,65 @@ trait AfrDirPathTrait
 		return implode(DIRECTORY_SEPARATOR, $absolutes);
 	}
 
-	public function dirExistAndWritable(string $dir, bool $bCreate = true, int $expectedPermissions = null): bool
+	/**
+	 * @throws AfrEnvException
+	 */
+	public function dirExistAndWritable(string $dir, bool $bCreate = true, ?int $expectedPermissions = null, bool $bClearStatCache = false): bool
 	{
-		$expectedPermissions ??= $this->getExpectedDirPermissions();
+		$expectedPermissions ??= $this->getExpectedDirPermissions(); // can return 0775 or similar
+		$expectedPermissionsOctal = $expectedPermissions & 0777;
 		$dir = rtrim($dir, '\\/');
+		if ($dir === '') return false;
+		if ($bClearStatCache) clearstatcache(true, $dir);
+		$testFile = $dir . DIRECTORY_SEPARATOR . 'AfrWriteTest'.
+			getmypid() . '_' . microtime(true) . '_' . uniqid('', true) . '_' . mt_rand(10000, 99999)
+			. '.tmp';
+
 		if (!is_dir($dir)) {
-			if (!$bCreate) {
-				return false;
-			}
-			if (!mkdir($dir, $expectedPermissions, true) || !is_dir($dir)) {
-				return false;
-			}
-			if ((fileperms($dir) & 0777) !== $expectedPermissions) {
-				if (!chmod($dir, $expectedPermissions)) {
-					return false; // Unable to set correct permissions
-				}
-				if ((fileperms($dir) & 0777) !== $expectedPermissions) {
-					return false; // Still incorrect after chmod
-				}
-			}
+			if (!$bCreate) return false;
+			if (!@mkdir($dir, $expectedPermissions, true)) return false;
+			if (!is_dir($dir)) return false;
+			$this->attemptToSetPermissions($dir, $expectedPermissions);
+			return $this->writeTestFile($testFile);
 		}
+		// Directory exists: fast path — if PHP thinks it's writable for the current user, we're done
+		if (@is_writable($dir)) return true;
 
-		if (@file_put_contents($testFile = $dir . DIRECTORY_SEPARATOR . 'AfrWriteTest' . microtime(true) . '.tmp', 'w') !== false) {
-			return @unlink($testFile);
-		}
-		if (chmod($dir, $expectedPermissions) && @file_put_contents($testFile, 'c') !== false) {
-			return unlink($testFile);
-		}
+		$this->attemptToSetPermissions($dir, $expectedPermissions);
+		return $this->writeTestFile($testFile);
 
-		return false;
 	}
+
+	protected function writeTestFile(string $testFile): bool
+	{
+		// After creation, actually verify write ability
+		$fp = @fopen($testFile, 'xb'); // exclusive create (no clobber), binary for portability
+		if ($fp === false) {
+			// If file somehow exists, attempt cleanup once (defensive)
+			if (is_file($testFile)) @unlink($testFile);
+			return false;
+		}
+		$ok = (@fwrite($fp, 'x') !== false);
+		@fclose($fp);
+		@unlink($testFile);
+		return $ok;
+	}
+	/**
+	 * @param string $dir
+	 * @param int $expectedPermissions
+	 * @return void
+	 */
+	protected function attemptToSetPermissions(string $dir, int $expectedPermissions): void
+	{
+		// POSIX-style mode enforcement (umask-safe); on Windows this is mostly a no-op, but cheap
+		if (DIRECTORY_SEPARATOR !== '\\') {
+			$p = @fileperms($dir);
+			if ($p !== false && (($p & 0777) !== ($expectedPermissions & 0777))) {
+				@chmod($dir, $expectedPermissions);
+			}
+		}
+	}
+
 
 	/**
 	 * @throws AfrEnvException
@@ -314,5 +342,7 @@ trait AfrDirPathTrait
 			array_merge($up, $remaining)
 		);
 	}
+
+
 
 }
