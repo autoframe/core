@@ -22,6 +22,9 @@ use Autoframe\Core\Tenant\AfrTenant;
 class AfrEnv extends AfrSingletonAbstractClass implements AfrEnvInterface
 {
 	protected AfrEnvParserInterface $oEnvParser;
+	/**
+	 * @var AfrEnvValidatorClass|AfrEnvValidatorInterface
+	 */
 	protected AfrEnvValidatorInterface $oValidator;
 	protected AfrDirTraversingFileListInterface $oFileList;
 	protected AfrOverWriteInterface $oOverWrite;
@@ -222,6 +225,7 @@ class AfrEnv extends AfrSingletonAbstractClass implements AfrEnvInterface
 		$this->bValidated = false;
 		$this->aEnvData = $this->aEnvDirsFiles = [];
 		$this->sBaseDir = $this->sCacheFile = '';
+		$this->oValidator->reset();
 		unset($this->oValidator);
 		return $this;
 	}
@@ -411,7 +415,7 @@ class AfrEnv extends AfrSingletonAbstractClass implements AfrEnvInterface
 
 	/**
 	 * @param AfrEnvValidatorInterface|null $oValidator
-	 * @return AfrEnvValidatorInterface
+	 * @return AfrEnvValidatorClass|AfrEnvValidatorInterface
 	 */
 	public function xetAfrEnvValidator(AfrEnvValidatorInterface $oValidator = null): AfrEnvValidatorInterface
 	{
