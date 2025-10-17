@@ -6,6 +6,7 @@ namespace Unit\Env;
 use Autoframe\Core\Env\AfrEnv;
 
 use Autoframe\Core\Env\Exception\AfrEnvException;
+use Autoframe\Core\FileSystem\Traversing\AfrDirTraversingFileListClass;
 use PHPUnit\Framework\TestCase;
 
 class AfrEnvTest extends TestCase
@@ -22,10 +23,11 @@ class AfrEnvTest extends TestCase
 	 */
 	public function AfrEnvAllInOneTest(): void
 	{
-		$oEnv = AfrEnv::getInstance()->setBaseDir(__DIR__ . DIRECTORY_SEPARATOR . 'Env');
+		$sBaseDir = __DIR__ . DIRECTORY_SEPARATOR . 'Env';
+		$oEnv = AfrEnv::getInstance()->setBaseDir($sBaseDir);
 
 		$oEnv->xetAfrEnvParser();
-		if (self::insideProductionVendorDir()) {
+		if ($bInsideProductionVendorDir = self::insideProductionVendorDir()) {
 			$oEnv->readEnv(0);
 		} else {
 			$oEnv->readEnv(1)->flush();
@@ -34,7 +36,24 @@ class AfrEnvTest extends TestCase
 			$oEnv->readEnv(2);
 		}
 
+		$aEnv = $oEnv->getEnv();
+		if(count($aEnv)<10){
+			$sCacheFileName = $oEnv->getCacheFileName();
+			$sDebugSources = "\n sBaseDir : $sBaseDir\n";
+			$sDebugSources .= "\n bInsideProductionVendorDir : `$bInsideProductionVendorDir`\n";
+			$sDebugSources .= "\n oEnv->getCacheFileName() : `$sCacheFileName`\n";
+			if($sCacheFileName && is_file($sCacheFileName)){
+				$sDebugSources .= "\n filemtime(oEnv->getCacheFileName()) : `".filemtime($sCacheFileName)."` vs time:".time()."\n";
+				$sDebugSources .= "\n file_size(oEnv->getCacheFileName()) : `".file_size($sCacheFileName)."` bytes \n";
+			}
+			$aEnvsFiles = AfrDirTraversingFileListClass::getInstance()->getDirFileList($sBaseDir);
+			$sDebugSources .= "\n AfrDirTraversingFileListClass::getInstance()->getDirFileList(sBaseDir) : ".print_r($aEnvsFiles,true)."\n";
+			$this->assertSame(true, false,'$oEnv->getEnv() has less than 10 entries '.print_r($aEnv,true).$sDebugSources);
+		}
+
+
 		$oEnv->setEnv('ARRAY_DATA', [2]);
+
 		try {
 			$oEnv->ifPresent(['VALID_EXPLICIT_LOWERCASE_TRUE'])->isBoolean();
 			$oEnv->ifPresent(['VALID_LARGE'])->isInteger();
@@ -71,11 +90,6 @@ class AfrEnvTest extends TestCase
 			$this->assertSame(true, true);
 			$oEnv->unrequire(['NVAR2']);
 		}
-
-		$oEnv->readEnv(0);
-		$aEnv = $oEnv->getEnv(); //print_r($aEnv); die;
-		$this->assertSame(true, count($aEnv)>=10,'$oEnv->getEnv() has less than 10 entries '.print_r($aEnv,true));
-
 
 		$oEnv->required(['NVAR2'])->allowedValues(['World!']);
 		$this->assertSame(true, $oEnv->getEnv('NVAR2') === 'World!','$oEnv->getEnv() '.print_r($oEnv->getEnv(),true));
