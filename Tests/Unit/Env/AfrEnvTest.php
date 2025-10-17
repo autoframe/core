@@ -31,7 +31,7 @@ class AfrEnvTest extends TestCase
 			$oEnv->readEnv(0);
 		} else {
 			$oEnv->readEnv(1)->flush();
-			sleep(1);
+			usleep(50*1000);
 			$oEnv->setBaseDir(__DIR__ . DIRECTORY_SEPARATOR . 'Env');
 			$oEnv->readEnv(2);
 		}
@@ -48,8 +48,12 @@ class AfrEnvTest extends TestCase
 			}
 			$aEnvsFiles = AfrDirTraversingFileListClass::getInstance()->getDirFileList($sBaseDir);
 			$sDebugSources .= "\n AfrDirTraversingFileListClass::getInstance()->getDirFileList(sBaseDir) : ".print_r($aEnvsFiles,true)."\n";
+			$sDebugSources .= "\n file_exists($sBaseDir.'/dev.env') : `".file_exists($sBaseDir.'/dev.env')."`\n";
+			$sDebugSources .= "\n file_exists($sBaseDir.'/extra.env') : `".file_exists($sBaseDir.'/extra.env')."`\n";
+
 			$this->assertSame(true, false,'$oEnv->getEnv() has less than 10 entries '.print_r($aEnv,true).$sDebugSources);
 		}
+
 
 
 		$oEnv->setEnv('ARRAY_DATA', [2]);
