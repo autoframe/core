@@ -32,7 +32,9 @@ class AfrEnvValidatorClass implements AfrEnvValidatorInterface
 					throw new AfrEnvException(
 						'Validation failed in ' .
 						__CLASS__ . '@' . ($aRule[2]) . ' for env key: ' .
-						$sKey . ' » `' . $this->aDataSet[$sKey] . '`'
+						$sKey . ' » `' . $this->aDataSet[$sKey] . '`'.PHP_EOL.
+						'$this->aDataSet:'.print_r($this->aDataSet, true).PHP_EOL.
+						'$this->aQueue:'.print_r($this->aQueue, true).PHP_EOL
 					);
 				}
 				if ($mResponse === 's') {
