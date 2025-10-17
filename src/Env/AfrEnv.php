@@ -17,6 +17,7 @@ use Autoframe\Core\Env\Validator\AfrEnvValidatorClass;
 use Autoframe\Core\Env\Validator\AfrEnvValidatorInterface;
 use Autoframe\Core\Env\Exception\AfrEnvException;
 use Autoframe\Core\Tenant\AfrTenant;
+use MabeEnum\EnumMap;
 
 
 class AfrEnv extends AfrSingletonAbstractClass implements AfrEnvInterface
@@ -225,8 +226,11 @@ class AfrEnv extends AfrSingletonAbstractClass implements AfrEnvInterface
 		$this->bValidated = false;
 		$this->aEnvData = $this->aEnvDirsFiles = [];
 		$this->sBaseDir = $this->sCacheFile = '';
-		$this->oValidator->reset();
-		unset($this->oValidator);
+		if(!empty($this->oValidator)){
+			$this->oValidator->reset();
+			unset($this->oValidator);
+		}
+
 		return $this;
 	}
 
