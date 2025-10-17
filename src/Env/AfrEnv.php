@@ -219,7 +219,7 @@ class AfrEnv extends AfrSingletonAbstractClass implements AfrEnvInterface
 	 */
 	public function flush(): self
 	{
-		if (is_file($this->getCacheFileName())) {
+		if (!empty($this->sCacheFile) && is_file($this->getCacheFileName())) {
 			unlink($this->getCacheFileName());
 		}
 		$this->bValidated = false;
