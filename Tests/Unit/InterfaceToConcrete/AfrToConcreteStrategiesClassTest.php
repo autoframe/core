@@ -16,7 +16,7 @@ class AfrToConcreteStrategiesClassTest extends TestCase
 
     protected function setUp(): void
     {
-	    if (AfrEnv::getInstance()->getEnv('AFR_ENV', 'X') === 'X') {
+	    if (AfrEnv::getInstance()->flush()->getEnv('AFR_ENV', 'X') === 'X') {
 		    $_ENV['AFR_ENV'] = 'DEV';
 	    }
 

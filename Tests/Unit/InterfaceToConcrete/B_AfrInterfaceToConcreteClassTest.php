@@ -67,7 +67,7 @@ class B_AfrInterfaceToConcreteClassTest extends TestCase
 
 		$obj = null;
 		try {
-			if(!AfrEnv::getInstance()->getEnv('AFR_ENV')){
+			if(!AfrEnv::getInstance()->flush()->getEnv('AFR_ENV')){
 				$_ENV['AFR_ENV'] = 'DEV';
 			}
 			$obj = new AfrInterfaceToConcreteClass($aEnvSettings, $aExtraPaths); //['DEV', 'PRODUCTION', 'STAGING', 'DEBUG']

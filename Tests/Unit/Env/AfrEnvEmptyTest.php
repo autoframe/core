@@ -25,8 +25,11 @@ class AfrEnvEmptyTest extends TestCase
 		    $this->assertSame(true, $oEnv->isDev());
 	    }
 
-	    $oEnv->setEnv('AFR_ENV', 'STAGING');
+	    $oEnv->flush();
+		$oEnv->setEnv('AFR_ENV', 'STAGING');
         $this->assertSame('STAGING',  $oEnv->getEnv('AFR_ENV'));
+	    $oEnv->flush();
+
     }
 
 
