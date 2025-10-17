@@ -71,7 +71,7 @@ class AfrEnvTest extends TestCase
 			$this->assertSame(true, true);
 			$oEnv->unrequire(['NVAR2']);
 		}
-
+		$oEnv->setEnv('NVAR2','World!');
 		$oEnv->required(['NVAR2'])->allowedValues(['World!']);
 		$this->assertSame(true, $oEnv->getEnv('NVAR2') === 'World!');
 		$oEnv->registerEnv(true, true);
