@@ -73,6 +73,9 @@ class AfrEnvTest extends TestCase
 		}
 
 		$oEnv->readEnv(0);
+		$aEnv = $oEnv->getEnv(); //print_r($aEnv); die;
+		$this->assertSame(true, count($aEnv)>=10,'$oEnv->getEnv() has less than 10 entries '.print_r($aEnv,true));
+
 
 		$oEnv->required(['NVAR2'])->allowedValues(['World!']);
 		$this->assertSame(true, $oEnv->getEnv('NVAR2') === 'World!','$oEnv->getEnv() '.print_r($oEnv->getEnv(),true));
