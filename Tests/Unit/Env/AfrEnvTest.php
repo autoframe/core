@@ -71,7 +71,9 @@ class AfrEnvTest extends TestCase
 			$this->assertSame(true, true);
 			$oEnv->unrequire(['NVAR2']);
 		}
-		$oEnv->setEnv('NVAR2','World!');
+
+		$oEnv->readEnv(0);
+
 		$oEnv->required(['NVAR2'])->allowedValues(['World!']);
 		$this->assertSame(true, $oEnv->getEnv('NVAR2') === 'World!');
 		$oEnv->registerEnv(true, true);
@@ -81,6 +83,8 @@ class AfrEnvTest extends TestCase
 		$oEnv->unrequire(['NVAR2']);
 
 		$aEnv = $oEnv->getEnv(); //print_r($aEnv); die;
+		//$this->assertSame(true, $aEnv,'$oEnv->getEnv() '.print_r($aEnv,true));
+
 
 		$this->assertSame(true, $aEnv['VALID_EXPLICIT_LOWERCASE_TRUE']);
 		$this->assertSame(true, $aEnv['VALID_EXPLICIT_UPPERCASE_TRUE']);
