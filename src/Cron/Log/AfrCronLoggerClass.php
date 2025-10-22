@@ -29,6 +29,7 @@ class AfrCronLoggerClass extends AfrSingletonAbstractClass implements AfrCronLog
 	protected ?string $sHash = null;
 	protected ?bool $bWorker = null;
 
+	protected array $aLogQueue = [];
 
 	protected string $sMessage;
 	protected bool $bError;
@@ -93,7 +94,16 @@ class AfrCronLoggerClass extends AfrSingletonAbstractClass implements AfrCronLog
 		foreach ($this->aChannels as $oChannel) {
 			$oChannel->log($this);
 		}
+		while(!empty($this->aLogQueue)) {
+			$aExtraLog = array_shift($this->aLogQueue);
+			$this->log(...$aExtraLog);
+		}
 	}
+	public function logQueue(string $sMessage, bool $bError = false, int $exitCode = null): void
+	{
+		$this->aLogQueue[] = [$sMessage, $bError, $exitCode];
+	}
+
 
 	public function getFullCommand(): ?string
 	{

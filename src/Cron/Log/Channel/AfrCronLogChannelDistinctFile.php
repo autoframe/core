@@ -27,7 +27,7 @@ class AfrCronLogChannelDistinctFile extends AfrSingletonAbstractClass implements
 	 * @param AfrCronLoggerClass|AfrCronLoggerInterface $oData
 	 * @return void
 	 * @throws AfrContainerException
-	 * @throws AfrEventException
+	 * @throws AfrEventException|\Autoframe\Core\Env\Exception\AfrEnvException
 	 */
 	public function log(AfrCronLoggerInterface $oData): void
 	{
@@ -71,10 +71,10 @@ class AfrCronLogChannelDistinctFile extends AfrSingletonAbstractClass implements
 				FILE_APPEND
 			);
 			if ($bLogWorkerPrintedOutputToSeparateFile) {
-				$oData->log("Exit code(" . $oData->getExitCode() . ") logged into: $sFileName\n", $bErr, null);
+				$oData->logQueue("Exit code(" . $oData->getExitCode() . ") logged into: $sFileName", $bErr, null);
 			}
 		} elseif ($bErr && !$bLogWorkerPrintedOutputToSeparateFile) {
-			error_log($sFileName . ' ' . $sText);//fallback to system logger
+			error_log($sFileName . ' ' . substr($sText,0,4096));//fallback to system logger
 		}
 
 		$w = date('w');

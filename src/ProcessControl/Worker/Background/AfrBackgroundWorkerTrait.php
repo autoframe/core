@@ -12,6 +12,7 @@ trait AfrBackgroundWorkerTrait
 
 	/**
 	 * Returns /usr/bin/php or C:\xampp\php\php.exe or php
+	 * @param bool $bStartInBackgroundOnWindows
 	 * @return string
 	 */
 	public static function getPhpBin(bool $bStartInBackgroundOnWindows = false): string

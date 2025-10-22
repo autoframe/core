@@ -11,7 +11,7 @@ use Autoframe\Core\Afr\Afr;
 use PDO;
 use Closure;
 use Throwable;
-
+//TODO: if the database connection is closed after a period of time, it will need to be reopened for services!
 class AfrDbConnectionManagerClass extends AfrSingletonAbstractClass implements AfrDbConnectionManagerInterface
 {
 	protected array $aAliases = [];

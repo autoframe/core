@@ -6,27 +6,25 @@ use Autoframe\Core\Afr\Afr;
 use Autoframe\Core\CliTools\AfrCliHttpDetect;
 use Autoframe\Core\Container\Exception\AfrContainerException;
 use Autoframe\Core\Event\Exception\AfrEventException;
+use Autoframe\Core\Exception\AfrException;
 use Autoframe\Core\InterfaceToConcrete\AfrVendorPath;
 
-//TODO: set_time_limit
-//TODO: set connection time limit
-
 /**
- * AfrCronJob Flags only for JSON lines:
- * Startup S; Startup S(someValue);
+ * AfrCronJob Flag List:
+ * Startup S;
  * TurnOffLog: O;
  * AllowParallelRun: P;
+ * TimeLimitedSeconds: T(0.02)=20ms | T(60)=60 seconds;
  * AlwaysRunService: A;
- * AlwaysRunService with timeout of x seconds between recall: A(10)  10 seconds sleep after job end
+ * AlwaysRunService with stop+start=restart trigger  : A(* * 5 * *);
+ * TenantInsensitiveJob : I; The lock is tenant insensitive
  */
 final class AfrCronJob
 {
 	protected array $aJob = [
-		//TODO: set_time_limit
-		//TODO: set connection time limit
-		AfrCronJobDaemon::flags => null, //
+		AfrCronJobDaemon::flags => null, // S O P T(0.5) A I
 		AfrCronJobDaemon::cronTime => null, //unix * * * * *
-		AfrCronJobDaemon::command => null, //executed with exec()
+		AfrCronJobDaemon::command => null, //executed with proc_open() / exec()
 		AfrCronJobDaemon::alias => null, // some name for logging
 		AfrCronJobDaemon::skipped => false, //line starts with #
 	];
@@ -165,19 +163,35 @@ final class AfrCronJob
 		return $this;
 	}
 
-	public function setRunOnStartup(bool $bOn, string $sOtherParam = null): self
+	public function setRunOnStartup(bool $bOn): self
 	{
-		return $this->setFlag('S', $bOn, $sOtherParam);
-	}
-
-	public function getRunOnStartupOtherParam(): ?string
-	{
-		return $this->getFlagVal('S');
+		return $this->setFlag('S', $bOn);
 	}
 
 	public function isRunOnStartup(): bool
 	{
 		return $this->hasFlag('S');
+	}
+
+	/**
+	 * @throws AfrException
+	 */
+	public function setTimeLimitedSeconds(bool $bOn, float $fSleepAfterJobDone = null): self
+	{
+		if ($bOn && empty($fSleepAfterJobDone)) {
+			throw new AfrException('The flag `TimeLimitedSeconds` T(x) can`t be ON with null seconds!');
+		}
+		return $this->setFlag('T', $bOn, $fSleepAfterJobDone);
+	}
+
+	public function getTimeLimitedSeconds(): ?float
+	{
+		return (float)($this->getFlagVal('T') ?? null);
+	}
+
+	public function isTimeLimitedSeconds(): bool
+	{
+		return $this->hasFlag('T');
 	}
 
 	public function setTurnOffLog(bool $bOn): self
@@ -190,14 +204,30 @@ final class AfrCronJob
 		return $this->hasFlag('O');
 	}
 
-	public function setAlwaysRunService(bool $bOn, float $fSleepAfterJobDone = null): self
+	public function setAlwaysRunService(bool $bOn, string $sRestartAtUnixTime = null): self
 	{
-		return $this->setFlag('A', $bOn, $fSleepAfterJobDone);
+		//unix * * * * *
+		if ($sRestartAtUnixTime !== null && count(explode(' ', $sRestartAtUnixTime)) !== 4) {
+			$sRestartAtUnixTime = null;
+		}
+		return $this->setFlag('A', $bOn, $sRestartAtUnixTime);
 	}
 
-	public function getAlwaysRunServiceSleepAfterJobDoneSeconds(): float
+	public function getAlwaysRunServiceUnixCronTimeValue(): ?string
 	{
-		return (float)($this->getFlagVal('A') ?? 0.0);
+		return $this->getFlagVal('A');
+	}
+
+	public function canTriggerAlwaysRunServiceRestartTime(array $aNow = null): bool
+	{
+		if (empty($snValue = $this->getAlwaysRunServiceUnixCronTimeValue())) {
+			return false;
+		}
+		$startTime = intval($_SERVER['REQUEST_TIME_FLOAT'] ?? ($_SERVER['REQUEST_TIME'] ?? 0));
+		return
+			$this->isValidConfig() &&
+			$startTime + 61 < time() && //at least 61 seconds old
+			AfrUnixCronTrigger::getInstance()->triggerUnixCron($snValue, $aNow ?? getdate());
 	}
 
 	public function isAlwaysRunService(): bool
@@ -213,6 +243,16 @@ final class AfrCronJob
 	public function isAllowParallelRun(): bool
 	{
 		return $this->hasFlag('P');
+	}
+
+	public function setTenantInsensitiveJob(bool $bOn): self
+	{
+		return $this->setFlag('I', $bOn);
+	}
+
+	public function isTenantInsensitiveJob(): bool
+	{
+		return $this->hasFlag('I');
 	}
 
 	public function getAlias(): ?string

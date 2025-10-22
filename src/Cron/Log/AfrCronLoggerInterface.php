@@ -15,6 +15,7 @@ interface AfrCronLoggerInterface extends AfrSingletonInterface
 	public function setCommandAliasTenantWorker(string $sFullCommand, string $sFlags, string $sAlias, string $sTenant, bool $bIsWorker, string $sHash = null): void;
 
 	public function log(string $sMessage, bool $bError = false, int $exitCode = null): void;
+	public function logQueue(string $sMessage, bool $bError = false, int $exitCode = null): void;
 
 	public function getFullCommand(): ?string;
 	public function getFlags(): ?string;
