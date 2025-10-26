@@ -5,50 +5,61 @@ namespace Autoframe\Core\Bank\ExchangeRate;
 
 
 //     $curs=new cursBnrThf(array('EUR','USD'));	//$curs->test();
+//TODO!!!!!!!
 
+use SimpleXMLElement;
 
 class cursBnrXML
 {
-    var $xmlDocument = "";
-    var $date = "";
-    var $currency = array();
+	protected static array $aNbFrames = [];
+    protected string $sXmlUrl = 'https://www.bnr.ro/nbrfxrates.xml';
+	protected string $date;
+	protected array $currency;
 
     function __construct()
     {
-        //$this->xmlDocument = file_get_contents('https://www.bnro.ro/nbrfxrates.xml');
-        $this->xmlDocument = file_get_contents('https://www.bnr.ro/nbrfxrates.xml');
-        $this->parseXMLDocument();
     }
 
-    function parseXMLDocument()
+	public function setXmlUrl(string $sXmlUrl): self
+	{
+		$this->sXmlUrl = $sXmlUrl;
+		return $this;
+	}
+
+    protected function parseXMLDocument()
     {
-        $xml = new SimpleXMLElement($this->xmlDocument);
-
-        $this->date = $xml->Header->PublishingDate;
-
+		if(empty(static::$aNbFrames[$this->sXmlUrl])){
+			static::$aNbFrames[$this->sXmlUrl] = file_get_contents($this->sXmlUrl);
+		}
+        $xml = new SimpleXMLElement(static::$aNbFrames[$this->sXmlUrl]);
+        $this->date = (string)$xml->Header->PublishingDate;
         foreach ($xml->Body->Cube->Rate as $line) {
-            $this->currency[] = array("name" => $line["currency"], "value" => $line, "multiplier" => $line["multiplier"]);
+            $this->currency[] = array("name" => $line["currency"], "value" => $line, "multiplier" => $line["multiplier"]??1);
         }
     }
 
-    function getExchangeRate($currency)
+    public function getExchangeRate(string $currency)
     {
+		if(empty($this->date)){
+			$this->parseXMLDocument();
+		}
+
         foreach ($this->currency as $line) {
-            if ($line["name"] == $currency) {
-                return $line["value"];
+            if ($line['name'] == $currency) {
+                return $line['value'];
             }
         }
-        return "Incorrect currency!";
+        return 'Incorrect currency!';
     }
 }
 
 class cursBnrThf extends cursBnrXML
 {
-    var $monede = array('EUR', 'USD');
+    protected array $monede = array('EUR', 'USD');
 
     function __construct($monede = array())
     {
-        if (is_array($monede) && count($monede) > 0) {
+        if (!empty($monede)) {
             $this->monede = $monede;
         }
         $this->checkLatest();
@@ -63,7 +74,7 @@ class cursBnrThf extends cursBnrXML
         }
     }
 
-    function updateCurs()
+    public function updateCursInServerVal()
     {
         parent::__construct();
         set_sv_val('curs_bnr_date', date('Y-m-d'));

@@ -4,7 +4,7 @@ Namespace:
 - Autoframe\\Core\\FileMime
 
 Class is a SINGLETON:
-- AfrFileMimeClass + AfrFileMimeInterface + AfrFileMimeTrait
+- AfrFileMimeClass + AfrFileMimeInterface
 - Methods:
   - getFileMimeTypes: array  *[... 'image/jpeg' => ['jpeg','jpg','jpe'], ...]*
   - getFileMimeExtensions: array  *[... 'jpeg' => 'image/jpeg', ...]*

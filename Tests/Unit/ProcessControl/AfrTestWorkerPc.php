@@ -1,6 +1,8 @@
 <?php
 declare(strict_types=1);
 
+ignore_user_abort(true);
+
 //TEST AfrBackgroundWorkerClass
 ob_start();
 $file = __DIR__ . DIRECTORY_SEPARATOR . (!empty($_SERVER['argv'][1]) ? $_SERVER['argv'][1] : rand(4242, 6146436) . '.test');

@@ -4,11 +4,6 @@ namespace Autoframe\Core\CliTools;
 
 class AfrCliPromptMenu
 {
-    public static function insideCli(): bool
-    {
-        return http_response_code() === false;
-    }
-
     /**
      * @param string $prompt
      * @param array $options
@@ -56,7 +51,7 @@ class AfrCliPromptMenu
             if ($option == $default) {
                 echo "\033[1m";
             }
-            print "$select) $option";
+            print "\t$select) $option";
             if ($option == $default) {
                 echo "\033[0m";
             }
@@ -110,8 +105,8 @@ class AfrCliPromptMenu
 
     public static function demo(): void
     {
-        if (!static::insideCli()) {
-            echo 'The script does not run inside CLI!' . PHP_EOL;
+        if (!AfrCliHttpDetect::isCli()) {
+            echo 'The script does runs inside CLI!' . PHP_EOL;
             return;
         }
         $options = [

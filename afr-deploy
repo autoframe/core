@@ -1,0 +1,27 @@
+#!/usr/bin/env php
+<?php
+
+$baseDir = __DIR__;
+
+$autoloadPaths = array(
+	$baseDir . '/vendor/autoload.php',
+	$baseDir . '/../../autoload.php',
+);
+
+$foundVendorAutoload = false;
+foreach ($autoloadPaths as $path) {
+	if (file_exists($path)) {
+		require $path;
+		$foundVendorAutoload = true;
+		break;
+	}
+}
+
+if (!$foundVendorAutoload) {
+	throw new \Exception('Could not find autoload path in any of the searched locations');
+}
+echo "basedir: $baseDir\n";
+echo "cwd: ".getcwd()."\n";
+print_r(debug_backtrace());
+//use Autoframe\Core\Afr\Afr;
+//Afr::makeApp(__DIR__)->run();

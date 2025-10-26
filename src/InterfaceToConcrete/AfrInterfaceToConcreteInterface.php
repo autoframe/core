@@ -19,21 +19,24 @@ use Autoframe\Core\InterfaceToConcrete\Exception\AfrInterfaceToConcreteException
 interface AfrInterfaceToConcreteInterface
 {
     /**
-     * @return array
+     * @param string|null $sFilterFQCN
+	 * @return array
      * @throws AfrInterfaceToConcreteException
      * @throws AfrClassDependencyException
      */
-    public function getClassInterfaceToConcrete(): array;
+    public function getClassInterfaceToConcrete(string $sFilterFQCN = null): array;
 
     /**
      * @return AfrInterfaceToConcreteInterface|null
      */
     public static function getLatestInstance(): ?AfrInterfaceToConcreteInterface;
 
-    /**
-     * @return array
-     */
-    public function getEnvSettings(): array;
+
+	/**
+	 * @param string|null $sType
+	 * @return array|mixed
+	 */
+    public function getSettings(string $sType = null);
 
     /**
      * @param string $s
@@ -63,7 +66,7 @@ interface AfrInterfaceToConcreteInterface
      * @param bool $bUseCache
      * @param string|null $sTemporaryContextOverwrite
      * @param string|null $sTemporaryPriorityRuleOverwrite
-     * @return string
+     * @return string 1|FQCN for instantiable; 2|FQCN for singleton; 0|notConcreteFQCN for fail
      * @throws AfrClassDependencyException
      * @throws AfrInterfaceToConcreteException
      */

@@ -4,9 +4,11 @@ declare(strict_types=1);
 namespace Autoframe\Core\InterfaceToConcrete;
 
 use Autoframe\Core\Arr\Export\AfrArrExportArrayAsStringClass;
+use Autoframe\Core\CliTools\AfrSysTempDir;
 use Autoframe\Core\FileSystem\OverWrite\AfrOverWriteClass;
 use Autoframe\Core\ClassDependency\AfrClassDependency;
 use Autoframe\Core\InterfaceToConcrete\Exception\AfrInterfaceToConcreteException;
+use Autoframe\Core\Tenant\AfrTenant;
 
 
 /**
@@ -53,22 +55,27 @@ class AfrMultiClassMapper
 		//allow for multiple calls of AfrInterfaceToConcreteInterface->getClassInterfaceToConcrete
 		if (!isset(self::$oWiringPaths) || self::$oWiringPaths !== $oWiringPaths) {
 			self::$oWiringPaths = $oWiringPaths;
-			self::$bForceRegenerateAllButVendor = $oWiringPaths->getEnvSettings()[self::ForceRegenerateAllButVendor];
-			self::$bSilenceErrors = $oWiringPaths->getEnvSettings()[self::SilenceErrors];
+			self::$bForceRegenerateAllButVendor = $oWiringPaths->getSettings(self::ForceRegenerateAllButVendor);
+			self::$bSilenceErrors = $oWiringPaths->getSettings(self::SilenceErrors);
 			self::$aNsClassMergedFromPathMap = self::$aRegeneratedByBuildNewNsClassFilesMap = [];
 
-			if (!empty($oWiringPaths->getEnvSettings()[self::CacheDir])) {
-				self::$sCacheDir = realpath($oWiringPaths->getEnvSettings()[self::CacheDir]);
+			if (!empty($sCachePath = $oWiringPaths->getSettings(self::CacheDir))) {
+				self::$sCacheDir = (
+					//lazy exec after tenant exec
+					$sCachePath instanceof \Closure ? $sCachePath() : $sCachePath
+					). DIRECTORY_SEPARATOR . 'AfrMultiClassMapper' ;
 			}
 			if (empty(self::$sCacheDir)) { //fallback
-				self::$sCacheDir = (ini_get('sys_temp_dir') ?: sys_get_temp_dir()) ?: __DIR__ . DIRECTORY_SEPARATOR . 'cache';
+				self::$sCacheDir = ((ini_get('sys_temp_dir') ?: AfrSysTempDir::sysGetTempDir()) ?: __DIR__). DIRECTORY_SEPARATOR . 'AfrMultiClassMapper' ;
 			}
-			//TODO: de mutat in system TEMP dir / easy flush
-			if (!is_dir(self::$sCacheDir)) {
-				throw new AfrInterfaceToConcreteException('Dir not found ' . __CLASS__ . ': ' . self::$sCacheDir);
-			}
-			if (!is_file(self::$sCacheDir . DIRECTORY_SEPARATOR . '.gitignore')) {
-				file_put_contents(self::$sCacheDir . DIRECTORY_SEPARATOR . '.gitignore', "*.php\n*CheckTs\n");
+
+			if (!is_file($gitignore = self::$sCacheDir . DIRECTORY_SEPARATOR . '.gitignore')) {
+				if(!is_dir(self::$sCacheDir) && !mkdir(self::$sCacheDir, 0775, true)){
+					throw new AfrInterfaceToConcreteException('Dir not writable ' . __CLASS__ . ': ' . self::$sCacheDir);
+				}
+				if(file_put_contents($gitignore, "*.php\n*CheckTs\n")===false){
+					throw new AfrInterfaceToConcreteException('File not writable: '. $gitignore);
+				}
 			}
 		}
 	}
@@ -260,7 +267,7 @@ class AfrMultiClassMapper
 			return true;
 		}
 
-		$iCacheExpire = self::$oWiringPaths->getEnvSettings()[self::CacheExpireSeconds];
+		$iCacheExpire = self::$oWiringPaths->getSettings(self::CacheExpireSeconds);
 		if (time() > $iCacheFileMtime + $iCacheExpire) {
 
 			//old local cache file, so we rescan the system:
@@ -335,7 +342,7 @@ class AfrMultiClassMapper
 			$aClasses = AfrVendorPath::createMap($sPath);
 		}
 
-		$bDumpPhpFilePathAndMtime = self::$oWiringPaths->getEnvSettings()[self::DumpPhpFilePathAndMtime];
+		$bDumpPhpFilePathAndMtime = self::$oWiringPaths->getSettings(self::DumpPhpFilePathAndMtime);
 		$iShort = AfrVendorPath::getVendorPath() === $sPath ? 1 : 2;
 		foreach ($aClasses as $sFQCN => &$sClassPath) {
 			if (self::excludeRegEx($sClassPath) || self::excludeRegEx($sFQCN)) {
@@ -367,8 +374,8 @@ class AfrMultiClassMapper
 	 */
 	protected static function overWrite(string $sPathTo, array $aData, int $iRetryMs = 3000, float $fDelta = 2): bool
 	{
-		$sHeader = '<?php /* ' . gmdate('D, d M Y H:i:s') . ' GMT ->getEnvSettings: ' .
-			str_replace('*/', '* /', print_r(self::$oWiringPaths->getEnvSettings(), true)) .
+		$sHeader = '<?php /* ' . gmdate('D, d M Y H:i:s') . ' GMT ->getSettings: ' .
+			str_replace('*/', '* /', print_r(self::$oWiringPaths->getSettings(), true)) .
 			"*/ \n return ";
 		return AfrOverWriteClass::getInstance()->overWriteFile(
 			$sPathTo,
@@ -388,8 +395,8 @@ class AfrMultiClassMapper
 	{
 		return AfrOverWriteClass::getInstance()->overWriteFile(
 			$sPathTo,
-			gmdate('D, d M Y H:i:s') . ' GMT' . PHP_EOL . 'getEnvSettings: ' .
-			print_r(self::$oWiringPaths->getEnvSettings(), true),
+			gmdate('D, d M Y H:i:s') . ' GMT' . PHP_EOL . 'getSettings: ' .
+			print_r(self::$oWiringPaths->getSettings(), true),
 			$iRetryMs,
 			$fDelta
 		);
@@ -415,7 +422,7 @@ class AfrMultiClassMapper
 
 	protected static function getHash(): string
 	{
-		$aEnvSettings = self::$oWiringPaths->getEnvSettings();
+		$aEnvSettings = self::$oWiringPaths->getSettings();
 		return self::ConcretePrefix . self::$oWiringPaths->hashV(serialize(
 				[
 					self::$oWiringPaths->getPaths(),
@@ -464,7 +471,7 @@ class AfrMultiClassMapper
 	 */
 	protected static function excludeRegEx($sPath): bool
 	{
-		foreach (self::$oWiringPaths->getEnvSettings()[self::RegexExcludeFqcnsAndPaths] as $sPattern) {
+		foreach (self::$oWiringPaths->getSettings(self::RegexExcludeFqcnsAndPaths) as $sPattern) {
 			if (preg_match($sPattern, $sPath)) {
 				return true;
 			}

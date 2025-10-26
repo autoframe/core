@@ -71,7 +71,10 @@ abstract class AfrObjectAbstractSingletonFactory
     }
 
 
-    public static function getInstance(): object
+	/**
+	 * @throws AfrException
+	 */
+	public static function getInstance(): object
     {
         if(!self::factoryConstruct()){
             throw new AfrException('General exception for ' . __CLASS__ . '::factoryConstruct()');

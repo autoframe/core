@@ -8,4 +8,7 @@
             <directory>*/autoframe/*/Tests/Unit</directory>
         </testsuite>
     </testsuites>
+    <php>
+        <env name="AFR_ENV" value="phpunit" force="true" />
+    </php>
 </phpunit>

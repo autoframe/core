@@ -5,53 +5,56 @@ namespace Autoframe\Core\Database\Connection;
 use Autoframe\Core\Database\Orm\Action\CnxActionFacade;
 use Autoframe\Core\DesignPatterns\Singleton\AfrSingletonAbstractClass;
 use Autoframe\Core\Database\Connection\Exception\AfrDatabaseConnectionException;
+use Autoframe\Core\Env\Exception\AfrEnvException;
+use Autoframe\Core\InterfaceToConcrete\AfrVendorPath;
+use Autoframe\Core\Afr\Afr;
 use PDO;
 use Closure;
 use Throwable;
-
+//TODO: if the database connection is closed after a period of time, it will need to be reopened for services!
 class AfrDbConnectionManagerClass extends AfrSingletonAbstractClass implements AfrDbConnectionManagerInterface
 {
 	protected array $aAliases = [];
 	protected array $aConnections = [];
-	protected string $sDataLayerNamespace = 'Autoframe\\DataLayer\\';
+	protected string $sDataLayerNamespace;
 	protected string $sDataLayerPath = '';
 
 	/**
 	 * @param string|null $sDataLayerNamespace
 	 * @return string or default namespace: Autoframe\DataLayer\
+	 * @throws AfrEnvException
 	 */
 	public function dataLayerNamespace(string $sDataLayerNamespace = null): string
 	{
-		if (!empty($sDataLayerNamespace)) {
+		if (!empty($sDataLayerNamespace)) { //set
 			return $this->sDataLayerNamespace = $sDataLayerNamespace;
 		}
-		if (
-			$this->sDataLayerNamespace == 'Autoframe\\DataLayer\\' &&
-			!empty($_ENV['AFRDATALAYERNAMESPACE']) &&
-			$this->sDataLayerNamespace != $_ENV['AFRDATALAYERNAMESPACE']
-		) {
-			return $this->sDataLayerNamespace = $_ENV['AFRDATALAYERNAMESPACE'];
+		if (!empty($this->sDataLayerNamespace)) { //get if exists
+			return $this->sDataLayerNamespace;
 		}
 
-		return $this->sDataLayerNamespace;
+		return $this->sDataLayerNamespace = Afr::app()->env()->getEnv('AFRDATALAYERNAMESPACE','Autoframe\\DataLayer\\');
 	}
 
 	/**
 	 * @param string|null $sDataLayerPath
 	 * @return string
-	 * @throws AfrDatabaseConnectionException
+	 * @throws AfrEnvException
 	 */
 	public function dataLayerPath(string $sDataLayerPath = null): string
 	{
-		if (!empty($sDataLayerPath)) {
+		if (!empty($sDataLayerPath)) {//set
 			return $this->sDataLayerPath = $sDataLayerPath;
-		} elseif (empty($this->sDataLayerPath)) {
-			if (!empty($_ENV['DATALAYERPATH'])) {
-				return $this->sDataLayerPath = $_ENV['DATALAYERPATH'];
+		} elseif (empty($this->sDataLayerPath)) {//set if empty
+			if (!empty($sDp = Afr::app()->env()->getEnv('DATALAYERPATH'))) {
+				return $this->sDataLayerPath = $sDp;
 			}
 			$ds = DIRECTORY_SEPARATOR;
-			list($sComposerJsonPath, $sUpperVendorPath) = $this->detectComposerAndVendorPath();
-			$aComposer = json_decode(file_get_contents($sComposerJsonPath), true);
+			//list($sComposerJsonPath, $sUpperVendorPath) = $this->detectComposerAndVendorPath();
+//			$aComposer = json_decode(file_get_contents($sComposerJsonPath), true);
+
+			$sUpperVendorPath = AfrVendorPath::getBaseDirPath();
+			$aComposer = AfrVendorPath::getComposerJson();
 			if (!empty($aComposer['autoload']["psr-4"][$this->sDataLayerNamespace])) {
 				return $this->sDataLayerPath = $sUpperVendorPath . $ds .
 					rtrim(
@@ -68,39 +71,50 @@ class AfrDbConnectionManagerClass extends AfrSingletonAbstractClass implements A
 			if (is_dir($sUpperVendorPath . $ds . 'src' . $ds . 'DataLayer')) {
 				return $this->sDataLayerPath = $sUpperVendorPath . $ds . 'src' . $ds . 'DataLayer';
 			}
-
 		}
 
 		return $this->sDataLayerPath;
 	}
 
-	/**
-	 * @throws AfrDatabaseConnectionException
-	 */
-	protected function detectComposerAndVendorPath(): array //TODO FIX ME AFTER MERGE WITH AFR CORE!
-	{
-		$sV = DIRECTORY_SEPARATOR . 'vendor' . DIRECTORY_SEPARATOR;
-		$pos = strrpos(__DIR__, $sV);
-		if ($pos !== false) {
-			$sUpperVendorPath = substr(__DIR__, 0, $pos);
-			$sComposer = $sUpperVendorPath . DIRECTORY_SEPARATOR . 'composer.json';
-			if (is_readable($sComposer)) {
-				return [$sComposer, $sUpperVendorPath];
+	/*
+		protected function detectComposerAndVendorPath(): array //TODO FIX ME AFTER MERGE WITH AFR CORE!
+		{
+			AfrVendorPath::getComposerJson();
+			$sV = DIRECTORY_SEPARATOR . 'vendor' . DIRECTORY_SEPARATOR;
+			$pos = strrpos(__DIR__, $sV);
+			if ($pos !== false) {
+				$sUpperVendorPath = substr(__DIR__, 0, $pos);
+				$sComposer = $sUpperVendorPath . DIRECTORY_SEPARATOR . 'composer.json';
+				if (is_readable($sComposer)) {
+					return [$sComposer, $sUpperVendorPath];
+				}
 			}
-		}
-		$aDirs = explode(DIRECTORY_SEPARATOR, __DIR__);
-		array_pop($aDirs);
-		for ($i = 0; $i < 3; $i++) {
+			$aDirs = explode(DIRECTORY_SEPARATOR, __DIR__);
 			array_pop($aDirs);
-			$sUpperVendorPath = implode(DIRECTORY_SEPARATOR, $aDirs);
-			$sComposer = $sUpperVendorPath . DIRECTORY_SEPARATOR . 'composer.json';
-			if (is_readable($sComposer)) {
-				return [$sComposer, $sUpperVendorPath];
+			for ($i = 0; $i < 3; $i++) {
+				array_pop($aDirs);
+				$sUpperVendorPath = implode(DIRECTORY_SEPARATOR, $aDirs);
+				$sComposer = $sUpperVendorPath . DIRECTORY_SEPARATOR . 'composer.json';
+				if (is_readable($sComposer)) {
+					return [$sComposer, $sUpperVendorPath];
+				}
 			}
+			throw new AfrDatabaseConnectionException(
+				'Please set the DataLayer directory path by $_ENV[DATALAYERPATH] OR ' . __CLASS__ . '->dataLayerPath(PATH)'
+			);
 		}
-		throw new AfrDatabaseConnectionException(
-			'Please set the DataLayer directory path by $_ENV[DATALAYERPATH] OR ' . __CLASS__ . '->dataLayerPath(PATH)'
-		);
+	*/
+
+	protected function processDsnCustomVariables(string &$sDSN, string $sVarKey, string $sDefault): string
+	{
+		if (strpos($sDSN, $sVarKey)) {
+			$aFQCN_PDO = explode($sVarKey, $sDSN);
+			$aPdoClass = explode(';', $aFQCN_PDO[1]);
+			$sDefault = trim($aPdoClass[0], ';=:& ');
+			$aPdoClass[0] = rtrim($aFQCN_PDO[0], '; ');//replace with dsn
+			$sDSN = implode(';', $aPdoClass);
+		}
+		return $sDefault;
 	}
 
 	/**
@@ -123,8 +137,10 @@ class AfrDbConnectionManagerClass extends AfrSingletonAbstractClass implements A
 		if (empty($sAlias)) {
 			throw new AfrDatabaseConnectionException('Please provide a database connection namespace!');
 		}
-		//TODO refactorizare cod repetitiv:
-		if (strpos($sDSN, static::FQCN_PDO)) {
+		$sPdoClass = $this->processDsnCustomVariables($sDSN, static::FQCN_PDO, '\PDO');
+		$sDialectOrmActionNamespace = $this->processDsnCustomVariables($sDSN, static::CUSTOM_DIALECT_CNX_NS, '');
+
+		/*if (strpos($sDSN, static::FQCN_PDO)) {
 			$aFQCN_PDO = explode(static::FQCN_PDO, $sDSN);
 			$aPdoClass = explode(';', $aFQCN_PDO[1]);
 			$sPdoClass = trim($aPdoClass[0], ';=:& ');
@@ -133,7 +149,6 @@ class AfrDbConnectionManagerClass extends AfrSingletonAbstractClass implements A
 		} else {
 			$sPdoClass = '\PDO';
 		}
-//TODO refactorizare cod repetitiv:
 		if (strpos($sDSN, static::CUSTOM_DIALECT_CNX_NS)) {
 			$aDsn = explode(static::CUSTOM_DIALECT_CNX_NS, $sDSN);
 			$aCustomDialect = explode(';', $aDsn[1]);
@@ -143,7 +158,7 @@ class AfrDbConnectionManagerClass extends AfrSingletonAbstractClass implements A
 		} else {
 			$sDialectOrmActionNamespace = '';
 		}
-		//TODO refactorizare cod repetitiv:
+		*/
 
 		$aInfo = $this->parseDSNInfo($sDSN);
 		$aPDOArgs = array_slice(func_get_args(), 1);
@@ -480,7 +495,7 @@ class AfrDbConnectionManagerClass extends AfrSingletonAbstractClass implements A
 		if (!$this->isConnected($sAlias)) {
 			if (!in_array($aConfig[static::INFO][static::DRIVER], PDO::getAvailableDrivers())) {
 				throw new AfrDatabaseConnectionException(
-					'Driver ['.$aConfig[static::INFO][static::DRIVER].'] is not supported by PDO driver list: ' .
+					'Driver [' . $aConfig[static::INFO][static::DRIVER] . '] is not supported by PDO driver list: ' .
 					implode(', ', PDO::getAvailableDrivers())
 				);
 			}

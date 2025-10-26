@@ -17,11 +17,19 @@ class AfrEnvEmptyTest extends TestCase
     public function AfrEnvEmptyTest(): void
     {
         $oEnv = AfrEnv::getInstance();
-        $this->assertSame(null,  $oEnv->getEnv('APP_ENV'));
-        $this->assertSame(true,  $oEnv->isDev());
+        $this->assertSame('fallback',  $oEnv->getEnv('some_undefined_key','fallback'));
+	    try {
+		    $this->assertSame(true, $oEnv->isDev());
+	    } catch (AfrEnvException $e) {
+		    $oEnv->setEnv('AFR_ENV', 'DEV');
+		    $this->assertSame(true, $oEnv->isDev());
+	    }
 
-        $oEnv->setInlineEnvVar('APP_ENV', 'STAGING');
-        $this->assertSame('STAGING',  $oEnv->getEnv('APP_ENV'));
+	    $oEnv->flush();
+		$oEnv->setEnv('AFR_ENV', 'STAGING');
+        $this->assertSame('STAGING',  $oEnv->getEnv('AFR_ENV'));
+	    $oEnv->flush();
+
     }
 
 

@@ -4,9 +4,13 @@ declare(strict_types=1);
 namespace Autoframe\Core\InterfaceToConcrete;
 
 use Autoframe\Core\ClassDependency\AfrClassDependencyException;
+use Autoframe\Core\CliTools\AfrSysTempDir;
+use Autoframe\Core\Env\AfrEnv;
+use Autoframe\Core\Env\Exception\AfrEnvException;
 use Autoframe\Core\InterfaceToConcrete\Exception\AfrInterfaceToConcreteException;
 use Autoframe\Core\ClassDependency\AfrClassDependency;
 
+use Autoframe\Core\Tenant\AfrTenant;
 use function array_merge;
 use function realpath;
 use function print_r;
@@ -19,7 +23,6 @@ use function serialize;
  * This will make a configuration object that contains the paths to be wired:
  *
  * $oAfrConfigWiredPaths = new AfrInterfaceToConcreteClass(
- *  $sEnv, //'DEV'/ 'PRODUCTION'/ 'STAGING'/ 'DEBUG'
  * $aSettings [], //overwrite profile settings
  * $aExtraPaths = [] //all compose paths are covered
  * );
@@ -38,18 +41,16 @@ class AfrInterfaceToConcreteClass implements AfrInterfaceToConcreteInterface
 	protected ?AfrToConcreteStrategiesInterface $oAfrToConcreteStrategies;
 
 	/**
-	 * @param string $sEnv
 	 * @param array $aSettings
 	 * @param array $aExtraPaths
-	 * @throws AfrInterfaceToConcreteException
+	 * @throws AfrInterfaceToConcreteException|AfrEnvException
 	 */
 	public function __construct(
-		string $sEnv,
-		array  $aSettings = [],
-		array  $aExtraPaths = []
+		array $aSettings = [],
+		array $aExtraPaths = []
 	)
 	{
-		$this->setEnvSettings($sEnv, $aSettings);
+		$this->setSettings($aSettings);
 		$aPaths = [
 			AfrMultiClassMapper::VendorPrefix => [],
 			AfrMultiClassMapper::AutoloadPrefix => [],
@@ -75,11 +76,12 @@ class AfrInterfaceToConcreteClass implements AfrInterfaceToConcreteInterface
 	}
 
 	/**
+	 * @param string|null $sFilterFQCN
 	 * @return array
-	 * @throws AfrInterfaceToConcreteException
 	 * @throws AfrClassDependencyException
+	 * @throws AfrInterfaceToConcreteException
 	 */
-	public function getClassInterfaceToConcrete(): array
+	public function getClassInterfaceToConcrete(string $sFilterFQCN = null): array
 	{
 		if (!isset($this->aClassInterfaceToConcrete)) {
 			$aSaveSkipClassInfo = $aSaveSkipNamespaceInfo = [];
@@ -105,7 +107,12 @@ class AfrInterfaceToConcreteClass implements AfrInterfaceToConcreteInterface
 				AfrClassDependency::setSkipNamespaceInfo($aSaveSkipNamespaceInfo);
 			}
 		}
-
+		if ($sFilterFQCN !== null) {
+			return
+				!empty($this->aClassInterfaceToConcrete[$sFilterFQCN]) &&
+				is_array($this->aClassInterfaceToConcrete[$sFilterFQCN]) ?
+					$this->aClassInterfaceToConcrete[$sFilterFQCN] : [];
+		}
 		return $this->aClassInterfaceToConcrete;
 	}
 
@@ -122,20 +129,12 @@ class AfrInterfaceToConcreteClass implements AfrInterfaceToConcreteInterface
 
 
 	/**
-	 * @param string $sEnv
 	 * @param array $aOverwrite
 	 * @throws AfrInterfaceToConcreteException
+	 * @throws AfrEnvException
 	 */
-	protected function setEnvSettings(string $sEnv, array $aOverwrite = [])
+	protected function setSettings(array $aOverwrite = [])
 	{
-		$aEnv = ['DEV', 'PRODUCTION', 'STAGING', 'DEBUG'];
-		$sEnv = strtoupper($sEnv);
-		if (!in_array($sEnv, $aEnv)) {
-			throw new AfrInterfaceToConcreteException(
-				__FUNCTION__ . ' for ' . get_class($this) . ' must be: ' . implode(' / ', $aEnv)
-			);
-		}
-
 		$aSettings = [
 			//time between changes checks. if something changed, then the cache is recalculated
 			AfrMultiClassMapper::CacheExpireSeconds => 3600 * 24 * 365 * 2,
@@ -154,7 +153,8 @@ class AfrInterfaceToConcreteClass implements AfrInterfaceToConcreteInterface
 			// overwrite here or auto set by AfrMultiClassMapper::getCacheDir()
 			// realpath(__DIR__) . DIRECTORY_SEPARATOR . 'cache';
 			//AfrMultiClassMapper::CacheDir => realpath(__DIR__) . DIRECTORY_SEPARATOR . 'cache',
-			AfrMultiClassMapper::CacheDir => sys_get_temp_dir(),
+			//AfrMultiClassMapper::CacheDir => AfrSysTempDir::sysGetTempDir(),
+			AfrMultiClassMapper::CacheDir => (fn() => AfrTenant::getTempDir()),
 
 			// Clean memory after job or keep AfrMultiClassMapper::$aNsClassMergedFromPathMap
 			// and access the raw data using AfrMultiClassMapper::getAllNsClassFilesMap()
@@ -212,12 +212,23 @@ class AfrInterfaceToConcreteClass implements AfrInterfaceToConcreteInterface
 				'Prophecy\\',
 			],
 		];
-
-		if ($sEnv === 'DEV') {
+		if (AfrEnv::getInstance()->isDev()) {
 			$aSettings = array_merge($aSettings, [
 				AfrMultiClassMapper::CacheExpireSeconds => 60,
 			]);
-		} elseif ($sEnv === 'DEBUG') {
+		} else { // PRODUCTION | STAGING
+			$aSettings = array_merge($aSettings, [
+				AfrMultiClassMapper::SilenceErrors => true,
+			]);
+		}
+
+		$aSettings = array_merge($aSettings,
+			AfrEnv::getInstance()->isDev() ?
+				[AfrMultiClassMapper::CacheExpireSeconds => 600,] : // DEV
+				[AfrMultiClassMapper::SilenceErrors => true,] // PRODUCTION|STAGING
+		);
+
+		if (AfrEnv::getInstance()->isDebug() >= 10) {
 			$aSettings = array_merge($aSettings, [
 				AfrMultiClassMapper::CacheExpireSeconds => 15,
 				AfrMultiClassMapper::ForceRegenerateAllButVendor => true,
@@ -230,15 +241,11 @@ class AfrInterfaceToConcreteClass implements AfrInterfaceToConcreteInterface
 				AfrMultiClassMapper::ClassDependencySetSkipClassInfo => [],
 				AfrMultiClassMapper::ClassDependencySetSkipNamespaceInfo => [],
 			]);
-		} else { // PRODUCTION
-			$aSettings = array_merge($aSettings, [
-				AfrMultiClassMapper::SilenceErrors => true,
-			]);
 		}
 		foreach ($aSettings as $sKey => $mValue) {
 			if (isset($aOverwrite[$sKey])) {
 				$sType = substr($sKey, 0, 2);
-				$sErr = 'EnvSettings[' . $sKey . '] was given as ' . gettype($aOverwrite[$sKey]) . ' in stead of ';
+				$sErr = self::class . '[' . $sKey . '] was given as ' . gettype($aOverwrite[$sKey]) . ' in stead of ';
 				if ($sType === '$i') {
 					if (!is_int($aOverwrite[$sKey])) {
 						throw new AfrInterfaceToConcreteException($sErr . ' integer');
@@ -260,7 +267,7 @@ class AfrInterfaceToConcreteClass implements AfrInterfaceToConcreteInterface
 					}
 					$aSettings[$sKey] = $aOverwrite[$sKey];
 				} else {
-					throw new AfrInterfaceToConcreteException('EnvSettings[' . $sKey . '] unknown format');
+					throw new AfrInterfaceToConcreteException(self::class . '[' . $sKey . '] unknown format');
 				}
 			}
 		}
@@ -268,12 +275,17 @@ class AfrInterfaceToConcreteClass implements AfrInterfaceToConcreteInterface
 	}
 
 	/**
-	 * @return array
+	 * @param string|null $sType
+	 * @return array|mixed
 	 */
-	public function getEnvSettings(): array
+	public function getSettings(string $sType = null)
 	{
+		if ($sType) {
+			return $this->aSettings[$sType];
+		}
 		return $this->aSettings;
 	}
+
 
 	/**
 	 * @param string $s
@@ -387,7 +399,7 @@ class AfrInterfaceToConcreteClass implements AfrInterfaceToConcreteInterface
 	public function resolve(
 		string $sNotConcreteFQCN,
 		bool   $bUseCache = true,
-		string $sTemporaryContextOverwrite = null,
+		string $sTemporaryContextOverwrite = null, //TODO: addContextualBinding / getContextualConcrete|findInContextualBindings
 		string $sTemporaryPriorityRuleOverwrite = null
 	): string
 	{

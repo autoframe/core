@@ -21,29 +21,36 @@ use Autoframe\Core\Tenant\AfrTenant;
  *
  */
 
-AfrTenant::getBaseDirPath() || AfrTenant::setBaseDirPath(__DIR__);
+//AfrTenant::getBaseDirPath() || AfrTenant::setBaseDirPath(__DIR__);
 
-(new AfrTenant('b2b-app-www'))->setProtocolDomainName([
-	'www.b2b-app.ro',
-	'www.b2b-app.test',
-	'b2b-app.ro',
-	'b2b-app.test',
-	'localhost',
-	'127.0.0.1',
+(new AfrTenant('www'))->setProtocolDomainName([
+	'https://www.b2b-app.ro',
+	'https://b2b-app.ro',
+	'http://www.b2b-app.test',
+	'http://b2b-app.test',
+	'http://localhost',
+	'http://localhost:808',
+	'http://localhost:8080',
+	'http://127.0.0.1',
 ])
-	->setEnv('dev')
-	->setDebug(true)
+	->setEnv($sEnv = 'dev')
+	->setDebug($bDebug = true)
 	->setRoot('/')
 	->setTempDir()
 	->setHtmlDir()
 	->setAssetsDir()
+	->setLogsDir()
 	->autoSetupAndPushTenantConfig();
 
 (new AfrTenant('online-b2b-app'))->setProtocolDomainName([
-	'online',
-	'online.b2b-app.ro',
-	'online.b2b-app.test',
+	'https://online.b2b-app.ro',
+	'http://online.b2b-app.test',
+	'http://online.test',
 ])
-	->setEnv('dev')
-	->setDebug(true)
+	->setEnv($sEnv)
+	->setDebug($bDebug)
 	->autoSetupAndPushTenantConfig();
+
+AfrTenant::pushDefaultTenantConfigs([
+
+]);

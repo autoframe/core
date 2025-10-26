@@ -62,7 +62,7 @@ class AfrStrUrl
      */
     public static function base64EncodeFile(string $sFullImagePath, string $fileType = 'image'): string
     {
-        $sMime = (new AfrFileMimeClass())->getMimeFromFileName($sFullImagePath);
+        $sMime = AfrFileMimeClass::getInstance()->getMimeFromFileName($sFullImagePath);
         return 'data:' . $sMime. ';base64,' . base64_encode(file_get_contents($sFullImagePath));
     }
 

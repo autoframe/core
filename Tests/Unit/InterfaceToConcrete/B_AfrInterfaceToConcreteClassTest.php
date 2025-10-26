@@ -4,6 +4,8 @@ declare(strict_types=1);
 namespace Unit\InterfaceToConcrete;
 
 use Autoframe\Core\ClassDependency\AfrClassDependency;
+use Autoframe\Core\CliTools\AfrSysTempDir;
+use Autoframe\Core\Env\AfrEnv;
 use Autoframe\Core\Exception\AfrException;
 use Autoframe\Core\InterfaceToConcrete\AfrMultiClassMapper;
 use PHPUnit\Framework\TestCase;
@@ -21,7 +23,7 @@ class B_AfrInterfaceToConcreteClassTest extends TestCase
 		return [
 			[[], 5, true, false, true, 'DEV'],
 			[['vendor'], $thirty_years, false, false, false, 'PRODUCTION'],
-			[[__DIR__], $thirty_years, false, false, true, 'DEBUG'],
+			[[__DIR__], 60*30, false, false, true, 'DEBUG'],
 		];
 	}
 
@@ -57,7 +59,7 @@ class B_AfrInterfaceToConcreteClassTest extends TestCase
 
 
 			//$aEnvSettings[AfrMultiClassMapper::CacheDir] = __DIR__ . DIRECTORY_SEPARATOR . 'cache';
-			$aEnvSettings[AfrMultiClassMapper::CacheDir] = ((ini_get('sys_temp_dir') ?: sys_get_temp_dir()) ?: __DIR__) . DIRECTORY_SEPARATOR . 'cache_B_AfrInterfaceToConcreteClassTest';
+			$aEnvSettings[AfrMultiClassMapper::CacheDir] = ((ini_get('sys_temp_dir') ?: AfrSysTempDir::sysGetTempDir()) ?: __DIR__) . DIRECTORY_SEPARATOR . 'cache_B_AfrInterfaceToConcreteClassTest';
 			if (!is_dir($aEnvSettings[AfrMultiClassMapper::CacheDir])) {
 				mkdir($aEnvSettings[AfrMultiClassMapper::CacheDir], 0755,true);
 			}
@@ -65,22 +67,25 @@ class B_AfrInterfaceToConcreteClassTest extends TestCase
 
 		$obj = null;
 		try {
-			$obj = new AfrInterfaceToConcreteClass($sEnv, $aEnvSettings, $aExtraPaths); //['DEV', 'PRODUCTION', 'STAGING', 'DEBUG']
+			if(!AfrEnv::getInstance()->flush()->getEnv('AFR_ENV')){
+				$_ENV['AFR_ENV'] = 'DEV';
+			}
+			$obj = new AfrInterfaceToConcreteClass($aEnvSettings, $aExtraPaths); //['DEV', 'PRODUCTION', 'STAGING', 'DEBUG']
 
 			$this->assertSame(
-				$obj->getEnvSettings()[AfrMultiClassMapper::ForceRegenerateAllButVendor],
+				$obj->getSettings(AfrMultiClassMapper::ForceRegenerateAllButVendor),
 				$bForceRegenerateAllButVendor,
 				'!$bForceRegenerateAllButVendor'
 			);
 
 			$this->assertSame(
-				$obj->getEnvSettings()[AfrMultiClassMapper::SilenceErrors],
+				$obj->getSettings(AfrMultiClassMapper::SilenceErrors),
 				$bGetSilenceErrors,
 				'!$bGetSilenceErrors'
 			);
 			$this->assertSame(true, count($obj->getPaths()) > 0, '!getPaths');
 
-			$iCacheExpireSeconds = $obj->getEnvSettings()[AfrMultiClassMapper::CacheExpireSeconds];
+			$iCacheExpireSeconds = $obj->getSettings(AfrMultiClassMapper::CacheExpireSeconds);
 			$this->assertSame(
 				true,
 				is_int($iCacheExpireSeconds) && $iCacheExpireSeconds > 1,
@@ -115,7 +120,7 @@ class B_AfrInterfaceToConcreteClassTest extends TestCase
 				}
 				$i++;
 				foreach ($aDeps as $sDfqcn => $bInstantiable) {
-					$this->assertSame(true, interface_exists($sDfqcn) || class_exists($sDfqcn), 'interface|2|class~' . $sDfqcn);
+					$this->assertSame(true, interface_exists($sDfqcn) || class_exists($sDfqcn), 'interface|2|class~' . $sDfqcn.' ~~ '.$sFqcn."\n".print_r($aMap, true));
 					$this->assertSame(true, is_bool($bInstantiable), '!is_bool($bInstantiable)');
 					$i += 0.2;
 				}

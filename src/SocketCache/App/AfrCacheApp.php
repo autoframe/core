@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Autoframe\Core\SocketCache\App;
 
+use Autoframe\Core\Arr\Merge\AfrArrMergeProfileClass;
 use Autoframe\Core\Exception\AfrException;
 use Autoframe\Core\SocketCache\AfrCacheSocketConfig;
 use Autoframe\Core\SocketCache\Client\AfrClientStore;
@@ -29,37 +30,18 @@ class AfrCacheApp extends AfrSingletonArrAbstractClass // extends Autoframe\Core
         ],
     ];
 
+	//TODO finish & test
     public function extendAppConfig(array $aData = [], bool $bMerge = true): self
     {
         if ($bMerge) {
-            $this->arrayMergeProfile($this->aArrayAccessData, $aData);
+	        $this->aArrayAccessData = AfrArrMergeProfileClass::getInstance()->arrayMergeProfile(
+		        $this->aArrayAccessData, $aData
+	        );
         } else {
             $this->aArrayAccessData = $aData;
         }
         $this->keyMaping(true);
         return $this;
-    }
-
-    /**
-     * Recursive array merging for config profiles
-     * @param array $aOriginal
-     * @param array $aNew
-     * @return array
-     */
-    protected function arrayMergeProfile(array $aOriginal, array $aNew): array
-    {
-        foreach ($aNew as $sNewKey => $mNewProfile) {
-            if (!isset($aOriginal[$sNewKey])) {
-                $aOriginal[$sNewKey] = $mNewProfile;
-            } elseif (is_array($aOriginal[$sNewKey]) && is_array($mNewProfile)) {
-                $aOriginal[$sNewKey] = $this->arrayMergeProfile($aOriginal[$sNewKey], $mNewProfile);
-            } elseif(is_integer($sNewKey)) {
-                $aOriginal[] = $mNewProfile;
-            } else {
-                $aOriginal[$sNewKey] = $mNewProfile;
-            }
-        }
-        return $aOriginal;
     }
 
     /**

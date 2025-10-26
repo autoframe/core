@@ -17,11 +17,15 @@ use Autoframe\Core\Env\Validator\AfrEnvValidatorClass;
 use Autoframe\Core\Env\Validator\AfrEnvValidatorInterface;
 use Autoframe\Core\Env\Exception\AfrEnvException;
 use Autoframe\Core\Tenant\AfrTenant;
+use MabeEnum\EnumMap;
 
 
 class AfrEnv extends AfrSingletonAbstractClass implements AfrEnvInterface
 {
 	protected AfrEnvParserInterface $oEnvParser;
+	/**
+	 * @var AfrEnvValidatorClass|AfrEnvValidatorInterface
+	 */
 	protected AfrEnvValidatorInterface $oValidator;
 	protected AfrDirTraversingFileListInterface $oFileList;
 	protected AfrOverWriteInterface $oOverWrite;
@@ -45,7 +49,7 @@ class AfrEnv extends AfrSingletonAbstractClass implements AfrEnvInterface
 		bool $bRegisterPutEnv = false
 	): self
 	{
-		if (empty($this->aEnvData) && !$this->bValidated) {
+		if (empty($this->aEnvData)) {
 			throw new AfrEnvException(
 				'No env settings to register! ' .
 				'Run $oEnv->setBaseDir(__DIR__)->readEnv() or $oEnv->readEnvPhpFile(path)'
@@ -91,14 +95,18 @@ class AfrEnv extends AfrSingletonAbstractClass implements AfrEnvInterface
 	 */
 	public function getEnv(string $sKey = '', $mFallback = null)
 	{
-		//TODO test fallback
 		$this->validateAll();
 		if (strlen($sKey)) {
-			return
-					$this->aEnvData[$sKey] ??
-					$_ENV[$sKey] ??
-					getenv($sKey) ?:
-					(defined($sKey) ? constant($sKey) : $mFallback);
+			$mVal = $this->aEnvData[$sKey] ??
+				$_ENV[$sKey] ??
+				getenv($sKey) ?:
+				(defined($sKey) ? constant($sKey) : $mFallback);
+			if ($sKey === 'AFR_ENV' && empty($mVal)) {
+				throw new AfrEnvException('AFR_ENV is not set! Please configure and load tenant');
+			} elseif ($sKey === 'AFR_DEBUG' && strlen((string)$mVal) < 1) {
+				throw new AfrEnvException('AFR_DEBUG is not a integer! Please configure and load tenant');
+			}
+			return $mVal;
 		}
 		return $this->aEnvData;
 	}
@@ -122,8 +130,9 @@ class AfrEnv extends AfrSingletonAbstractClass implements AfrEnvInterface
 	 */
 	public function setBaseDir(string $sDir): self
 	{
+
 		if (!is_dir($sDir)) {
-			throw new AfrEnvException('Unable to set the ENV word dir: ' . $sDir);
+			throw new AfrEnvException('Unable to set the ENV project dir: ' . $sDir);
 		}
 		$this->sBaseDir = strtr(rtrim($sDir, '\/'), DIRECTORY_SEPARATOR === '/' ? '\\' : '/', DIRECTORY_SEPARATOR);
 		return $this;
@@ -134,7 +143,7 @@ class AfrEnv extends AfrSingletonAbstractClass implements AfrEnvInterface
 	 * @param $mData
 	 * @return self
 	 */
-	public function setInlineEnvVar(string $sKey, $mData): self
+	public function setEnv(string $sKey, $mData): self
 	{
 		$this->bValidated = false;
 		$this->aEnvData[$sKey] = $mData;
@@ -170,15 +179,13 @@ class AfrEnv extends AfrSingletonAbstractClass implements AfrEnvInterface
 	 * iCacheSeconds is the number of cache seconds before expire. Use zero for no cache
 	 * aExtraEnvDirsFiles to add extra env directories and .env files
 	 * @param int $iCacheSeconds
-	 * @param array $aExtraEnvDirsFiles
+	 * @param array $aEnvDirsFiles
+	 * @param bool $bReadEnvFromBaseDir
 	 * @return self
 	 * @throws AfrEnvException
 	 */
-	public function readEnv(int $iCacheSeconds, array $aExtraEnvDirsFiles = []): self
+	public function readEnv(int $iCacheSeconds, array $aEnvDirsFiles = [], bool $bReadEnvFromBaseDir = true): self
 	{
-		$this->bValidated = false;
-		$this->aEnvDirsFiles = array_merge([$this->sBaseDir], $aExtraEnvDirsFiles);
-
 		if (
 			$iCacheSeconds > 0 &&
 			is_file($this->getCacheFileName()) &&
@@ -189,6 +196,8 @@ class AfrEnv extends AfrSingletonAbstractClass implements AfrEnvInterface
 			return $this;
 		}
 
+		$this->bValidated = false;
+		$this->aEnvDirsFiles = $bReadEnvFromBaseDir ? array_merge([$this->sBaseDir], $aEnvDirsFiles) : $aEnvDirsFiles;
 		foreach ($this->aEnvDirsFiles as $sSources) {
 			if (file_exists($sSources)) {
 				if (is_file($sSources)) {
@@ -211,13 +220,17 @@ class AfrEnv extends AfrSingletonAbstractClass implements AfrEnvInterface
 	 */
 	public function flush(): self
 	{
-		if (is_file($this->getCacheFileName())) {
+		if (!empty($this->sCacheFile) && is_file($this->getCacheFileName())) {
 			unlink($this->getCacheFileName());
 		}
 		$this->bValidated = false;
 		$this->aEnvData = $this->aEnvDirsFiles = [];
 		$this->sBaseDir = $this->sCacheFile = '';
-		unset($this->oValidator);
+		if(!empty($this->oValidator)){
+			$this->oValidator->reset();
+			unset($this->oValidator);
+		}
+
 		return $this;
 	}
 
@@ -260,12 +273,34 @@ class AfrEnv extends AfrSingletonAbstractClass implements AfrEnvInterface
 		return true;
 	}
 
+	/**
+	 * @return int
+	 * @throws AfrEnvException
+	 */
+	public function isDebug(): int
+	{
+		return (int)$this->getEnv('AFR_DEBUG', 0);
+	}
+
+	/**
+	 * @return bool
+	 * @throws AfrEnvException
+	 */
+	public function isDevOrDebug(): bool
+	{
+		return $this->isDebug() || $this->isDev();
+	}
+
 
 	/**
 	 * @return void
 	 */
 	protected function setCache(): void
 	{
+		if (empty($this->aEnvData)) {
+			//	$this->aEnvData = ['AFR_DEBUG' => 1];
+			return;
+		}
 		$sHeader = '<?php /* ' . gmdate('D, d M Y H:i:s') . ' GMT ->loadCache: ' .
 			str_replace('*/', '* /', print_r($this->aEnvDirsFiles, true)) .
 			"*/ \n return ";
@@ -278,12 +313,12 @@ class AfrEnv extends AfrSingletonAbstractClass implements AfrEnvInterface
 	/**
 	 * @return string
 	 */
-	protected function getCacheFileName(): string
+	public function getCacheFileName(): string
 	{
 		if (empty($this->sCacheFile)) {
 			$this->sCacheFile = $this->sBaseDir .
 				DIRECTORY_SEPARATOR .
-				(AfrTenant::getTenantAlias()??'_') . '.' . $_ENV['AFR_ENV'] .
+				(AfrTenant::getTenantAlias() ?? '_') . '.' . $_ENV['AFR_ENV'] .
 				//'_' . substr(md5(serialize($this->aEnvDirsFiles)), 10, 8) .
 				'.env.php';
 		}
@@ -358,7 +393,6 @@ class AfrEnv extends AfrSingletonAbstractClass implements AfrEnvInterface
 	 */
 	protected function validateAll(): void
 	{
-
 		if (!$this->bValidated) {
 			$this->bValidated = $this->xetAfrEnvValidator()->validateAll($this->aEnvData);
 		}
@@ -370,6 +404,8 @@ class AfrEnv extends AfrSingletonAbstractClass implements AfrEnvInterface
 	/**
 	 * @param AfrEnvParserInterface|null $oEnvParser
 	 * @return AfrEnvParserInterface
+	 * @throws \Autoframe\Core\Container\Exception\AfrContainerException
+	 * @throws \Autoframe\Core\Event\Exception\AfrEventException
 	 */
 	public function xetAfrEnvParser(AfrEnvParserInterface $oEnvParser = null): AfrEnvParserInterface
 	{
@@ -383,7 +419,7 @@ class AfrEnv extends AfrSingletonAbstractClass implements AfrEnvInterface
 
 	/**
 	 * @param AfrEnvValidatorInterface|null $oValidator
-	 * @return AfrEnvValidatorInterface
+	 * @return AfrEnvValidatorClass|AfrEnvValidatorInterface
 	 */
 	public function xetAfrEnvValidator(AfrEnvValidatorInterface $oValidator = null): AfrEnvValidatorInterface
 	{

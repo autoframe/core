@@ -9,12 +9,12 @@ use Autoframe\Core\Http\Header\Formatters\AfrHttpHeaderFormatters;
 
 trait AfrHttpCurlSimpleMethods
 {
-    use AfrHttpHeaderFormatters;
+    //use AfrHttpHeaderFormatters;
 
     /**
      * @var array|string[]
      */
-    private array $aCurlSimpleDefaultHeaders = [
+    private array $aCurlSimpleDefaultHeaders = [ //TODO: refactor to solid
         'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
         'Accept-Language: en-US,en;q=0.5',
         'Cache-Control: no-cache',
@@ -102,8 +102,9 @@ trait AfrHttpCurlSimpleMethods
      */
     private function prepareCurlOrganizedHeaders(array $aHeaders): array
     {
-        $aOrganizedHeaders = $this->formatMixedHeadersInputToKeyArray($this->getCurlSimpleDefaultHeaders());
-        foreach ($this->formatMixedHeadersInputToKeyArray($aHeaders) as $sHeaderKey => $sHeaderVal) {
+		$oHeaderF = AfrHttpHeaderFormatters::getInstance();
+        $aOrganizedHeaders = $oHeaderF->formatMixedHeadersInputToKeyArray($this->getCurlSimpleDefaultHeaders());
+        foreach ($oHeaderF->formatMixedHeadersInputToKeyArray($aHeaders) as $sHeaderKey => $sHeaderVal) {
             if (strlen($sHeaderVal)) {
                 $aOrganizedHeaders[$sHeaderKey] = $sHeaderVal;
             } elseif (isset($aOrganizedHeaders[$sHeaderKey])) {
@@ -183,7 +184,9 @@ trait AfrHttpCurlSimpleMethods
         }
 
         if (count($aOrganizedHeaders)) {
-            $aCurlSetOpt[CURLOPT_HTTPHEADER] = $this->formatForCurlOptHttpHeader($aOrganizedHeaders);
+            $aCurlSetOpt[CURLOPT_HTTPHEADER] = AfrHttpHeaderFormatters::getInstance()->formatForCurlOptHttpHeader(
+				$aOrganizedHeaders
+            );
         }
 
         return $aCurlSetOpt;

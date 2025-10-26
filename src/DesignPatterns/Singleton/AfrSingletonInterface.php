@@ -24,10 +24,21 @@ interface AfrSingletonInterface
     public function __wakeup();
 
     /**
-     * The method you use to get the Singleton's instance.
+     * The method you use to get the Singleton's instance, of the container binding
+     * or instance of the static class.
+     * If the container binds to another class then make sure that the bound class
+     * will implement the original all the methods of the original class like an interface does it!
+     * The safest way is for the bound class to extend the original class similar to an interface!
+     * You can use this way a singleton class as a SOLID service provider :)
      * @return self
      */
-    public static function getInstance(): self;
+    public static function getInstance();
+
+	/**
+	 * Always get a singleton instance of the static class
+	 * @return self
+	 */
+    public static function getInstanceNoContainerBindings(): self;
 
     /**
      * @return bool

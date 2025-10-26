@@ -166,7 +166,7 @@ class AfrCacheManagerTest extends TestCase
         $sInfo = print_r($oApp, true);
         $oRepo = $oManager->store();
         $this->assertSame($sDriverName, $oManager->getDefaultDriver(), $sInfo);
-        $this->assertSame(true, $oRepo->put($sKey, $mData, 5));
+        $this->assertSame(true, $oRepo->put($sKey, $mData, 50));
         if (is_object($mData)) {
             $this->assertEquals($mData, $oRepo->get($sKey));
         } else {

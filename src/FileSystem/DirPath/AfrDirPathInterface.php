@@ -75,4 +75,36 @@ interface AfrDirPathInterface
      * @return string
      */
     public function fixDs(string $sPath): string;
+
+	/**
+	 * @param string $path
+	 * @param bool $bCheckExistence
+	 * @return false|string
+	 */
+	public function realpath(string $path, bool $bCheckExistence);
+
+	public function dirExistAndWritable(string $dir, bool $bCreate = true, ?int $expectedPermissions = null, bool $bClearStatCache = false): bool;
+
+	public function getExpectedDirPermissions(): int;
+
+	/**
+	 * Calculate relative path from $from to $to.
+	 *
+	 * @param string $to Absolute target path (file/directory to reach).
+	 * @param string $from Absolute base path (current file).
+	 * @param bool $bForceForwardSlashes If true, returns with `/` as separator.
+	 * @param bool|null $bCaseSensitive Force case-sensitivity (default: null = auto-detect).
+	 * @param bool $bRealPath Use realpath on files.
+	 *
+	 * @return string Relative path.
+	 * Output: ..\vendor\autoload.php $to='C:\xampp\htdocs\core\vendor\autoload.php', $from = 'C:\xampp\htdocs\core\base3\index.php'
+	 * Output: ../vendor/autoload.php $to='/var/www/project/vendor/autoload.php', $from = '/var/www/project/app/index.php'
+	 */
+	public function getRelativePath(
+		string $to,
+		string $from,
+		bool   $bForceForwardSlashes = false,
+		?bool  $bCaseSensitive = null,
+		bool   $bRealPath = false
+	): string;
 }

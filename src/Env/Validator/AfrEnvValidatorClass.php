@@ -19,14 +19,23 @@ class AfrEnvValidatorClass implements AfrEnvValidatorInterface
 	public function validateAll(array $aDataSet): bool
 	{
 		$this->aDataSet = $aDataSet;
+		if(0){
+			print_r(__CLASS__.'@'.__FUNCTION__.'$this->aDataSet:'); //todo remove debug
+			print_r($this->aDataSet);//todo remove debug
+			debug_print_backtrace();//todo remove debug
+		}
+
 		foreach ($this->aQueue as $sKey => $aRules) {
 			foreach ($aRules as $aRule) {
 				$mResponse = $aRule[0](...$aRule[1]);
 				if (!$mResponse) {
 					throw new AfrEnvException(
 						'Validation failed in ' .
-						__CLASS__ . '@' . $aRule[2] . ' for env key: ' .
+						__CLASS__ . '@' . ($aRule[2]??'$aRule[2]NULL') . ' for env key: ' .
 						$sKey . ' » `' . $this->aDataSet[$sKey] . '`'
+					//	.PHP_EOL.'$this->aDataSet:'.print_r($this->aDataSet, true).PHP_EOL //TODO: remeve debug because of secirity issues!
+					//	.'$this->aQueue:'.print_r($this->aQueue, true).PHP_EOL
+					//	.'~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'.PHP_EOL
 					);
 				}
 				if ($mResponse === 's') {

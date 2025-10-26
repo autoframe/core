@@ -6,7 +6,7 @@ class thfView  extends thfSingleton
 {
 	//use thfHeader;
 	//use thfDirTools;
-	//use thfModuleTools;
+	//use Autoframe\Core\Router\Module\thfModuleTools;
 	protected $selfWrapTags1=array('br','hr','img','meta','link','input');
 	protected $selfWrapTags2=array('!doctype','!--');
 	protected $spaceChars=array(' ',"\r","\n","\t",'>');
@@ -41,7 +41,9 @@ class thfView  extends thfSingleton
 					$level_str.='['.$depth.']';
 				}
 			}
-			eval('$this->dom'.$level_str.'=$tag;'); //echo '$this->dom'.$level_str.'=$tag;'."\r\n";
+			$domLevel = 'dom'.$level_str;
+			$this->$domLevel=$tag;
+			//eval('$this->dom'.$level_str.'=$tag;'); //echo '$this->dom'.$level_str.'=$tag;'."\r\n";
 			$this->refferenceDomNodeWalk($tag,$tag['n']);
 		}
 	}
@@ -79,11 +81,8 @@ class thfView  extends thfSingleton
 				}
 			}
 		}
-		$dom_path='$this->dom'.$level_str;
-		//echo '$exists= isset('.$dom_path.');'."\r\n";
-		eval('$exists= isset('.$dom_path.');');
-		if(!$exists){$dom_path=false;}
-		return array($dom_path,$nnode);
+		$domLevel = 'dom'.$level_str;
+		return array(isset($this->$domLevel),$nnode);
 	}
 	function loadNode($target_node_or_alias){
 		$this->e=null;
@@ -103,9 +102,8 @@ class thfView  extends thfSingleton
 			}
 			else{return null;}
 		}
-		
-		eval('$parentNode= '.$dom_path.';');
-		$newNodeI=$this->maxNodeI($parentNode) + 1;
+		//eval('$parentNode= '.$dom_path.';');
+		$newNodeI=$this->maxNodeI($parentNode = $dom_path) + 1;
 		
 		$newNode=trim($node.','.$newNodeI,',');
 		$this->e['n']=$newNode;
@@ -227,7 +225,7 @@ class thfView  extends thfSingleton
 					foreach($tag['a'] as $attr=>$valA){
 						$startBuffer.=' '.$attr;
 						if($valA || $valA===''){
-							$startBuffer.='="'.thfString::h($valA).'"';
+							$startBuffer.='="'.htmlentities($valA).'"';
 						}
 							
 					}

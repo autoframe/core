@@ -7,7 +7,6 @@ namespace Autoframe\Core\Captcha\Classic;
 use Autoframe\Core\FileSystem\Exception\AfrFileSystemException;
 use Autoframe\Core\Captcha\AfrCaptcha;
 use Autoframe\Core\Exception\AfrException;
-use Autoframe\Core\Session\AfrSessionFactory;
 use Autoframe\Core\Session\AfrSessionPhp;
 use Autoframe\Core\FileSystem\Traversing\AfrDirTraversingFileListTrait;
 
@@ -203,7 +202,7 @@ abstract class AfrCaptchaClassicImg extends AfrCaptcha
     protected function sessionStart(): bool
     {
         /** @var AfrSessionPhp $session */
-        $session = AfrSessionFactory::getInstance();
+        $session = AfrSessionPhp::getInstance();
         if (!$session->session_started()) {
             if (!$session->session_start()) {
                 throw new AfrException('Session could not be started!');

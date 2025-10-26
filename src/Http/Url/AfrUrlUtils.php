@@ -2,38 +2,70 @@
 
 namespace Autoframe\Core\Http\Url;
 
-trait AfrUrlUtils
+use Autoframe\Core\DesignPatterns\Singleton\AfrSingletonAbstractClass;
+
+class AfrUrlUtils extends AfrSingletonAbstractClass
 {
 
-    /**
-     * @param string $user
-     * @param string $pass
-     * @param string $link
-     * @return false|string
-     */
-    public function getNtlmLinkContents(string $user, string $pass, string $link)
-    {
-        return file_get_contents(urlencode($user) . '@' . urlencode($pass) . ':' . $link);
-    }
+	/**
+	 * @param string $user
+	 * @param string $pass
+	 * @param string $sUrl
+	 * @return false|string
+	 */
+	public function getNtlmLinkContents(string $user, string $pass, string $sUrl) //TODO: test on ares
+	{
+		return file_get_contents(...array_merge(
+			[
+				$this->addNtlmCredentialsToUrl($user, $pass, $sUrl),
+				false
+			],
+			array_slice(func_get_args(), 2) //overload with $context, $offset and $length
+		));
+	}
 
-    /**
-     * @param string $sUrl
-     * @return bool
-     */
-    public function isUrlSecure(string $sUrl): bool
-    {
-        return strtolower(substr($sUrl, 0, 6)) === 'https:';
-    }
+	public function addNtlmCredentialsToUrl(string $user, string $pass, string $sUrl): string
+	{
+		$aParts = explode('://', $sUrl);
+		$aParts[0] .= urlencode($user) . ':' . urlencode($pass) . '@';
+		return implode('://', $aParts);
+	}
+	/**
+	 * @param string $sUrl
+	 * @return string https://hostname.com or https://username:password@hostname:9090
+	 */
+	public function getUrlSchemeHostUpToPath(string $sUrl): string
+	{
+		return implode(
+			'/',
+			array_slice(
+				explode('/', $sUrl, 5),
+				0,
+				4
+			)
+		);
+	}
 
-    /**
-     * @param string $sUrl
-     * @return string https://username:password@hostname:9090
-     */
-    public function getUrlSchemeHostUpToPath(string $sUrl): string
-    {
-        $aParts = explode('/', $sUrl, 0, 3);
-        return implode('/', array_slice($aParts, 0, 3));
-    }
+	/**
+	 * @param string $sUrl
+	 * @return bool
+	 */
+	public function isUrlProtocolHttps(string $sUrl): bool
+	{
+		return strtolower(substr($sUrl, 0, 6)) === 'https:';
+	}
+
+	public function isUrlProtocolHttp(string $sUrl): bool
+	{
+		return strtolower(substr($sUrl, 0, 5)) === 'http:';
+	}
+
+	public function isUrlProtocolFtp(string $sUrl): bool
+	{
+		return strtolower(substr($sUrl, 0, 4)) === 'ftp:';
+	}
+
+
 
 
 }

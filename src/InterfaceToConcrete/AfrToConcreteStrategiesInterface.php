@@ -13,6 +13,13 @@ interface AfrToConcreteStrategiesInterface
      */
     public static function getLatestInstance(): AfrToConcreteStrategiesInterface;
 
+	/**
+	 * @param AfrToConcreteStrategiesInterface $oLatestInstance
+	 * @return AfrToConcreteStrategiesInterface
+	 */
+	public static function setInstance(AfrToConcreteStrategiesInterface $oLatestInstance): AfrToConcreteStrategiesInterface;
+
+
     /**
      * Defined in AfrToConcreteStrategiesInterface->resolve(...)
      * @return string
@@ -97,7 +104,7 @@ interface AfrToConcreteStrategiesInterface
     /**
      * Returns: 1|FQCN for instantiable; 2|FQCN for singleton; 0|notConcreteFQCN for fail
      * @param string $notConcreteFQCN
-     * @param AfrInterfaceToConcreteInterface $oAfrInterfaceToConcreteInterface
+     * @param AfrInterfaceToConcreteInterface|null $oAfrInterfaceToConcreteInterface
      * @param bool $bCache
      * @return string
      * @throws AfrClassDependencyException
@@ -105,7 +112,7 @@ interface AfrToConcreteStrategiesInterface
      */
     public function resolveInterfaceToConcrete(
         string $notConcreteFQCN,
-        AfrInterfaceToConcreteInterface $oAfrInterfaceToConcreteInterface,
+        AfrInterfaceToConcreteInterface $oAfrInterfaceToConcreteInterface = null,
         bool $bCache = true
     ): string;
 
@@ -138,10 +145,11 @@ interface AfrToConcreteStrategiesInterface
     /**
      * @param string $sName
      * @param array $aPriorities
-     * @return AfrToConcreteStrategiesInterface
+     * @param bool $bSetPriorityRule
+	 * @return AfrToConcreteStrategiesInterface
      * @throws AfrInterfaceToConcreteException
      */
-    public function addPriorityRules(string $sName, array $aPriorities): AfrToConcreteStrategiesInterface;
+    public function addPriorityRules(string $sName, array $aPriorities, bool $bSetPriorityRule = false): AfrToConcreteStrategiesInterface;
 
     /**
      * @param string $sName
@@ -154,4 +162,11 @@ interface AfrToConcreteStrategiesInterface
      * @return array
      */
     public function getStrategies(): array;
+
+	/**
+	 *
+	 * @param bool|null $bConfigLoaded
+	 * @return AfrToConcreteStrategiesInterface|bool
+	 */
+	public function xetTenantToConcreteStrategiesConfigState(bool $bConfigLoaded = null);
 }

@@ -7,8 +7,8 @@ interface AfrArrXSortInterface
 {
     /**
      * @param array $aArray
-     * @param $mDirectionOrCallableFn ; SORT_ASC|SORT_DESC|callable
-     * @param $mSortByKey
+     * @param callable|int $mDirectionOrCallableFn SORT_ASC|SORT_DESC|callable
+     * @param mixed $mSortByKey
      * @param int $iFlags
      * @return bool
      */

@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Unit\InterfaceToConcrete;
 
+use Autoframe\Core\Env\AfrEnv;
 use Autoframe\Core\InterfaceToConcrete\AfrInterfaceToConcreteClass;
 use Autoframe\Core\InterfaceToConcrete\AfrVendorPath;
 use PHPUnit\Framework\TestCase;
@@ -15,7 +16,11 @@ class AfrToConcreteStrategiesClassTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->oAfrInterfaceToConcreteClass = new AfrInterfaceToConcreteClass('DEV');
+	    if (AfrEnv::getInstance()->flush()->getEnv('AFR_ENV', 'X') === 'X') {
+		    $_ENV['AFR_ENV'] = 'DEV';
+	    }
+
+        $this->oAfrInterfaceToConcreteClass = new AfrInterfaceToConcreteClass();
     }
 
     protected function tearDown(): void

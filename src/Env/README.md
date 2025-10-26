@@ -3,7 +3,7 @@
 Namespace:
 - Autoframe\Core\Env
 - **AfrEnv::getInstance()->isDev() returns true if APP_ENV is null**
-- **APP_ENV is not mandatory but recommended AfrEnv::getInstance()->setInlineEnvVar('APP_ENV', 'DEV');**
+- **APP_ENV is not mandatory but recommended AfrEnv::getInstance()->setEnv('APP_ENV', 'DEV');**
 
 Classes:
 - class AfrEnv extends AfrSingletonAbstractClass implements AfrEnvInterface
@@ -12,7 +12,7 @@ Classes:
     * iCacheSeconds is the number of cache seconds before expire. Use zero for no cache
     * aExtraEnvDirsFiles to add extra env directories and .env files
   - readEnvPhpFile(string $sFilePath)
-  - setInlineEnvVar(string $sKey, $mData)
+  - setEnv(string $sKey, $mData)
   - - populate inline keys
   - required(array $aKeys): AfrEnvValidatorInterface
   - ifPresent(array $aKeys): AfrEnvValidatorInterface
@@ -55,7 +55,7 @@ Classes:
     $oEnv = AfrEnv::getInstance()->setBaseDir(__DIR__);
     $oEnv->readEnv(0); //load env files from __DIR__ without cache
     $oEnv->readEnv(60); //cache loaded env file for 60 seconds
-    $oEnv->setInlineEnvVar('FOO', 'BAR'); //set *[FOO]=BAR
+    $oEnv->setEnv('FOO', 'BAR'); //set *[FOO]=BAR
     
     $oEnv->getEnv('APP_ENV'); //get env key
     $oEnv->getEnv(); //get all env keys as array
@@ -92,7 +92,7 @@ Classes:
       'PRODUCTION',
       'STAGING',
     ]);
-    $oEnv->setInlineEnvVar('APP_ENV', 'DEV');
+    $oEnv->setEnv('APP_ENV', 'DEV');
     echo $oEnv->getEnv('APP_ENV'); //prints CUSTOM
 	
 ---
