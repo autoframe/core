@@ -208,7 +208,6 @@ class AfrCronJobDaemon
 	{
 		AfrEvent::dispatchEvent(AfrEvent::CRON_DAEMON, [__FUNCTION__]);
 		//TODO: !!! JOBS venite din module / CORE JOBS ca si LOADER static
-		//TODO: CRON ENTRY POINT PHP file : trebuie sa fie replaceble in comanda: |AFR.DEAMOM.ENTRY.FILE.PHP|??
 
 		$this->setAllDaemonJobsAndCache(false);
 		$bWhile = $bDaemonStartup = true;
@@ -429,7 +428,7 @@ class AfrCronJobDaemon
 			if (AfrCliHttpDetect::isCli() && ($aArgsLst = AfrGetOpt::getInstance()->getoptDetectAllArgs($_SERVER['argv'], false))) {
 				$saDSJW = $aArgsLst[AfrRouterConstantsInterface::CRON_WORKER_ARGV_KEY] ?? null;
 			}/* elseif (!AfrCliHttpDetect::isCli() && !empty($_REQUEST[AfrRouterConstantsInterface::CRON_WORKER_ARGV_KEY])) {
-			//todo security over http:) OR Cleanup http
+			// THIS IS UNSECURE, so the implementation is temporarily stopped
 			$saDSJW = $_REQUEST[AfrRouterConstantsInterface::CRON_WORKER_ARGV_KEY];
 			}*/
 		}
@@ -671,8 +670,6 @@ class AfrCronJobDaemon
 	 */
 	protected function runWorkerProcOpen(string $sCommand): void
 	{
-		//TODO: cand se schimba fila de env|composer restartez serviciile? nope, numai daca spun eu ca trebuie resetate
-
 		// services will always restart automatically if a crash occurs
 		$onNewJob = $this->oWorkerJob->isAlwaysRunService() ? $this->oWorkerJob : null;
 		$sPipeFilePrefix = AfrSysTempDir::sysGetTempDirAliasSubDir(__CLASS__) .

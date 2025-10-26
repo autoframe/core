@@ -53,8 +53,6 @@ trait AfrRouterHandleCliTrait
 			AfrCronLogChannelSharedLogBuffer::getInstance()->viewLogs($sCronLiveLogViewer);
 		}
 		elseif ($bIsCron || $bIsCronWorker) {
-			//TODO: add aici cumva, cron job-uri din module / framework / servicii!!!
-			//TODO: add aici lock check! si posibilitate reboot la adaugare / stergere lista cronuri / cronuri individuale
 			if ($bIsCronWorker && empty($sWorkerValue)) {
 				throw new AfrRouterException('Cron Worker payload is not configured! This must be a base64 @_');
 			}
@@ -70,8 +68,6 @@ trait AfrRouterHandleCliTrait
 				$oCronLogger = Afr::app()->container()->get(AfrCronLoggerInterface::class), //AfrCronLoggerClass::getInstance();
 				$bIsCronWorker ? $sWorkerValue : null
 			)->run();
-			//AfrCronJobDaemon::demo('http://localhost:808/core/src/Cron/AfrCronJobDaemon.DemoCron.txt');
-			//die('CRON TODO implemenare ' . __FILE__ . PHP_EOL); //TODO
 
 			if ($oClosureAfterRoute) {
 				$oClosureAfterRoute(

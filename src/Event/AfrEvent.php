@@ -14,6 +14,34 @@ use Closure;
 
 /**
  * Class AfrEvent
+ *
+ *
+ *
+ *
+ * AfrEvent::addEventClosure('*afr*',function ($aData) {
+ * echo "\n~~addEventClosure Class: ";
+ * if(!empty($this)){
+ * if($this instanceof Afr){
+ * //    $this->dick = '9999';
+ * }
+ * }
+ * debug_print_backtrace();
+ * echo (!empty($this) ?  (get_class($this).": ") : '~~~~-php~~~~:').print_r($aData,true);
+ * echo "\n\n";
+ * },true);
+ *
+ * AfrEvent::addEventClosure('*',function (&$allData) {
+ * $aData['AfrEvent::addEventClosure(*'] = 'rand(112,998)';
+ * return rand(112,998).count($aData);
+ * });
+ * AfrEvent::addEventClosure('Connection\AfrDbConnectionManagerClass::getInstance',function ($aData) {
+ * return 'Connection\AfrDbConnectionManagerClass::getInstance--'.rand(112,998).count($aData);
+ * });
+ *
+ * AfrEvent::dispatchEvent('',['s1',2,['a3']]);
+ * AfrEvent::dispatchEvent('SomeEvD');
+ *
+ * AfrEvent::dispatchEvent('Some.Last.Eventx', ['SomeEvDArg1']);
  */
 class AfrEvent implements AfrDefaultTenantConfigsInterface
 {
