@@ -12,7 +12,6 @@
     "ext-pdo": "*",
     "ext-curl": "*"
   },
-  "version": "dev-1.0.0",
   "authors": [
     {
       "name": "Nistor Alexandru Marius",
