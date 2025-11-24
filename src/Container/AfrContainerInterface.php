@@ -16,7 +16,7 @@ interface AfrContainerInterface extends ArrayAccess
 
 	/**
 	 * @param string $id
-	 * @return mixed
+	 * @return object|mixed
 	 * @throws AfrContainerException
 	 */
 	public function get(string $id);

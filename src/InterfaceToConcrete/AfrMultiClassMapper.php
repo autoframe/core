@@ -66,7 +66,7 @@ class AfrMultiClassMapper
 					). DIRECTORY_SEPARATOR . 'AfrMultiClassMapper' ;
 			}
 			if (empty(self::$sCacheDir)) { //fallback
-				self::$sCacheDir = ((ini_get('sys_temp_dir') ?: AfrSysTempDir::sysGetTempDir()) ?: __DIR__). DIRECTORY_SEPARATOR . 'AfrMultiClassMapper' ;
+				self::$sCacheDir = (AfrSysTempDir::sysGetTempDir() ?: __DIR__). DIRECTORY_SEPARATOR . 'AfrMultiClassMapper' ;
 			}
 
 			if (!is_file($gitignore = self::$sCacheDir . DIRECTORY_SEPARATOR . '.gitignore')) {
@@ -371,15 +371,18 @@ class AfrMultiClassMapper
 	 * @param int $iRetryMs
 	 * @param float $fDelta
 	 * @return bool
+	 * @throws \Autoframe\Core\Container\Exception\AfrContainerException
+	 * @throws \Autoframe\Core\Event\Exception\AfrEventException
+	 * @throws \ReflectionException
 	 */
 	protected static function overWrite(string $sPathTo, array $aData, int $iRetryMs = 3000, float $fDelta = 2): bool
 	{
 		$sHeader = '<?php /* ' . gmdate('D, d M Y H:i:s') . ' GMT ->getSettings: ' .
 			str_replace('*/', '* /', print_r(self::$oWiringPaths->getSettings(), true)) .
 			"*/ \n return ";
-		return AfrOverWriteClass::getInstance()->overWriteFile(
+		return AfrOverWriteClass::getInstanceNoContainerBindings()->overWriteFile(
 			$sPathTo,
-			$sHeader . AfrArrExportArrayAsStringClass::getInstance()->exportPhpArrayAsString($aData),
+			$sHeader . AfrArrExportArrayAsStringClass::getInstanceNoContainerBindings()->exportPhpArrayAsString($aData),
 			$iRetryMs,
 			$fDelta
 		);

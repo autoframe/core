@@ -72,6 +72,7 @@ trait AfrModuleHTTPRoutesTrait
 
 	public function getModuleHTTPRoutesPath(): string
 	{
+		return $this->getModuleDirPath().AfrModuleHTTPRoutesInterface::MODULE_HTTP_ROUTES_FILE;
 		return $this->moduleNaming('sModuleHTTPRoutesPath');
 	}
 

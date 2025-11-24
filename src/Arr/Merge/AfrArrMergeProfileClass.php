@@ -11,6 +11,21 @@ use Autoframe\Core\DesignPatterns\Singleton\AfrSingletonAbstractClass;
  */
 class AfrArrMergeProfileClass extends AfrSingletonAbstractClass implements AfrArrMergeProfileInterface
 {
+	/*
+	When to use arrayMergeProfile(): Use it when you need:
+	-	deep merge with predictable rules
+	-	preserve original array structure
+	-	append numeric keys, not overwrite
+	-	only merge arrays if both sides are arrays
+	-	config/profile merging, inheritance, or module overrides
+
+	When to use array_replace_recursive(): Use it when you want:
+	-	strict replacement
+	-	no merging logic
+	-	no numeric key preservation
+	-	simple override behavior
+	 */
+
 	/**
 	 * Recursive array merging for config profiles
 	 * @param array $aOriginal

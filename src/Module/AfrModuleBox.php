@@ -18,7 +18,7 @@ use Autoframe\Core\Tenant\AfrTenant;
  * Modular box approach abstract concept definitions and constraints:
  * The module manager class is called "AfrModuleBoxClass" and uses the namespace "Autoframe\Core\ModuleBox";
  * The module manager class will load on demand or registers on demand functionalities provided by modules;
- * Dependency injection (auto whiling) is made using the container get method as follows: "Autoframe\Core\Afr\Afr::app()->container()->get($sFQCN);";
+ * Dependency injection (auto wiring) is made using the container get method as follows: "Autoframe\Core\Afr\Afr::app()->container()->get($sFQCN);";
  * The Container will resolve interfaces and concrete FQCN based on class names bindings from abstract to concrete;
  * The module box should provide a internal mechanism to resolve abstract bindings originated from modules config or manifest files;
  * If the module box provided internal mechanism fails to resolve a concrete implementation, then we fallback on "Autoframe\Core\Afr\Afr::app()->container()->get($sFQCN);";
@@ -29,9 +29,8 @@ use Autoframe\Core\Tenant\AfrTenant;
  * The module resolving can include fallback full qualified class names when providing interfaces as parameter;
  * The module resolving should provide both debug and log methods;
  * The Module Box must instantiate the module without instantiating all the nested functionalities, because functionalities will be instantiated on demand at first access;
- * When a module is disabled from the current application config, any configuration or functionality from inside the module directory will simply not be loaded/read/listed, unless accessed by a extender module;
- * A disabled module = It cannot be resolved directly(unless replaced or extended), its functionality is not visible, and its default configuration is normally omitted — except when the module is extended by another module, in which case its default config may still be used only as a base for the extender.
  * Lazy per-module/functionality states that ModuleBox loads config only for the modules/functionality types that are actually needed, and may incrementally merge these with app config;
+ * A disabled module cannot be resolved directly via Module Box (unless replaced), its functionality is not visible, and its default configuration is normally omitted except when the module is extended by another module, in which case its default config may still be used only as a base for the extender. DI container may still instantiate a disabled module if requested directly by FQCN elsewhere in the application;
  *
  * Module Box Resolving Logic → Priority and order:
  * 0. Load Application config.
@@ -78,7 +77,6 @@ use Autoframe\Core\Tenant\AfrTenant;
  * A module has a public method that allows a custom configuration file to be applied;
  * A module can have one or more distinct configurations, resulting in a distinct module instance for each configuration;
  *
- *
  * File and class naming conventions regarding modules, functionalities or the module box class:
  * All classes related to the module box, interfaces and traits should be a part of the namespace "Autoframe\Core\ModuleBox";
  * All classes, interfaces and traits should be be prefixed by "Afr";
@@ -90,25 +88,28 @@ use Autoframe\Core\Tenant\AfrTenant;
  * The php code should avoid long or complicated methods;
  *
  * CONCEPT LIST REGARDING MODULE FUNCTIONALITIES CONFIGURATION EXTENSION,MERGING,REPLACING,EXCLUDING FUNCTIONALITIES:
- * A module will provide a default configuration that can be loaded by the Module Box when needed, unless the module is disabled from the app config.
+ * A module will provide a default configuration that can be loaded by the Module Box when needed. If the module is disabled in the app config, its default configuration is normally omitted, except when it is used internally as a base by a module that extends it;
+ * A module extender extends the original base module config not the replacement module config in the case a module is both extended and replaced by other modules.
  * The configuration manifest will be stored as a php file, so we can use PHP OPcache;
  * The configuration files will return an array, when included with php function include();
  * Modules and functionalities can be personalized from the current application configuration;
- * Inside the Module Box, the application configuration file is recursively merged only with the default settings of modules that are not disabled.
+ * Inside the Module Box, the application configuration file is recursively merged only with the default settings of modules that are not disabled, but merge can occur with configuration of disabled modules when this configuration is used as base for extension in the case of the extender module.
  * After merging, any functionality marked as "Excluded functionality" in the final configuration will have its settings removed and will not be resolvable.
  * Based on the configuration files, certain interfaces can list as available functionalities or not list as available;
+ * A module can be both replaced and extended at the same time in the final configuration. If such a situation occurs, the Module Box will prioritize module replace over module extend. Replacement represents complete override and therefore has higher precedence than extension, which is additive. Replacement has priority over the extender when resolving the base module itself. Extension still functions as a configuration merge mechanism;
+ * A module extender extends the original base module config not the replacement module config in the case a module is both extended and replaced by other modules.
  *
  * A module can REPLACE or EXTEND another module, meaning all the functionalities and configuration files will be replaced or extended;
  * When a module replaces another module, all the functionalities and configuration files will be replaced;
  * When a module extends another module, all the functionalities and configuration files will be merged;
  *
  * When the configuration of "Module B" states that "Module B" FQCN replaces "Module A" FQCN, we know for a fact that "Module B" has replaced "Module A" for the purpose of resolving "Module A" using the Module Box
- * When "Module A" is replaced by "Module B", then all the configuration and functionalities from "Module A" is totally ignored and skipped;
+ * When "Module A" is replaced by "Module B", then "Module B" will not inherit anything(functionalities or configurations or anything else) from "Module A"
  * When "Module A" is replaced by "Module B", and we are resolving "Module A" inside the module box class, then we will get a instance of "Module B";
  * When "Module A" is replaced by "Module B", only instances of "Module B" can be generated using the module box class;
  * Even if "Module A" is disabled, any attempt to resolve "Module A" via Module Box will still return "Module B", because "Module B" replaces "Module A";
  *
- * When "Module D" extends "Module C", both "Module D" and "Module C" can be resolved independently and coexist in the same time. This is true only when "Module C" is not disabled;
+ * When "Module D" extends "Module C", both "Module D" and "Module C" can be resolved independently. "Module C" and "Module D" can be resolved via Module Box and have instances of "Module C" and "Module D" in the same time is true only when "Module C" is not disabled;
  * When "Module D" extends "Module C", all the functionalities and configuration from "Module C" will be reflected in "Module D" configurations;
  * When "Module D" extends "Module C", "Module D" can add new functionalities,interfaces,concrete implementations and configuration files compared to "Module C";
  * When "Module D" extends "Module C", "Module D" can overwrite or replace default configuration php files located into "Module C";
@@ -120,6 +121,8 @@ use Autoframe\Core\Tenant\AfrTenant;
  * When "Module E" is disabled and "Module F" extends "Module E", then in "Step 1" we will lazy-load the relevant default configuration of "Module E" and merge into it the relevant configuration from "Module F"
  * When "Module F" extends "Module E" and "Module E" is disabled, then "Module F" may still use "Module E" config as base;
  * When "Module E" is disabled, any attempt to resolve "Module E" will ask the Module Box to search for a replacement module, else fallback to "Step 5"
+ *
+ * If a module is simultaneously disabled, replaced, and extended, extension rules still use the original base module’s configuration as their merge base, while replacement rules control how the base module itself is resolved. The disabled state only prevents direct resolution of the base module; it does not prevent its configuration from being used as an internal base by extenders.
  *
  * What are the module functionalities:
  * A functionality is always defined and characterized by one or more interfaces;

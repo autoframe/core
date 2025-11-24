@@ -128,8 +128,8 @@ trait AfrRouterRegisterTrait
 	/**
 	 * Store a middleware route and a handling function to be executed when accessed using one of the specified methods.
 	 *
-	 * @param array $methods Allowed methods
-	 * @param string $pattern A route pattern such as /about/system
+	 * @param array $methods ['GET','POST',...]
+	 * @param string $pattern REGEX pattern such as /about/system
 	 * @param object|callable $fn The handling function to be executed
 	 * @param array $routeOptions
 	 * @return AfrRouter
@@ -142,7 +142,13 @@ trait AfrRouterRegisterTrait
 
 
 	/**
-	 * @throws AfrRouterException|AfrEventException
+	 * @param array $methods ['GET','POST',...]
+	 * @param string $pattern REGEX pattern such as /about/system
+	 * @param $fn
+	 * @param array $routeOptions
+	 * @return AfrRouterRegisterTrait|AfrRouter
+	 * @throws AfrEventException
+	 * @throws AfrRouterException
 	 */
 	public function registerCodeRoute(array $methods, string $pattern, $fn, array $routeOptions = []): self
 	{
@@ -150,7 +156,13 @@ trait AfrRouterRegisterTrait
 	}
 
 	/**
-	 * @throws AfrRouterException|AfrEventException
+	 * @param array $methods ['GET','POST',...]
+	 * @param string $pattern REGEX pattern such as /about/system
+	 * @param $fn
+	 * @param array $routeOptions
+	 * @return AfrRouterRegisterTrait|AfrRouter
+	 * @throws AfrEventException
+	 * @throws AfrRouterException
 	 */
 	public function registerAfterRoute(array $methods, string $pattern, $fn, array $routeOptions = []): self
 	{
