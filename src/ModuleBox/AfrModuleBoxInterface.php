@@ -15,6 +15,22 @@ interface AfrModuleBoxInterface extends AfrModuleConstantsInterface
 	 */
 	public function registerModuleInstance(AfrModuleInterface $oModule, array $aConfig = []): void;
 
+
+	/**
+	 * Register a module class name and its configuration.
+	 *
+	 * @param string $sFqcnModule
+	 * @param array $aModConfig
+	 */
+	public function registerModuleFQCN(string $sFqcnModule, array $aModConfig = []): void;
+
+
+	/**
+	 * @param array $aConfigFQCN
+	 * @return void
+	 */
+	public function registerModuleFqcnListFromAppConfig(array $aConfigFQCN = []): void;
+
 	/**
 	 * Resolve a module by its FQCN, taking into account disabled/replace/extend rules.
 	 *
@@ -36,7 +52,7 @@ interface AfrModuleBoxInterface extends AfrModuleConstantsInterface
 	 * @param string|null $preferredFqcn When $single = true and multiple implementations exist,
 	 *                                   this preferred concrete FQCN can be used to select one.
 	 *
-	 * @return object|array|null
+	 * @return AfrFunctionalityInterface|AfrFunctionalityInterface[]|object|object[]|null
 	 */
 	public function resolveFunctionality(
 		string $interfaceFqcn,

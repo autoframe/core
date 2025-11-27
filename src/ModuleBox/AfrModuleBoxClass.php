@@ -72,7 +72,7 @@ class AfrModuleBoxClass extends AfrSingletonAbstractClass implements AfrModuleBo
 
 
 	/**
-	 * @param string|AfrModuleInterface $sFqcnModule
+	 * @param string $sFqcnModule
 	 * @param array $aModConfig
 	 * @return void
 	 */
@@ -82,12 +82,31 @@ class AfrModuleBoxClass extends AfrSingletonAbstractClass implements AfrModuleBo
 	}
 
 	/**
+	 * @param array $aConfigFQCN
+	 * @return void
+	 */
+	public function registerModuleFqcnListFromAppConfig(array $aConfigFQCN = []): void
+	{
+		foreach ($aConfigFQCN as $sKey => $aFqcnConfig) {
+			$aFqcnConfig = (array)$aFqcnConfig;
+			if(is_string($sKey)) { //class name is as key
+				$this->registerModuleFQCN($sKey, $aFqcnConfig);
+				continue;
+			}
+			if(empty($aFqcnConfig)) continue;
+			$sFqcn = array_shift($aFqcnConfig);
+			$this->registerModuleFQCN($sFqcn, $aFqcnConfig);
+		}
+
+	}
+
+	/**
 	 * @param string|AfrModuleInterface $module
 	 * @param string $sFQCN
 	 * @param array $aConfig
 	 * @return void
 	 */
-	protected function pushModuleConfig($module, string $sFQCN, array $aConfig): void
+	protected function pushModuleConfig($module, string $sFQCN, array $aConfig = []): void
 	{
 		$this->modules[$sFQCN] = $module; //push instance or fqcn
 
@@ -102,22 +121,22 @@ class AfrModuleBoxClass extends AfrSingletonAbstractClass implements AfrModuleBo
 		$this->graphBuilt = false; // Mark graph as dirty so it will be rebuilt lazily
 	}
 
+	/**
+	 * @param string $moduleFqcn
+	 * @return AfrModuleInterface|null
+	 * @throws AfrContainerException
+	 */
 	public function resolveModule(string $moduleFqcn): ?AfrModuleInterface
 	{
 		$this->buildGraphIfNeeded();
 
 		$fqcn = $this->replacementMap[$moduleFqcn] ?? $moduleFqcn;
-
-		if (empty($this->modules[$fqcn])) {
-			return null;
-		}
-
+		if (empty($this->modules[$fqcn])) return null;
 		$config = $this->effectiveConfigs[$fqcn] ?? $this->moduleConfigs[$fqcn] ?? [];
 
-		if (!empty($config[self::bDisabledModule])) {
-			// Disabled module cannot be resolved directly (per spec)
-			return null;
-		}
+		// Disabled module cannot be resolved directly (per spec)
+		if (!empty($config[self::bDisabledModule])) return null;
+
 
 		$mReturn = $this->modules[$fqcn];
 		if ($mReturn instanceof \Closure) {
@@ -134,15 +153,32 @@ class AfrModuleBoxClass extends AfrSingletonAbstractClass implements AfrModuleBo
 				$mReturnInstance->registerModuleInstance(); //init once
 			}
 		}
-
-
-		return $this->modules[$fqcn];//should be AfrModuleInterface or null
+		return $this->modules[$fqcn] instanceof AfrModuleInterface ? $this->modules[$fqcn] : null;
 	}
+
+
+
 
 	/**
 	 * @inheritDoc
 	 */
 	public function resolveFunctionality(
+		string  $interfaceFqcn,
+		array   $context = [],
+		bool    $bSingleImplementationExpected = false,
+		?string $preferredFqcn = null
+	)
+	{
+		$mix = $this->resolveFunctionalityResolver($interfaceFqcn,$context,$bSingleImplementationExpected,$preferredFqcn);
+		if(is_array($mix)){
+			foreach($mix as $m){
+
+			}
+		}
+	}
+
+
+	protected function resolveFunctionalityResolver(
 		string  $interfaceFqcn,
 		array   $context = [],
 		bool    $bSingleImplementationExpected = false,
@@ -157,7 +193,6 @@ class AfrModuleBoxClass extends AfrSingletonAbstractClass implements AfrModuleBo
 
 			// Disabled module not considered for functionality resolution
 			if (!empty($config[self::bDisabledModule])) continue;
-
 
 			$funcConfig = $config[self::aFunctionalities][$interfaceFqcn] ?? null;
 			if ($funcConfig === null) continue;
@@ -178,14 +213,11 @@ class AfrModuleBoxClass extends AfrSingletonAbstractClass implements AfrModuleBo
 			$instance = $this->resolveUsingAppContainer($classFqcn);
 			$instances[] = $instance;
 
-			if ($bSingleImplementationExpected && $preferredFqcn === null) {
-				// For single resolution with no preference, return first match
-				return $instance;
-			}
+			// For single resolution with no preference, return first match
+			if ($bSingleImplementationExpected && $preferredFqcn === null) return $instance;
 
-			if ($bSingleImplementationExpected && $preferredFqcn !== null && $classFqcn === $preferredFqcn) {
-				return $instance;
-			}
+			if ($bSingleImplementationExpected && $preferredFqcn !== null && $classFqcn === $preferredFqcn) return $instance;
+
 		}
 
 		if ($bSingleImplementationExpected) {
@@ -194,9 +226,7 @@ class AfrModuleBoxClass extends AfrSingletonAbstractClass implements AfrModuleBo
 		}
 
 		// For multi-instance resolution:
-		if (!empty($instances)) {
-			return $instances;
-		}
+		if (!empty($instances)) return $instances;
 
 		// No module implementations: try container (could return single or array depending on user binding)
 		return $this->resolveUsingAppContainer($interfaceFqcn);
@@ -275,7 +305,7 @@ class AfrModuleBoxClass extends AfrSingletonAbstractClass implements AfrModuleBo
 	}
 
 
-	public static function mergeConfig(iterable $aOld, iterable $aNew): array
+	protected static function mergeConfig(iterable $aOld, iterable $aNew): array
 	{
 		is_array($aOld) or $aOld = iterator_to_array($aOld);
 		foreach ($aNew as $k => $v)

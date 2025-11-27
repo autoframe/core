@@ -15,4 +15,23 @@ interface AfrFunctionalityInterface extends AfrModuleConstantsInterface
 	// generic marker/base interface
 	// No members here; used for type grouping.
 
+	public function attachParentModuleInstance(AfrModuleInterface $oModule);
+
+	/**
+	 * @param string $sModuleFQCN
+	 * @return mixed
+	 * Aici daca am mai multe instante ma va afecta? Instante ale modulului si ale functionalitatilor
+	 * Daca vorbesc de login-uri diferite, asta inseamna ca trebuie sa am mai multe config-uri de module sau de functionalitati?
+	 *
+	 * Cand construiesc modulul, inseamna ca trebuie sa atasez toate functionalitatile?
+	 * - Cel mai probabil ca nu, ca nu este lazy!
+	 *
+	 * Functionalitatea trebuie sa stie despre modul?
+	 * - Da si Nu
+	 * - Da, ca sa aiba path de file
+	 * - Da, pentru ca config-ul de functionalitate trebuie aplicat / facut available din modul
+	 * - Nu, pentru ca modului ofera paths si array cu config
+	 */
+	public function attachParentModuleFQCN(string $sModuleFQCN);
+
 }
