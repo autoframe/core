@@ -130,30 +130,30 @@ class AfrModuleBoxClass extends AfrSingletonAbstractClass implements AfrModuleBo
 	{
 		$this->buildGraphIfNeeded();
 
-		$fqcn = $this->replacementMap[$moduleFqcn] ?? $moduleFqcn;
-		if (empty($this->modules[$fqcn])) return null;
-		$config = $this->effectiveConfigs[$fqcn] ?? $this->moduleConfigs[$fqcn] ?? [];
+		$sFQCN = $this->replacementMap[$moduleFqcn] ?? $moduleFqcn;
+		if (empty($this->modules[$sFQCN])) return null;
+		$config = $this->effectiveConfigs[$sFQCN] ?? $this->moduleConfigs[$sFQCN] ?? [];
 
 		// Disabled module cannot be resolved directly (per spec)
 		if (!empty($config[self::bDisabledModule])) return null;
 
 
-		$mReturn = $this->modules[$fqcn];
+		$mReturn = $this->modules[$sFQCN];
 		if ($mReturn instanceof \Closure) {
 			$mReturn = $mReturn($config);
 			if ($mReturn instanceof AfrModuleInterface) {
 				$mReturn->registerModuleInstance(); //init once
 			}
-			$this->modules[$fqcn] = $mReturn;
+			$this->modules[$sFQCN] = $mReturn;
 		}
 		if (is_string($mReturn)) {
 			/** @var AfrModuleInterface $mReturnInstance */
-			$this->modules[$fqcn] = $mReturnInstance = $this->resolveUsingAppContainer($mReturn);
+			$this->modules[$sFQCN] = $mReturnInstance = $this->resolveUsingAppContainer($mReturn);
 			if ($mReturnInstance instanceof AfrModuleInterface) {
 				$mReturnInstance->registerModuleInstance(); //init once
 			}
 		}
-		return $this->modules[$fqcn] instanceof AfrModuleInterface ? $this->modules[$fqcn] : null;
+		return $this->modules[$sFQCN] instanceof AfrModuleInterface ? $this->modules[$sFQCN] : null;
 	}
 
 
@@ -164,12 +164,10 @@ class AfrModuleBoxClass extends AfrSingletonAbstractClass implements AfrModuleBo
 	 */
 	public function resolveFunctionality(
 		string  $interfaceFqcn,
-		array   $context = [],
-		bool    $bSingleImplementationExpected = false,
 		?string $preferredFqcn = null
 	)
 	{
-		$mix = $this->resolveFunctionalityResolver($interfaceFqcn,$context,$bSingleImplementationExpected,$preferredFqcn);
+		$mix = $this->resolveFunctionalityResolver($interfaceFqcn,$preferredFqcn);
 		if(is_array($mix)){
 			foreach($mix as $m){
 
@@ -177,17 +175,21 @@ class AfrModuleBoxClass extends AfrSingletonAbstractClass implements AfrModuleBo
 		}
 	}
 
-
+	/**
+	 * @param string $interfaceFqcn
+	 * @param string|null $preferredFqcn
+	 * @return AfrFunctionalityInterface[]
+	 * @throws AfrContainerException
+	 */
 	protected function resolveFunctionalityResolver(
 		string  $interfaceFqcn,
-		array   $context = [],
-		bool    $bSingleImplementationExpected = false,
 		?string $preferredFqcn = null
-	)
+	):array
 	{
-		$this->buildGraphIfNeeded();
-
+		$bSingleImplementationExpected = false;
 		$instances = [];
+		$this->buildGraphIfNeeded();
+		//loop effective MODULE configs
 		foreach ($this->effectiveConfigs as $moduleFqcn => $config) {
 			if (empty($this->modules[$moduleFqcn])) continue;
 
@@ -229,7 +231,7 @@ class AfrModuleBoxClass extends AfrSingletonAbstractClass implements AfrModuleBo
 		if (!empty($instances)) return $instances;
 
 		// No module implementations: try container (could return single or array depending on user binding)
-		return $this->resolveUsingAppContainer($interfaceFqcn);
+		return $this->resolveUsingAppContainer($interfaceFqcn); //todo force array | preffered
 	}
 
 	/**

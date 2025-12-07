@@ -29,8 +29,21 @@ interface AfrFunctionalityInterface extends AfrModuleConstantsInterface
 	 * Functionalitatea trebuie sa stie despre modul?
 	 * - Da si Nu
 	 * - Da, ca sa aiba path de file
+	 * - Da, CONTEXT
 	 * - Da, pentru ca config-ul de functionalitate trebuie aplicat / facut available din modul
 	 * - Nu, pentru ca modului ofera paths si array cu config
+	 * ---------------
+	 *
+	 * Func sa aiba swager
+	 * RESOLVE FN SA FIE: SAME CONTEXT(CA SI MODULUL DE ORIGINE) => FALLBACK => RESTUL
+	 * RESOLVE FN SA FIE CONTERXT BASED CU NUME DE CONTEXT OBLIGATORIU SAU *
+	 *
+	 * RESOLVE FN SA INTOARCA ARRAY
+	 *
+	 * SAP:
+	 * BAdI lookups instead of hardcoding behavior
+	 * RAP handlers injected as dependencies / RAP extension points / Subclassing with REDEFINITION
+	 *
 	 */
 	public function attachParentModuleFQCN(string $sModuleFQCN);
 

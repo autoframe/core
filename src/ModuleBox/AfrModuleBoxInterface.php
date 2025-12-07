@@ -47,8 +47,6 @@ interface AfrModuleBoxInterface extends AfrModuleConstantsInterface
 	 * - Falls back to the DI container if no module can provide it.
 	 *
 	 * @param string      $interfaceFqcn Interface to resolve
-	 * @param array       $context       Optional context information
-	 * @param bool        $bSingleImplementationExpected        Whether a single implementation is expected
 	 * @param string|null $preferredFqcn When $single = true and multiple implementations exist,
 	 *                                   this preferred concrete FQCN can be used to select one.
 	 *
@@ -56,8 +54,6 @@ interface AfrModuleBoxInterface extends AfrModuleConstantsInterface
 	 */
 	public function resolveFunctionality(
 		string $interfaceFqcn,
-		array $context = [],
-		bool $bSingleImplementationExpected = false,
 		?string $preferredFqcn = null
 	);
 }
