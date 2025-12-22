@@ -28,8 +28,8 @@ class AfrMailReplacementModuleClass implements AfrModuleInterface
 		// This module redefines the email sender with a log-only implementation.
 		return [
 			AfrEmailSenderInterface::class => [
-				AfrModuleConstantsInterface::FQCN     => AfrLogOnlyEmailSenderClass::class,
-				AfrModuleConstantsInterface::bSingleton => true,
+				AfrModuleConstantsInterface::sConcreteFQCN     => AfrLogOnlyEmailSenderClass::class,
+				AfrModuleConstantsInterface::bSingletonSpawn => true,
 				AfrModuleConstantsInterface::bExcludedFunctionality  => false,
 			],
 		];

@@ -3,16 +3,16 @@
 namespace Autoframe\Core\ModuleBox;
 
 /**
- * 'disabled'       => bool,
- *    'replaces'       => string|null,
- *    'extends'        => string|null,
- *    'functionalities'=> [ interfaceFqcn => [ 'class'=>..., 'singleton'=>..., 'excluded'=>... ] ],
+ *    'bDisabledModule'       => bool,
+ *    'snModuleReplaces'       => string|null,
+ *    'snModuleExtends'        => string|null,
+ *    'aFunctionalities'=> [ interfaceFqcn => [ 'class'=>..., 'singleton'=>..., 'excluded'=>... ] ],
  *
  *  Example Functionality list structure:
  *  [
- *      SomeInterface::class => [
- *          AfrModuleInterface::FQCN     => ConcreteClass::class,
- *          AfrModuleInterface::bSingleton => true,
+ *      SomeFunctionalityInterface::class => [
+ *          AfrModuleInterface::FQCN     => sConcreteClass::class,
+ *          AfrModuleInterface::bSingletonSpawn => true,
  *          AfrModuleInterface::bExcludedFunctionality  => false,
  *      ],
  *  ]
@@ -21,11 +21,13 @@ namespace Autoframe\Core\ModuleBox;
  * */
 interface AfrModuleConstantsInterface
 {
-	const FQCN = 'sClass';
-	const bSingleton = 'bSingleton';
+	const sConcreteFQCN = 'sConcreteFQCN';
+	const sInterfaceFQCN = 'sInterfaceFQCN';
+	const bSingletonSpawn = 'bSingletonSpawn';
 	const bExcludedFunctionality = 'bExcludedFunctionality';
 	const bDisabledModule = 'bDisabledModule';
 	const snModuleReplaces = 'snModuleReplaces';
 	const snModuleExtends = 'snModuleExtends';
 	const aFunctionalities = 'aFunctionalities';
+	const aModuleParents = 'aModuleParents';
 }

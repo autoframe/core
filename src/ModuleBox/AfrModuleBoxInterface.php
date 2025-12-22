@@ -5,6 +5,8 @@ namespace Autoframe\Core\ModuleBox;
 
 
 
+use Closure;
+
 interface AfrModuleBoxInterface extends AfrModuleConstantsInterface
 {
 	/**
@@ -24,6 +26,15 @@ interface AfrModuleBoxInterface extends AfrModuleConstantsInterface
 	 */
 	public function registerModuleFQCN(string $sFqcnModule, array $aModConfig = []): void;
 
+	/**
+	 * Register a module class name and its configuration.
+	 *
+	 * @param string $sFqcnModule
+	 * @param Closure $oClosure
+	 * @param array $aModConfig
+	 */
+	public function registerModuleUsingClosure(string $sFqcnModule, Closure $oClosure, array $aModConfig = []): void;
+
 
 	/**
 	 * @param array $aConfigFQCN
@@ -34,10 +45,10 @@ interface AfrModuleBoxInterface extends AfrModuleConstantsInterface
 	/**
 	 * Resolve a module by its FQCN, taking into account disabled/replace/extend rules.
 	 *
-	 * @param string $moduleFqcn Base module FQCN (may be mapped to a replacer)
+	 * @param string $sModuleFqcn Base module FQCN (may be mapped to a replacer)
 	 * @return AfrModuleInterface|null
 	 */
-	public function resolveModule(string $moduleFqcn): ?AfrModuleInterface;
+	public function resolveModule(string $sModuleFqcn): ?AfrModuleInterface;
 
 	/**
 	 * Resolve functionality by interface FQCN.
@@ -46,14 +57,17 @@ interface AfrModuleBoxInterface extends AfrModuleConstantsInterface
 	 * - Can return an array of instances (if multiple implementations exist and $single is false).
 	 * - Falls back to the DI container if no module can provide it.
 	 *
-	 * @param string      $interfaceFqcn Interface to resolve
+	 * @param string      $sFuncInterfaceFqcn Interface to resolve
 	 * @param string|null $preferredFqcn When $single = true and multiple implementations exist,
 	 *                                   this preferred concrete FQCN can be used to select one.
 	 *
 	 * @return AfrFunctionalityInterface|AfrFunctionalityInterface[]|object|object[]|null
 	 */
 	public function resolveFunctionality(
-		string $interfaceFqcn,
+		string  $sFuncInterfaceFqcn,
 		?string $preferredFqcn = null
 	);
+
+	public function getEffectiveModulesList(): array;
+	public function getEffectiveFunctionalitiesList(): array;
 }

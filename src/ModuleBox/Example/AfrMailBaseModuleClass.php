@@ -21,8 +21,8 @@ class AfrMailBaseModuleClass implements AfrModuleInterface
 		// Default: provide SMTP-based email sending as a singleton functionality.
 		return [
 			AfrEmailSenderInterface::class => [
-				AfrModuleConstantsInterface::FQCN     => AfrSmtpEmailSenderClass::class,
-				AfrModuleConstantsInterface::bSingleton => true,
+				AfrModuleConstantsInterface::sConcreteFQCN     => AfrSmtpEmailSenderClass::class,
+				AfrModuleConstantsInterface::bSingletonSpawn => true,
 				AfrModuleConstantsInterface::bExcludedFunctionality  => false,
 			],
 		];
