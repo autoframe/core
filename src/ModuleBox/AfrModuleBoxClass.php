@@ -71,7 +71,7 @@ class AfrModuleBoxClass extends AfrSingletonAbstractClass implements AfrModuleBo
 	 */
 	protected bool $graphBuilt = false;
 
-	protected array $aFunctionalityFqcnAsSingletonMap = [];
+	protected array $aFunctionalityConcreteFqcnAsSingletonMap = [];
 
 	public function registerModuleInstance(AfrModuleInterface $oModule, array $aConfig = []): void
 	{
@@ -369,7 +369,7 @@ class AfrModuleBoxClass extends AfrSingletonAbstractClass implements AfrModuleBo
 		$this->aModuleExtensionMap =
 		$this->aModuleEffectiveConfigs =
 		$this->aFunctionalityEffectiveConfigs =
-		$this->aFunctionalityFqcnAsSingletonMap = [];
+		$this->aFunctionalityConcreteFqcnAsSingletonMap = [];
 
 		// First pass: collect basic relations from raw config
 		foreach ($this->aModuleConfigs as $fqcn => $config) {
@@ -418,7 +418,7 @@ class AfrModuleBoxClass extends AfrSingletonAbstractClass implements AfrModuleBo
 					// daca o mapez ca si singleton undeva, ea va trebui sa ramana singleton / bridge / semi container
 					// PUN FLAG|env cum si ce, dar asta poate afecta coneziunea de functionare intre module
 					// $this->aFunctionalityFqcnAsSingletonMap[$funcConfig[self::FQCN]][$sModFQCN] = $interfaceFqcn;
-					$this->aFunctionalityFqcnAsSingletonMap[$aFuncConf[self::sConcreteFQCN]][$modFQCN] = $sFuncInterfaceFqcn;
+					$this->aFunctionalityConcreteFqcnAsSingletonMap[$aFuncConf[self::sConcreteFQCN]][$modFQCN] = $sFuncInterfaceFqcn;
 				}
 			}
 		}
@@ -429,10 +429,10 @@ class AfrModuleBoxClass extends AfrSingletonAbstractClass implements AfrModuleBo
 				$this->aFunctionalityEffectiveConfigs[$sFuncInterfaceFqcn][$sModFQCN] = $aFuncConf;
 
 				//force all concrete implementations to singleton
-				if (!empty($this->aFunctionalityFqcnAsSingletonMap[$aFuncConf[self::sConcreteFQCN]])) {
+				if (!empty($this->aFunctionalityConcreteFqcnAsSingletonMap[$aFuncConf[self::sConcreteFQCN]])) {
 					$aFuncConf[self::bSingletonSpawn] = true;
 					$aFuncConf[self::bSingletonSpawn . 'ForceByModules'] =
-						array_keys($this->aFunctionalityFqcnAsSingletonMap[$aFuncConf[self::sConcreteFQCN]]);
+						array_keys($this->aFunctionalityConcreteFqcnAsSingletonMap[$aFuncConf[self::sConcreteFQCN]]);
 				}
 				//push concrete cfg
 				$this->aFunctionalityEffectiveConfigs[$aFuncConf[self::sConcreteFQCN]][$sModFQCN] = $aFuncConf;
@@ -470,7 +470,7 @@ class AfrModuleBoxClass extends AfrSingletonAbstractClass implements AfrModuleBo
 	{
 		//	$this->aFunctionalityFqcnAsSingletonMap[$aFuncConf[self::sConcreteFQCN]][$modFQCN] = $sFuncInterfaceFqcn;
 		//	return (!empty($this->aFunctionalityFqcnAsSingletonMap[$sFuncConcreteFqcn]) ? $moduleFqcn . '|' : '') . $sFuncConcreteFqcn;
-		return $sFuncConcreteFqcn.(!empty($this->aFunctionalityFqcnAsSingletonMap[$sFuncConcreteFqcn]) ? '' : '@'.$moduleFqcn);
+		return $sFuncConcreteFqcn.(!empty($this->aFunctionalityConcreteFqcnAsSingletonMap[$sFuncConcreteFqcn]) ? '' : '@'.$moduleFqcn);
 	}
 
 	/**
@@ -509,7 +509,26 @@ class AfrModuleBoxClass extends AfrSingletonAbstractClass implements AfrModuleBo
 		//TODO: daca vreau sa extind un modul, si folosesc numai extensia, atunci de ce extantiez si baza obligatoriu?
 		//	}
 		$key = $this->getFunctionalityWrapKey($sFuncConcreteFqcn, $moduleFqcn);
-		if (!array_key_exists($key, $this->aFunctionalityFqcnAsSingletonMap)) {
+		if (!array_key_exists($key, $this->aFunctionalityConcreteFqcnAsSingletonMap)) {
+			//TODO: SINGLETON CONCRETE|SINGLETON|INTERFACE
+			//TODO: SINGLETON CONCRETE|SINGLETON|INTERFACE
+			//TODO: SINGLETON CONCRETE|SINGLETON|INTERFACE
+			//TODO: SINGLETON CONCRETE|SINGLETON|INTERFACE
+			//TODO: SINGLETON CONCRETE|SINGLETON|INTERFACE
+			//TODO: SINGLETON CONCRETE|SINGLETON|INTERFACE
+			//TODO: SINGLETON CONCRETE|SINGLETON|INTERFACE
+			//TODO: SINGLETON CONCRETE|SINGLETON|INTERFACE
+			//TODO: SINGLETON CONCRETE|SINGLETON|INTERFACE
+			//TODO: SINGLETON CONCRETE|SINGLETON|INTERFACE
+			//TODO: SINGLETON CONCRETE|SINGLETON|INTERFACE
+			//TODO: SINGLETON CONCRETE|SINGLETON|INTERFACE
+			//TODO: SINGLETON CONCRETE|SINGLETON|INTERFACE
+			//TODO: SINGLETON CONCRETE|SINGLETON|INTERFACE
+			//TODO: SINGLETON CONCRETE|SINGLETON|INTERFACE
+			//TODO: SINGLETON CONCRETE|SINGLETON|INTERFACE
+			//TODO: SINGLETON CONCRETE|SINGLETON|INTERFACE
+			//TODO: SINGLETON CONCRETE|SINGLETON|INTERFACE
+			//TODO: SINGLETON CONCRETE|SINGLETON|INTERFACE
 			$this->aWrapFunctionalitiesInstances[$key] = null; //init key
 			//empty($this->aWrapFunctionalitiesInstances[$key])
 			try {
