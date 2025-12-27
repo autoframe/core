@@ -54,5 +54,7 @@ interface AfrFunctionalityInterface extends AfrModuleConstantsInterface
 	 * RAP handlers injected as dependencies / RAP extension points / Subclassing with REDEFINITION
 	 *
 	 */
+	public function attachFunctionalityEffectiveConfigs(array $aEffectiveConfigs);
+
 
 }

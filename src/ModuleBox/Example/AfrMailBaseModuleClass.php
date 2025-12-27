@@ -22,7 +22,7 @@ class AfrMailBaseModuleClass implements AfrModuleInterface
 		return [
 			AfrEmailSenderInterface::class => [
 				AfrModuleConstantsInterface::sConcreteFQCN     => AfrSmtpEmailSenderClass::class,
-				AfrModuleConstantsInterface::bSingletonSpawn => true,
+				AfrModuleConstantsInterface::bSingletonFunctionalityWithMergedSettings => true,
 				AfrModuleConstantsInterface::bExcludedFunctionality  => false,
 			],
 		];

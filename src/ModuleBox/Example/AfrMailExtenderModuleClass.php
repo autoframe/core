@@ -36,7 +36,7 @@ class AfrMailExtenderModuleClass implements AfrModuleInterface
 				// In this simple example, we keep the same concrete class
 				// but in real life you might wrap or decorate it.
 				AfrModuleConstantsInterface::sConcreteFQCN     => AfrSmtpEmailSenderClass::class,
-				AfrModuleConstantsInterface::bSingletonSpawn => true,
+				AfrModuleConstantsInterface::bSingletonFunctionalityWithMergedSettings => true,
 				AfrModuleConstantsInterface::bExcludedFunctionality  => false,
 			],
 		];

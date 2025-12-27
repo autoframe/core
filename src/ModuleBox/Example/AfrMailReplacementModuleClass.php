@@ -29,7 +29,7 @@ class AfrMailReplacementModuleClass implements AfrModuleInterface
 		return [
 			AfrEmailSenderInterface::class => [
 				AfrModuleConstantsInterface::sConcreteFQCN     => AfrLogOnlyEmailSenderClass::class,
-				AfrModuleConstantsInterface::bSingletonSpawn => true,
+				AfrModuleConstantsInterface::bSingletonFunctionalityWithMergedSettings => true,
 				AfrModuleConstantsInterface::bExcludedFunctionality  => false,
 			],
 		];
