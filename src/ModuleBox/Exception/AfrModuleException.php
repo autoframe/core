@@ -1,6 +1,6 @@
 <?php
 
-namespace Autoframe\Core\ModuleBox;
+namespace Autoframe\Core\ModuleBox\Exception;
 
 use Autoframe\Core\Exception\AfrException;
 

@@ -68,6 +68,7 @@ class AfrError
 	public static function errorHandler(int $errno, string $errstr, string $errfile, int $errline): bool
 	{
 		//TODO
+		return false;
 	}
 
 	public static function error_log(string  $message,

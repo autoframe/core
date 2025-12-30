@@ -52,14 +52,16 @@ if (!class_exists(__NAMESPACE__ . '\AfrException', false)) {
 		 */
 		public function __toString(): string
 		{
-			$sCode = $this->code?  "{code.{$this->code}} ":'';
-			$aClass = explode('\\', get_class($this));
-			$sMsg = end($aClass) . $sCode."{$this->message}";
+			$sCode = $this->code ? " {code.{$this->code}}" : '';
+			$aClass = get_class($this);
+		//	$aClass = explode('\\', get_class($this)); $aClass = end($aClass);
+			$sMsg = $aClass . $sCode . "\n" . $this->message;
 			if (($bIsCli = http_response_code() === false)) {
 				return
 					(\Autoframe\Core\CliTools\AfrCliTextColors::getInstance()->colorRed('')->textGet()) .
 					$sMsg .
-					(\Autoframe\Core\CliTools\AfrCliTextColors::getInstance()->colorDefaultAllBgStyle()->textGet());
+					(\Autoframe\Core\CliTools\AfrCliTextColors::getInstance()->colorDefaultAllBgStyle()->textGet()) .
+					"\n" . $this->getTraceAsString();
 			}
 			return $sMsg;
 		}

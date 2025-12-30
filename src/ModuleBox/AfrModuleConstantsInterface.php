@@ -21,28 +21,22 @@ namespace Autoframe\Core\ModuleBox;
  * */
 interface AfrModuleConstantsInterface
 {
-	const sConcreteFQCN = 'sConcreteFQCN';
-	const bSingletonFunctionalityWithMergedSettings = 'bSingletonFunctionalityWithMergedSettings';
-	const bSingletonFunctionalityForceByModules = 'bSingletonSpawnForceByModules';
-	const bExcludedFunctionality = 'bExcludedFunctionality';
-
-	/**
-	 * TODO:
-	 * Set only for module extenders when a bridge is needed and both modules coexist.
-	 * This may be used for multiple extenders of base class, when a mixin is needed.
-	 * This is not a pure singleton.
-	 * When parent is replaced, then we use the parent replacer functionality instance, we use the replacer key
-	 * When parent is bDisabledModule || or functionality is excluded, we use name the key as the parent, regardless ??
-	 * What do I do with the config? PARENT|Extender1|Extender2
-	 * What do I do with the config? PARENT|Extender1|Extender2
-	 * What do I do with the config? PARENT|Extender1|Extender2
-	 * Parent seems to be the norm, so we can ignore the OFF flags?
-	 */
-	const bBridgeFunctionalityInstanceWithParent = 'bBridgeFunctionalityInstanceWithParent';
+	//MODULES
 	const bDisabledModule = 'bDisabledModule';
-	const iResolvableModule = 'iResolvableModule'; //0 = false; 1 = true resolvable by this module; 2 = resolvable by extender
 	const snModuleReplaces = 'snModuleReplaces';
 	const snModuleExtends = 'snModuleExtends';
+	const iResolvableModule = 'iResolvableModule'; //0 = false; 1 = true resolvable by this module; 2 = resolvable by extender
 	const aFunctionalities = 'aFunctionalities';
-	const aFunctionalitiesModuleParents = 'aModuleParents';
+
+
+	//MODULES[aFunctionalities][funcInterface]
+	const aFunctionalitiesRunTimeParameters = 'aFunctionalitiesRunTimeParameters'; // aFunctionalitiesModuleParents
+	const sFuncConcreteFQCN = 'sFuncConcreteFQCN';
+	const bExcludedFunctionality = 'bExcludedFunctionality';
+	const bSingletonFunctionalityWithMergedSettings = 'bSingletonFunctionalityWithMergedSettings';
+	const aSingletonFunctionalityForceByModules = 'aSingletonFunctionalityForceByModules';
+	const bBridgeFunctionalityInstanceWithParent = 'bBridgeFunctionalityInstanceWithParent';
+	const aBridgeFunctionalityForceByModules = 'aBridgeFunctionalityForceByModules';
+
+
 }

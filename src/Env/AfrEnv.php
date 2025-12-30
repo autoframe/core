@@ -132,7 +132,8 @@ class AfrEnv extends AfrSingletonAbstractClass implements AfrEnvInterface
 	{
 
 		if (!is_dir($sDir)) {
-			throw new AfrEnvException('Unable to set the ENV project dir: ' . $sDir);
+			debug_print_backtrace();
+			throw new AfrEnvException('Unable to set the ENV project DIRECTORY: ' . $sDir);
 		}
 		$this->sBaseDir = strtr(rtrim($sDir, '\/'), DIRECTORY_SEPARATOR === '/' ? '\\' : '/', DIRECTORY_SEPARATOR);
 		return $this;

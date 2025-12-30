@@ -4,11 +4,15 @@ declare(strict_types=1);
 namespace Autoframe\Core\ModuleBox;
 
 use Autoframe\Core\Afr\Afr;
+use Autoframe\Core\Arr\Compare\AfrArrCompareClass;
 use Autoframe\Core\Container\AfrContainerFacade;
 use Autoframe\Core\Container\Exception\AfrContainerException;
 use Autoframe\Core\DesignPatterns\Singleton\AfrSingletonAbstractClass;
+use Autoframe\Core\Env\Exception\AfrEnvException;
+use Autoframe\Core\Error\AfrError;
 use Autoframe\Core\Event\Exception\AfrEventException;
-use Autoframe\Core\Exception\AfrException;
+use Autoframe\Core\ModuleBox\Exception\AfrModuleException;
+use Autoframe\Core\ModuleBox\Exception\AfrModuleFunctionalityException;
 use Closure;
 
 /**
@@ -20,6 +24,7 @@ use Closure;
  */
 class AfrModuleBoxClass extends AfrSingletonAbstractClass implements AfrModuleBoxInterface
 {
+	public static bool $bDebug = false;
 	/**
 	 * @var AfrModuleInterface[] keyed by module FQCN
 	 */
@@ -41,6 +46,7 @@ class AfrModuleBoxClass extends AfrSingletonAbstractClass implements AfrModuleBo
 	 * @var array<string,array>
 	 */
 	protected array $aModuleConfigs = [];
+	protected array $aOrderedEffectiveConfigKeys = [];
 
 	/**
 	 * Effective configuration after applying extend/replace rules.
@@ -63,6 +69,8 @@ class AfrModuleBoxClass extends AfrSingletonAbstractClass implements AfrModuleBo
 	 * @var array<string,string[]>
 	 */
 	protected array $aModuleExtensionMap = [];
+	protected array $aModuleIsExtenderOfOtherModule = [];
+	protected array $aModuleIsReplacerOfOtherModule = [];
 
 	/**
 	 * Lazy-build flag for $effectiveConfigs / replacement / extension maps.
@@ -133,13 +141,41 @@ class AfrModuleBoxClass extends AfrSingletonAbstractClass implements AfrModuleBo
 		$this->aPushedModules[$sFQCN] = $module; //push instance or fqcn for resolving
 
 		$aConfig[self::aFunctionalities] = self::mergeConfig(
-			$module::getDefaultFunctionalitiesConfig(), // Merge module-provided defaults (from code) with manifest/app config
+		/** @var AfrModuleInterface $sFQCN */
+			$sFQCN::getDefaultFunctionalitiesConfig(), // Merge module-provided defaults (from code) with manifest/app config
 			(array)($aConfig[self::aFunctionalities] ?? [])
 		);
-		$this->aModuleConfigs[$sFQCN] = self::mergeConfig(
-			$module::getDefaultModuleConfig(),
-			$aConfig // Normalize config with Defaults
-		);
+		//TODO: structura default pentru fiecare interfata:
+		/*
+		 * [
+			AfrEmailSenderInterface::class => [
+				AfrModuleConstantsInterface::sFuncConcreteFQCN     => AfrSmtpEmailSenderClass::class,
+				AfrModuleConstantsInterface::bSingletonFunctionalityWithMergedSettings => true,
+				AfrModuleConstantsInterface::bBridgeFunctionalityInstanceWithParent  => false,
+				AfrModuleConstantsInterface::bExcludedFunctionality  => false,
+			TODO	AfrModuleConstantsInterface::aRunTimeParameters  => XXXXX,
+			TODO	AfrModuleConstantsInterface::aRunTimeParameters  => XXXXX,
+			TODO	AfrModuleConstantsInterface::aRunTimeParameters  => XXXXX,
+			TODO	AfrModuleConstantsInterface::aRunTimeParameters  => XXXXX,
+			TODO	AfrModuleConstantsInterface::aRunTimeParameters  => XXXXX,
+			TODO	AfrModuleConstantsInterface::aRunTimeParameters  => XXXXX,
+			TODO	AfrModuleConstantsInterface::aRunTimeParameters  => XXXXX,
+			TODO	AfrModuleConstantsInterface::aRunTimeParameters  => XXXXX,
+			],
+		 * */
+
+		// Normalize config with Defaults
+		$aConfig = self::mergeConfig($sFQCN::getDefaultModuleConfig(), $aConfig);
+
+		$bSomePartialConfigAlreadyExists =
+			!empty($this->aModuleConfigs[$sFQCN]) &&
+			is_array($this->aModuleConfigs[$sFQCN]) &&
+			count($this->aModuleConfigs[$sFQCN]) < 2;
+
+		$this->aModuleConfigs[$sFQCN] = $bSomePartialConfigAlreadyExists ?
+			self::mergeConfig($this->aModuleConfigs[$sFQCN], $aConfig) :
+			$aConfig;
+
 		$this->graphBuilt = false; // Mark graph as dirty so it will be rebuilt lazily
 	}
 
@@ -168,13 +204,26 @@ class AfrModuleBoxClass extends AfrSingletonAbstractClass implements AfrModuleBo
 	public function isResolvedModule(string $sModuleFqcn, bool $bCountReplacersAsTrue, bool $bCountEmptyInstanceAsResolved = false): bool
 	{
 		$this->buildGraphIfNeeded();
-		if ($bCountReplacersAsTrue && !empty($this->aModuleReplacementMap[$sModuleFqcn])) {
-			return $this->isResolvedModule($this->aModuleReplacementMap[$sModuleFqcn], true);
+		if ($bCountReplacersAsTrue && $snReplacement = $this->getModuleReplacementMap($sModuleFqcn)) {
+			return $this->isResolvedModule($snReplacement, true);
 		}
 		return $bCountEmptyInstanceAsResolved ?
 			array_key_exists($sModuleFqcn, $this->aModulesInstances) :
 			($this->aModulesInstances[$sModuleFqcn] ?? null) instanceof AfrModuleInterface;
 
+	}
+
+	protected function getModuleReplacementMap(string $sModuleFqcn): ?string
+	{
+		$this->buildGraphIfNeeded();
+		if (!empty($this->aModuleReplacementMap[$sModuleFqcn])) {
+			if (is_array($this->aModuleReplacementMap[$sModuleFqcn])) {
+				return end($this->aModuleReplacementMap[$sModuleFqcn]) ?: null;
+			} elseif (is_string($this->aModuleReplacementMap[$sModuleFqcn])) {
+				return $this->aModuleReplacementMap[$sModuleFqcn] ?: null;
+			}
+		}
+		return null;
 	}
 
 	/**
@@ -187,8 +236,8 @@ class AfrModuleBoxClass extends AfrSingletonAbstractClass implements AfrModuleBo
 	{
 		$this->buildGraphIfNeeded();
 
-		if (!empty($this->aModuleReplacementMap[$sModuleFqcn])) { //replaced
-			return $this->resolveModule($this->aModuleReplacementMap[$sModuleFqcn]);
+		if ($snReplacement = $this->getModuleReplacementMap($sModuleFqcn)) { //replaced
+			return $this->resolveModule($snReplacement);
 		}
 
 		$config = $this->getModuleEffectiveConfigs($sModuleFqcn) ?? [];
@@ -239,18 +288,18 @@ class AfrModuleBoxClass extends AfrSingletonAbstractClass implements AfrModuleBo
 	}
 
 	//TODO: add interface
-	public function resolveFunctionalityByModuleFQCN(string $sFuncInterfaceFqcn, string $sModuleFQCN): ?AfrFunctionalityInterface
+	public function resolveFunctionalityByModuleFQCN(string $sFuncInterfaceFqcn, string $sModuleFqcn): ?AfrFunctionalityInterface
 	{
 		//MODULE IS REPLACED by another implementation, so we get the functionality from there,
 		// because this module should not instanciate
 		$this->buildGraphIfNeeded();
-		if (!empty($this->aModuleReplacementMap[$sModuleFQCN])) {
-			return $this->resolveFunctionalityByModuleFQCN($sFuncInterfaceFqcn, $this->aModuleReplacementMap[$sModuleFQCN]);
+		if ($snReplacement = $this->getModuleReplacementMap($sModuleFqcn)) {
+			return $this->resolveFunctionalityByModuleFQCN($sFuncInterfaceFqcn, $snReplacement);
 		}
 		//TODO instance cache here?? Nu cred, ca este in context + singleton + cheie
 		return $this->getFunctionalityWrap(
-			$sModuleFQCN,
-			$this->getFunctionalityConcreteByInterface($sFuncInterfaceFqcn)[$sModuleFQCN] ?? '',
+			$sModuleFqcn,
+			$this->getFunctionalityConcreteByInterface($sFuncInterfaceFqcn)[$sModuleFqcn] ?? '',
 			$sFuncInterfaceFqcn
 		);
 	}
@@ -362,7 +411,7 @@ class AfrModuleBoxClass extends AfrSingletonAbstractClass implements AfrModuleBo
 			// Disabled module not considered for functionality resolution
 			if (!empty($aModuleConfig[self::bDisabledModule])) continue;
 
-			if (!empty($this->aModuleReplacementMap[$sModuleFqcn])) continue;
+			if ($this->getModuleReplacementMap($sModuleFqcn)) continue;
 
 			$aFuncConfig = $aModuleConfig[self::aFunctionalities][$sFuncInterfaceFqcn] ?? null;
 			if ($aFuncConfig === null) continue;
@@ -370,8 +419,8 @@ class AfrModuleBoxClass extends AfrSingletonAbstractClass implements AfrModuleBo
 			// Excluded functionality is treated as non-existent in this module
 			if (!empty($aFuncConfig[self::bExcludedFunctionality])) continue;
 
-			if (!empty($aFuncConfig[self::sConcreteFQCN]) && is_string($aFuncConfig[self::sConcreteFQCN])) {
-				$aFunctionalityConcrete[$sModuleFqcn] = $aFuncConfig[self::sConcreteFQCN];
+			if (!empty($aFuncConfig[self::sFuncConcreteFQCN]) && is_string($aFuncConfig[self::sFuncConcreteFQCN])) {
+				$aFunctionalityConcrete[$sModuleFqcn] = $aFuncConfig[self::sFuncConcreteFQCN];
 			}
 
 		}
@@ -393,13 +442,13 @@ class AfrModuleBoxClass extends AfrSingletonAbstractClass implements AfrModuleBo
 			// Disabled module not considered for functionality resolution
 			if (!$bIncludeDisabledModules && !empty($aModuleConfig[self::bDisabledModule])) continue;
 
-			if (!$bIncludeReplacedModules && !empty($this->aModuleReplacementMap[$sModuleFqcn])) continue;
+			if (!$bIncludeReplacedModules && $this->getModuleReplacementMap($sModuleFqcn)) continue;
 
 			if (empty($aModuleConfig[self::aFunctionalities]) || !is_array(empty($aModuleConfig[self::aFunctionalities]))) continue;
 
 			foreach ($aModuleConfig[self::aFunctionalities] as $sFuncInterfaceFqcn => $aFuncConfig) {
 				if (!$bIncludeExcludedFunctionalities && !empty($aFuncConfig[self::bExcludedFunctionality])) continue;
-				if (!empty($aFuncConfig[self::sConcreteFQCN]) && $sFuncConcrete === $aFuncConfig[self::sConcreteFQCN]) {
+				if (!empty($aFuncConfig[self::sFuncConcreteFQCN]) && $sFuncConcrete === $aFuncConfig[self::sFuncConcreteFQCN]) {
 					$aParents[] = $sModuleFqcn;
 					break;
 				}
@@ -430,58 +479,198 @@ class AfrModuleBoxClass extends AfrSingletonAbstractClass implements AfrModuleBo
 
 		$this->aModuleReplacementMap =
 		$this->aModuleExtensionMap =
+		$this->aModuleIsExtenderOfOtherModule =
+		$this->aModuleIsReplacerOfOtherModule =
+		$this->aOrderedEffectiveConfigKeys =
 		$this->aModuleEffectiveConfigs =
 		$this->aFunctionalityEffectiveConfigs =
 		$this->aFunctionalityConcreteFqcnAsSingletonMap =
 		$this->aBridgeFunctionalityInstanceWithParentMap = [];
 
-		//TODO: daca inlocuiesc sau extind un modul neregistrat, atunci incerc sa il inregistrez automat daca exista sau eroare!!!!
-		//TODO: daca inlocuiesc sau extind un modul neregistrat, atunci incerc sa il inregistrez automat daca exista sau eroare!!!!
-		//TODO: daca inlocuiesc sau extind un modul neregistrat, atunci incerc sa il inregistrez automat daca exista sau eroare!!!!
-		//TODO: daca inlocuiesc sau extind un modul neregistrat, atunci incerc sa il inregistrez automat daca exista sau eroare!!!!
-		//TODO: daca inlocuiesc sau extind un modul neregistrat, atunci incerc sa il inregistrez automat daca exista sau eroare!!!!
-		//TODO: daca inlocuiesc sau extind un modul neregistrat, atunci incerc sa il inregistrez automat daca exista sau eroare!!!!
-		//TODO: daca inlocuiesc sau extind un modul neregistrat, atunci incerc sa il inregistrez automat daca exista sau eroare!!!!
-		//TODO: daca inlocuiesc sau extind un modul neregistrat, atunci incerc sa il inregistrez automat daca exista sau eroare!!!!
-		//TODO: daca inlocuiesc sau extind un modul neregistrat, atunci incerc sa il inregistrez automat daca exista sau eroare!!!!
-		//TODO: daca inlocuiesc sau extind un modul neregistrat, atunci incerc sa il inregistrez automat daca exista sau eroare!!!!
-		//TODO: daca inlocuiesc sau extind un modul neregistrat, atunci incerc sa il inregistrez automat daca exista sau eroare!!!!
-
+		$this->buildGraphAutoRegisterMissingDependencyModules();
 		// First pass: collect basic relations from raw config
-		foreach ($this->aModuleConfigs as $fqcn => $config) {
-			$replaces = $config[self::snModuleReplaces] ?? null;
-			if (\is_string($replaces) && $replaces !== '') {
-				// Spec: at most one replacer per base; if multiple found, last one wins (or treat as error).
-				$this->aModuleReplacementMap[$replaces] = $fqcn;
-			}
-			$sOriginalExtendedModule = $config[self::snModuleExtends] ?? null;
-			if (\is_string($sOriginalExtendedModule) && $sOriginalExtendedModule !== '') {
-				$this->aModuleExtensionMap[$sOriginalExtendedModule] ??= [];
-				$this->aModuleExtensionMap[$sOriginalExtendedModule][] = $fqcn;
+		$this->buildGraphOrderedEffectiveConfigs();
+
+
+		// Set Bridge (singleton) functionality instances
+		foreach ($this->aModuleEffectiveConfigs as $modFQCN => $mconfig) {
+			foreach ($mconfig[self::aFunctionalities] as $sFuncInterfaceFqcn => $aFuncConf) {
+				if (
+					!empty($aFuncConf[self::bBridgeFunctionalityInstanceWithParent]) &&
+					empty($this->aFunctionalityConcreteFqcnAsSingletonMap[$aFuncConf[self::sFuncConcreteFQCN]])
+				) {
+					//TODO: nu toate modulel fac bridge pe aceiasi instanta!!!
+					//TODO: cheia se face intre parinte si extender sau intre parinte extender 1 extender 2?
+					if ($this->functionalityInstanceCanBridgeWithParentHelper($sFuncInterfaceFqcn, $modFQCN)) {
+						$this->aBridgeFunctionalityInstanceWithParentMap[$aFuncConf[self::sFuncConcreteFQCN]][$modFQCN] = $aFuncConf[self::snModuleExtends];
+						//	$this->aBridgeFunctionalityInstanceWithParentMap[$aFuncConf[self::sFuncConcreteFQCN]][$modFQCN] = $sFuncInterfaceFqcn;
+					} else {
+						//incompatible bridging because of divergent functionality configs
+						$this->aModuleEffectiveConfigs[$modFQCN][self::aFunctionalities][$sFuncInterfaceFqcn][self::bBridgeFunctionalityInstanceWithParent] = false;
+					}
+				}
 			}
 		}
-		//TODO
-		// Second pass: build effectiveConfigs.
-		// Base idea:
-		// - Start from raw moduleConfigs.
-		// - For each extender, merge its base config (original base) into extender config.
-		// - Disable only affects resolvability, not ability to act as base for extenders.
-		$this->aModuleEffectiveConfigs = $this->aModuleConfigs;
+		//TODO: PUPULARE FUNCTIONALITY EFFECTIVE CONFIGS + refactor referinte
+		foreach ($this->aModuleEffectiveConfigs as $sModFQCN => $aModCfg) {
+			foreach ($aModCfg[self::aFunctionalities] as $sFuncInterfaceFqcn => $aFuncConf) {
+				//push also interface cfg as an easy way to access it
+				$this->aFunctionalityEffectiveConfigs[$sFuncInterfaceFqcn][$sModFQCN] = $aFuncConf;
+
+				//force all concrete implementations to singleton
+				if (!empty($this->aFunctionalityConcreteFqcnAsSingletonMap[$aFuncConf[self::sFuncConcreteFQCN]])) {
+					$aFuncConf[self::bSingletonFunctionalityWithMergedSettings] = true;
+					$aFuncConf[self::aSingletonFunctionalityForceByModules] =
+						array_keys($this->aFunctionalityConcreteFqcnAsSingletonMap[$aFuncConf[self::sFuncConcreteFQCN]]);
+				}
+				/*
+				//TODO: nu toate modulel bac bridge pe aceiasi instanta!!! bBridgeFunctionalityForceByModules
+				//force all concrete implementations to bridge like singleton shared instance
+				if (!empty($this->aBridgeFunctionalityInstanceWithParentMap[$aFuncConf[self::sFuncConcreteFQCN]])) {
+					$aFuncConf[self::bSingletonFunctionalityWithMergedSettings] = true;
+					$aFuncConf[self::bBridgeFunctionalityForceByModules] =
+						array_keys($this->aBridgeFunctionalityInstanceWithParentMap[$aFuncConf[self::sFuncConcreteFQCN]]);
+				}*/
+
+				//push concrete cfg
+				$this->aFunctionalityEffectiveConfigs[$aFuncConf[self::sFuncConcreteFQCN]][$sModFQCN] = $aFuncConf;
+			}
+		}
+
+
+		$this->graphBuilt = true;
+		//SET IS RESOLVABLE
+		foreach (array_keys($this->aModuleEffectiveConfigs) as $sModFQCN) {
+			$this->aModuleEffectiveConfigs[$sModFQCN][self::iResolvableModule] =
+				$this->isResolvableModuleHelper($sModFQCN);
+		}
+
+
+	}
+
+
+	protected function buildGraphAutoRegisterMissingDependencyModules(): void
+	{
+		[$aModuleExtensionMap, $aModuleReplacementMap] = $this->buildGraphGetRawUnorderedExtendersReplacers();
+		$aToCheck = array_merge(
+			array_keys($aModuleReplacementMap), array_keys($aModuleExtensionMap)
+		);
+		$bRerun = false;
+		foreach ($aToCheck as $fqcnToAutoload) {
+			if (!isset($this->aModuleConfigs[$fqcnToAutoload])) {
+				$this->aModuleConfigs[$fqcnToAutoload] = [__FUNCTION__ => true]; //prevent infinite loops
+				$bRerun = true;
+				$this->registerModuleFQCN($fqcnToAutoload);
+			}
+		}
+		if ($bRerun) $this->buildGraphAutoRegisterMissingDependencyModules();
+	}
+
+	protected function buildGraphGetRawUnorderedExtendersReplacers(): array
+	{
+		$aModuleExtensionMap = $aModuleReplacementMap = [];
+		foreach ($this->aModuleConfigs as $fqcn => $config) {
+			$sModuleReplaceBase = $config[self::snModuleReplaces] ?? null;
+			if ($sModuleReplaceBase === $fqcn) {//prevent self replacing
+				$this->aModuleConfigs[$fqcn][self::snModuleReplaces] = $sModuleReplaceBase = null;
+			}
+			if (\is_string($sModuleReplaceBase) && $sModuleReplaceBase !== '') {
+				// Spec: at most one replacer per base; if multiple found, last one wins
+				//TODO: demapez din effective configs ceilalti replaceri + verific care este enabeled??
+				//TODO: demapez din effective configs ceilalti replaceri + verific care este enabeled??
+				//TODO: demapez din effective configs ceilalti replaceri + verific care este enabeled??
+				$aModuleReplacementMap[$sModuleReplaceBase] ??= [];
+				$aModuleReplacementMap[$sModuleReplaceBase][] = $fqcn;
+				//$aModuleReplacementMap[$sModuleReplaceBase] = $fqcn;
+			}
+			$sModuleExtensionBase = $config[self::snModuleExtends] ?? null;
+			if ($sModuleExtensionBase === $fqcn) {//prevent self extension
+				$this->aModuleConfigs[$fqcn][self::snModuleExtends] = $sModuleExtensionBase = null;
+			}
+			if (\is_string($sModuleExtensionBase) && $sModuleExtensionBase !== '') {
+				$aModuleExtensionMap[$sModuleExtensionBase] ??= [];
+				$aModuleExtensionMap[$sModuleExtensionBase][] = $fqcn;
+			}
+		}
+		return [$aModuleExtensionMap, $aModuleReplacementMap];
+	}
+
+	/**
+	 * @throws AfrModuleException
+	 * @throws AfrEnvException
+	 */
+	protected function buildGraphOrderedEffectiveConfigs(): void
+	{
+		/*
+		 * 10.5 Replacement -- Detailed Semantics
+
+		When the configuration states that ModuleB replaces ModuleA:
+
+		-   ModuleB does not automatically inherit functionalities or
+			configuration from ModuleA. Replacement is a resolution-level alias,
+			not inheritance.
+		-   When ModuleA is requested via Module Box, the result is an instance
+			of ModuleB (or ModuleB's functionality), according to wiring.
+		-   Only instances of ModuleB are generated by Module Box when resolving
+			ModuleA. ModuleA is not instantiated by Module Box for that
+			resolution.
+		-   These rules apply even if ModuleA is disabled: resolving ModuleA via
+			Module Box still yields ModuleB if the replacement relationship is
+			defined.
+		*/
+
+		$aQueueRemainingToOrder = [];
+		foreach ($this->aModuleConfigs as $fqcn => $config) {
+			$aQueueRemainingToOrder[$fqcn] = true;
+			$sModuleExtensionBase = $config[self::snModuleExtends] ?? null;
+			if (\is_string($sModuleExtensionBase) && $sModuleExtensionBase !== '') {
+				$this->aModuleExtensionMap[$sModuleExtensionBase] ??= [];
+				$this->aModuleExtensionMap[$sModuleExtensionBase][] = $fqcn;
+				$this->aModuleIsExtenderOfOtherModule[$fqcn] = $sModuleExtensionBase;
+			}
+			$sModuleReplaceBase = $config[self::snModuleReplaces] ?? null;
+			if (\is_string($sModuleReplaceBase) && $sModuleReplaceBase !== '') {
+				// Spec: at most one replacer per base; if multiple found, last one wins
+				$this->aModuleReplacementMap[$sModuleReplaceBase] ??= [];
+				$this->aModuleReplacementMap[$sModuleReplaceBase][] = $fqcn;
+				//$this->aModuleReplacementMap[$sModuleReplaceBase] = $fqcn;//TODO resolve Replacer
+				$this->aModuleIsReplacerOfOtherModule[$fqcn] = $sModuleReplaceBase;
+			}
+		}
+		$aRemainingToOrder = $aQueueRemainingToOrder;
+		foreach ($aQueueRemainingToOrder as $fqcn => $b) {
+			$this->buildGraphOrderedEffectiveConfigsReferencesOrder(
+				$fqcn,
+				$aRemainingToOrder
+			);
+		}
+		if (static::$bDebug) {
+			echo "\naOrderedEffectiveConfigKeys\n";
+			print_r($this->aOrderedEffectiveConfigKeys);
+		}
+
+		foreach ($this->aOrderedEffectiveConfigKeys as $fqcn => $x) {
+			$this->aModuleEffectiveConfigs[$fqcn] = $this->aModuleConfigs[$fqcn];
+		}
+		$this->aOrderedEffectiveConfigKeys = [];//done
 
 		//merge extenders config with base
-		foreach ($this->aModuleExtensionMap as $baseFqcn => $extenders) {
-			foreach ($extenders as $extenderFqcn) {
+		foreach ($this->aModuleExtensionMap as $baseFqcn => $aExtenders) {
+			foreach ($aExtenders as $extenderFqcn) {
 				// Merge baseConfig into extenderConfig, extender wins on conflicts.
 				// We explicitly do NOT use any replacer of the base as merge source.
-				$aBaseConfig = $this->aModuleConfigs[$baseFqcn] ?? [];  //base config
-				$aExtenderConfig = $this->aModuleEffectiveConfigs[$extenderFqcn] ?? $this->aModuleConfigs[$extenderFqcn] ?? [];
-				//do not inherit explicitly the module disable flag in is not set by the extender
-				if(!empty($aBaseConfig[self::bDisabledModule]) && !array_key_exists(self::bDisabledModule, $aExtenderConfig)) {
+				$aBaseConfig = $this->aModuleEffectiveConfigs[$baseFqcn];
+				$aExtenderConfig = $this->aModuleEffectiveConfigs[$extenderFqcn];
+				//Do not inherit explicitly the module disable flag in is not set by the extender
+				if (!empty($aBaseConfig[self::bDisabledModule]) && !array_key_exists(self::bDisabledModule, $aExtenderConfig)) {
 					unset($aBaseConfig[self::bDisabledModule]);
 				}
 				$this->aModuleEffectiveConfigs[$extenderFqcn] = self::mergeConfig($aBaseConfig, $aExtenderConfig);
 			}
 		}
+
+		//TODO
+		// - Disable only affects resolvability, not ability to act as base for extenders.
 
 		// Finally, apply "excluded functionality" semantics:
 		foreach ($this->aModuleEffectiveConfigs as $modFQCN => &$config) {
@@ -491,95 +680,107 @@ class AfrModuleBoxClass extends AfrSingletonAbstractClass implements AfrModuleBo
 			foreach ($config[self::aFunctionalities] as $sFuncInterfaceFqcn => $aFuncConf) {
 				if (
 					!empty($aFuncConf[self::bExcludedFunctionality]) ||
-					empty($aFuncConf[self::sConcreteFQCN]) ||
-					!is_string($aFuncConf[self::sConcreteFQCN])
+					empty($aFuncConf[self::sFuncConcreteFQCN]) ||
+					!is_string($aFuncConf[self::sFuncConcreteFQCN])
 				) {
 					unset($config[self::aFunctionalities][$sFuncInterfaceFqcn]); //broken / skip
 				} elseif (!empty($aFuncConf[self::bSingletonFunctionalityWithMergedSettings])) {
-					$this->aFunctionalityConcreteFqcnAsSingletonMap[$aFuncConf[self::sConcreteFQCN]][$modFQCN] = $sFuncInterfaceFqcn;
-				} elseif (!empty($aFuncConf[self::bBridgeFunctionalityInstanceWithParent]))
-					$this->functionalityInstanceCanBridgeWithParentHelper($sFuncInterfaceFqcn,$modFQCN);
-
-			}
-		}
-
-		// Set Bridge (singleton) functionality instances
-		foreach ($this->aModuleEffectiveConfigs as $modFQCN => $mconfig) {
-			foreach ($mconfig[self::aFunctionalities] as $sFuncInterfaceFqcn => $aFuncConf) {
-				if (
-					empty($this->aFunctionalityConcreteFqcnAsSingletonMap[$aFuncConf[self::sConcreteFQCN]]) &&
-					!empty($aFuncConf[self::bBridgeFunctionalityInstanceWithParent])
-				){
-					$this->aModuleEffectiveConfigs[$modFQCN][self::aFunctionalities][$sFuncInterfaceFqcn][self::bBridgeFunctionalityInstanceWithParent] =
-						$this->functionalityInstanceCanBridgeWithParentHelper($sFuncInterfaceFqcn,$modFQCN);
+					$this->aFunctionalityConcreteFqcnAsSingletonMap[$aFuncConf[self::sFuncConcreteFQCN]][$modFQCN] = $sFuncInterfaceFqcn;
 				}
-
-
 			}
 		}
+	}
 
-		foreach ($this->aModuleEffectiveConfigs as $sModFQCN => $aModCfg) {
-			foreach ($aModCfg[self::aFunctionalities] as $sFuncInterfaceFqcn => $aFuncConf) {
-				//push also interface cfg as an easy way to access it
-				$this->aFunctionalityEffectiveConfigs[$sFuncInterfaceFqcn][$sModFQCN] = $aFuncConf;
+	/**
+	 * @throws AfrModuleException
+	 * @throws AfrEnvException
+	 */
+	protected function buildGraphOrderedEffectiveConfigsReferencesOrder(
+		string $fqcn,
+		array  &$aRemainingToOrder
+	): void
+	{
+		$sExtends = $this->aModuleIsExtenderOfOtherModule[$fqcn] ?? null;
+		$sReplaces = $this->aModuleIsReplacerOfOtherModule[$fqcn] ?? null;
 
-				//force all concrete implementations to singleton
-				if (!empty($this->aFunctionalityConcreteFqcnAsSingletonMap[$aFuncConf[self::sConcreteFQCN]])) {
-					$aFuncConf[self::bSingletonFunctionalityWithMergedSettings] = true;
-					$aFuncConf[self::bSingletonFunctionalityForceByModules] =
-						array_keys($this->aFunctionalityConcreteFqcnAsSingletonMap[$aFuncConf[self::sConcreteFQCN]]);
-				}
-				//push concrete cfg
-				$this->aFunctionalityEffectiveConfigs[$aFuncConf[self::sConcreteFQCN]][$sModFQCN] = $aFuncConf;
+		if (isset($aRemainingToOrder[$fqcn])) {
+			unset($aRemainingToOrder[$fqcn]);
+		} elseif (!isset($this->aOrderedEffectiveConfigKeys[$fqcn])) {
+			//Handle silently and proceed with potentially corrupted module configuration
+			$sInfo = 'Circular Module Configuration Dependency (recursive loop) INFO:';
+			$sInfo .= "\nModule: $fqcn;\n";
+			$sInfo .= $sExtends ? "Extends: $sExtends;\n" : '';
+			$sInfo .= $sReplaces ? "Replaces: $sReplaces;\n" : '';
+			$sInfo .= !empty($r = $this->aModuleReplacementBaseMap[$fqcn] ?? null) ?
+				"Replaced by: " . (is_array($r) ? implode('; ', $r) : $r) . ";\n" : '';
+			$sInfo .= !empty($m = $this->aModuleExtensionMap[$fqcn] ?? null) ?
+				"Extended by: " . (is_array($m) ? implode('; ', $m) : $m) . ";\n" : '';
+			if (Afr::app() && Afr::app()->env()->isProduction()) {
+				error_log($sInfo);
+				AfrError::error_log($sInfo); //TODO
+				return;
 			}
+			throw new AfrModuleException($sInfo);
 		}
 
+		if (isset($this->aOrderedEffectiveConfigKeys[$fqcn])) return;
 
-		$this->graphBuilt = true;
-		foreach (array_keys($this->aModuleEffectiveConfigs) as $sModFQCN) {
-			$this->aModuleEffectiveConfigs[$sModFQCN][self::iResolvableModule] =
-				$this->isResolvableModuleHelper($sModFQCN);
+		if ($sExtends && !isset($this->aOrderedEffectiveConfigKeys[$sExtends])) {
+			$this->buildGraphOrderedEffectiveConfigsReferencesOrder(
+				$sExtends,
+				$aRemainingToOrder
+			);
 		}
-
-
+		if ($sReplaces && !isset($this->aOrderedEffectiveConfigKeys[$sReplaces])) {
+			$this->buildGraphOrderedEffectiveConfigsReferencesOrder(
+				$sReplaces,
+				$aRemainingToOrder
+			);
+		}
+		$this->aOrderedEffectiveConfigKeys[$fqcn] = true;
+		if (static::$bDebug) {
+			$this->aOrderedEffectiveConfigKeys[$fqcn] =
+				(!empty($this->aModuleReplacementBaseMap[$fqcn]) ? 'r' : '-') .
+				(!empty($this->aModuleExtensionMap[$fqcn]) ? 'e' : '-') .
+				(!empty($sReplaces) ? "R[$sReplaces]" : '-') .
+				(!empty($sExtends) ? " E[$sExtends]" : '-');
+		}
 	}
 
 	protected function isResolvableModuleHelper(string $sModuleFqcn): int
 	{
-		if (!empty($this->aModuleReplacementMap[$sModuleFqcn])) {
-			return empty($this->isResolvableModuleHelper($this->aModuleReplacementMap[$sModuleFqcn])) ? 0 : 2;
+		if ($snReplacement = $this->getModuleReplacementMap($sModuleFqcn)) {
+			return empty($this->isResolvableModuleHelper($snReplacement)) ? 0 : 2;
 		}
 		$config = $this->getModuleEffectiveConfigs($sModuleFqcn) ?? [];
 		if (!empty($config[self::bDisabledModule])) return 0;
 		return !empty($this->aModulesInstances[$sModuleFqcn]) || !empty($this->aPushedModules[$sModuleFqcn]) ? 1 : 0;
 	}
-	protected function functionalityInstanceCanBridgeWithParentHelper(string $sFuncInterfaceFqcn,string $sModuleFqcn): bool
-	{
 
+	/**
+	 * @param string $sFuncInterfaceFqcn
+	 * @param string $sModuleFqcn
+	 * @return bool
+	 * @throws AfrContainerException
+	 * @throws AfrEventException
+	 */
+	protected function functionalityInstanceCanBridgeWithParentHelper(string $sFuncInterfaceFqcn, string $sModuleFqcn): bool
+	{
 		$parentModule = $this->aModuleEffectiveConfigs[$sModuleFqcn][self::snModuleExtends] ?? null;
 		$aFuncConf = $this->aModuleEffectiveConfigs[$sModuleFqcn][self::aFunctionalities][$sFuncInterfaceFqcn] ?? null;
-		if(empty($parentModule) || empty($aFuncConf)) return false;
-		if(
+		if (empty($parentModule) || empty($aFuncConf)) return false;
+		if (
 			!empty($this->aModuleEffectiveConfigs[$parentModule][self::bDisabledModule]) ||
-			empty($this->aModuleEffectiveConfigs[$parentModule][self::aFunctionalities][$sFuncInterfaceFqcn][self::sConcreteFQCN])
+			empty($this->aModuleEffectiveConfigs[$parentModule][self::aFunctionalities][$sFuncInterfaceFqcn][self::sFuncConcreteFQCN])
 		) return false;
 		$aParentFuncConf = $this->aModuleEffectiveConfigs[$parentModule][self::aFunctionalities][$sFuncInterfaceFqcn];
-		if($aFuncConf[self::sConcreteFQCN] !== $aParentFuncConf[self::sConcreteFQCN]) return false; //other implementation
+		if ($aFuncConf[self::sFuncConcreteFQCN] !== $aParentFuncConf[self::sFuncConcreteFQCN]) return false; //other implementation
 
 		//compare the settings to be the same:
 		unset($aFuncConf[self::bBridgeFunctionalityInstanceWithParent]);
 		unset($aParentFuncConf[self::bBridgeFunctionalityInstanceWithParent]);
-		ksort($aFuncConf);
-		ksort($aParentFuncConf);
 
-
-		//$this->aModuleExtensionMap[$sOriginalExtendedModule]
-		//
-		//TODO: check for parent existence and resolvability
-		// ++++ aceiasi implementaare concreta in interfata si acelasi config ca si baza, fara flag de bridge
-
-		$this->aBridgeFunctionalityInstanceWithParentMap[$aFuncConf[self::sConcreteFQCN]][$modFQCN] = $sFuncInterfaceFqcn;
-
+		return AfrArrCompareClass::getInstance()->assertSameContents($aFuncConf, $aParentFuncConf);
 
 	}
 
@@ -587,7 +788,8 @@ class AfrModuleBoxClass extends AfrSingletonAbstractClass implements AfrModuleBo
 	{
 		is_array($aOld) or $aOld = iterator_to_array($aOld);
 		foreach ($aNew as $k => $v)
-			if (!isset($aOld[$k])) $aOld[$k] = $v;
+			//if (!isset($aOld[$k])) $aOld[$k] = $v;
+			if (!array_key_exists($k, $aOld)) $aOld[$k] = $v;
 			elseif (is_array($aOld[$k]) && is_array($v)) $aOld[$k] = static::mergeConfig($aOld[$k], $v);
 			elseif (is_int($k)) $aOld[] = $v;
 			else $aOld[$k] = $v;
@@ -608,8 +810,16 @@ class AfrModuleBoxClass extends AfrSingletonAbstractClass implements AfrModuleBo
 
 	protected function getFunctionalityWrapKey(string $sFuncConcreteFqcn, string $moduleFqcn): string
 	{
-		return $sFuncConcreteFqcn .
-			(!empty($this->aFunctionalityConcreteFqcnAsSingletonMap[$sFuncConcreteFqcn]) ? '' : '@' . $moduleFqcn);
+		$sKey = $sFuncConcreteFqcn;
+		if (!empty($this->aFunctionalityConcreteFqcnAsSingletonMap[$sFuncConcreteFqcn])) {
+			return $sFuncConcreteFqcn;
+		}
+		if (!empty($this->aBridgeFunctionalityInstanceWithParentMap[$sFuncConcreteFqcn])) {
+			//TODO: refactor dupa ce fac o structura corecta la aBridgeFunctionalityInstanceWithParentMap
+			return $sFuncConcreteFqcn . '@' .
+				implode('@', array_keys($this->aBridgeFunctionalityInstanceWithParentMap[$sFuncConcreteFqcn]));
+		}
+		return $sFuncConcreteFqcn . '@' . $moduleFqcn; //simple key
 	}
 
 	/**
@@ -665,12 +875,12 @@ class AfrModuleBoxClass extends AfrSingletonAbstractClass implements AfrModuleBo
 			throw new AfrModuleFunctionalityException(
 				"Functionality `$sFuncConcreteFqcn`@[$moduleFqcn] is not a instanceof `" . AfrFunctionalityInterface::class . "`");
 		}
-		$oResolvedFunctionality->attachFunctionalityEffectiveConfigs(
-			$this->aFunctionalityEffectiveConfigs[$sFuncConcreteFqcn]
+		$oResolvedFunctionality->attachFunctionalityEffectiveRunTimeParameters(
+			$this->getFunctionalityEffectiveConfigs($sFuncConcreteFqcn)//TODO: REFACTOR
 		);
 
 		//TODO it can have more parents from $this->aFunctionalityConcreteFqcnAsSingletonMap !!!!!!!!!!!
-		//	$this->aFunctionalityConcreteFqcnAsSingletonMap[$aFuncConf[self::sConcreteFQCN]][$modFQCN] = $sFuncInterfaceFqcn;
+		//	$this->aFunctionalityConcreteFqcnAsSingletonMap[$aFuncConf[self::sFuncConcreteFQCN]][$modFQCN] = $sFuncInterfaceFqcn;
 		$this->aWrapFunctionalitiesInstances[$key] = $oResolvedFunctionality;
 		AfrModuleRelations::getInstance()->pushFunctionalityInstance($this->aWrapFunctionalitiesInstances[$key]);
 		foreach ($this->getConcreteFunctionalityModuleParents($sFuncConcreteFqcn) as $sModuleParent) {
