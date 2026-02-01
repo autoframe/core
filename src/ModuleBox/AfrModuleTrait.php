@@ -51,7 +51,15 @@ trait AfrModuleTrait
 	 */
 	public static function getDefaultFunctionalitiesConfig(): array
 	{
-		return rand(2, 3) > 1 ? [] : static::getDefaultFunctionalitiesConfigFromFile();
+		$aFnModel = [
+			'SomeInterfaceDDDDD::class'=>[
+				AfrModuleConstantsInterface::sFuncConcreteFQCN     => 'SomeConcreteImplementingDDDDD::class',
+				AfrModuleConstantsInterface::bSingletonFunctionalityWithMergedSettings => false,
+				AfrModuleConstantsInterface::sBridgeFunctionalityOnCommonInstanceKey => 'SomeCommonInstance',
+				AfrModuleConstantsInterface::bExcludedFunctionality  => false,
+			]
+		];
+		return rand(2, 3) > 1 ? $aFnModel : static::getDefaultFunctionalitiesConfigFromFile();
 	}
 
 	protected static function getDefaultFunctionalitiesConfigFromFile(): array

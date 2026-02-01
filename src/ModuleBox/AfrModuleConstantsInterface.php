@@ -26,17 +26,21 @@ interface AfrModuleConstantsInterface
 	const snModuleReplaces = 'snModuleReplaces';
 	const snModuleExtends = 'snModuleExtends';
 	const iResolvableModule = 'iResolvableModule'; //0 = false; 1 = true resolvable by this module; 2 = resolvable by extender
+
 	const aFunctionalities = 'aFunctionalities';
 
 
 	//MODULES[aFunctionalities][funcInterface]
-	const aFunctionalitiesRunTimeParameters = 'aFunctionalitiesRunTimeParameters'; // aFunctionalitiesModuleParents
 	const sFuncConcreteFQCN = 'sFuncConcreteFQCN';
 	const bExcludedFunctionality = 'bExcludedFunctionality';
 	const bSingletonFunctionalityWithMergedSettings = 'bSingletonFunctionalityWithMergedSettings';
-	const aSingletonFunctionalityForceByModules = 'aSingletonFunctionalityForceByModules';
-	const bBridgeFunctionalityInstanceWithParent = 'bBridgeFunctionalityInstanceWithParent';
-	const aBridgeFunctionalityForceByModules = 'aBridgeFunctionalityForceByModules';
+	const sBridgeFunctionalityOnCommonInstanceKey = 'sBridgeFunctionalityOnCommonInstanceKey';
+	const sFunctionalityWrapKey = 'sFunctionalityWrapKey';
+	//DEPRECATED: 	const aFunctionalityParentsModInterface = 'aFunctionalityParentsModInterface';
+
+	const RESOLVE_NONE = 0;
+	const RESOLVE_DIRECT = 1;
+	const RESOLVE_REPLACED = 2;
 
 
 }
