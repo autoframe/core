@@ -276,7 +276,7 @@ class AfrTenant
 			if (!empty(self::$sBaseDirPath)) {
 				self::loadConfig();
 			} else {
-				return AfrSysTempDir::sysGetTempDir();
+				return AfrSysTempDir::sysGetTempDir();//no tenant
 			}
 		}
 		return self::$sTempDir . DIRECTORY_SEPARATOR . self::getTenantAlias();

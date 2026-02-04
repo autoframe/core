@@ -3,11 +3,13 @@
 namespace Autoframe\Core\ModuleBox;
 
 use Autoframe\Core\Afr\Afr;
+use Autoframe\Core\CliTools\AfrSysTempDir;
 use Autoframe\Core\Container\AfrContainerFacade;
 use Autoframe\Core\Container\Exception\AfrContainerException;
 use Autoframe\Core\Env\Exception\AfrEnvException;
 use Autoframe\Core\Error\AfrError;
 use Autoframe\Core\ModuleBox\Exception\AfrModuleException;
+use Autoframe\Core\Tenant\AfrTenant;
 
 trait AfrModuleBoxHelperTrait {
 
@@ -33,18 +35,20 @@ trait AfrModuleBoxHelperTrait {
 	protected array $aTempOrderedConfigKeys = []; //temp reorder dependency
 
 
-	protected array $aModuleReplacementMap = []; //Maps base module FQCN => replacer module FQCN.
-	protected array $aModuleExtensionMap = []; //Maps base module FQCN => list of extender module FQCNs.
-	protected array $aModuleIsExtenderOfOtherModule = []; //reverse map
-	protected array $aModuleIsReplacerOfOtherModule = [];//reverse map
+	protected array $aModuleReplacementMap = []; //Maps base module FQCN => replacer module FQCN. [$sModuleReplaceBase][] = $ModFQCN;
+	protected array $aModuleExtensionMap = []; //Maps base module FQCN => list of extender module FQCNs. [$sModuleExtensionBase][] = $ModFQCN;
+	protected array $aModuleIsExtenderOfOtherModule = []; //reverse map [$ModFQCN] = $sModuleExtensionBase;
+	protected array $aModuleIsReplacerOfOtherModule = [];//reverse map [$ModFQCN] = $sModuleReplaceBase;
 
-	//resolved functionalities [$sWrapKey] = ['i' => $oResolvedFunctionality,'s' => $splId, ]
-	protected array $aWrapFunctionalitiesInstances = [];
-	protected array $aWrapFunctionalitiesInstancesSplMap = []; //[$splId] = $sWrapKey;
 
-	protected array $aFunctionalityConcreteFqcnAsSingletonMap = []; //map
-	protected array $aBridgeFunctionalityOnCommonInstanceKeyMap = [];//map
-	protected array $aFunctionalityRelatedModulesByKeyMap = [];//map
+	//resolved functionalities
+	protected array $aWrapFunctionalitiesInstances = []; // map [$sWrapKey] = ['i' => $oResolvedFunctionality,'s' => $splId, ]
+	protected array $aWrapFunctionalitiesInstancesSplMap = []; //map [$splId] = $sWrapKey;
+
+	protected array $aFunctionalityConcreteFqcnAsSingletonMap = []; //map [$aFuncConf[self::sFuncConcreteFQCN]][$modFQCN][$sFuncInterfaceFqcn] = true;
+	protected array $aBridgeFunctionalityOnCommonInstanceKeyMap = [];//map [$sFuncInterfaceFqcn . '+' . $sBridgeKey][$modFQCN] = true;
+	protected array $aFunctionalityRelatedModulesByKeyMap = [];//map [$wrapKey][$modFQCN][$sFuncInterfaceFqcn] = $aFuncConf[self::sFuncConcreteFQCN];
+
 
 
 
@@ -58,6 +62,8 @@ trait AfrModuleBoxHelperTrait {
 	protected function buildGraphIfNeeded(): void
 	{
 		if ($this->graphBuilt) return;//TODO file cache
+
+	//	$this->aModulesInstances = $this->aWrapFunctionalitiesInstances = []; //WIll not be retested
 
 		$this->aRunTimeFunctionCache =
 		$this->aModuleReplacementMap =
@@ -82,7 +88,10 @@ trait AfrModuleBoxHelperTrait {
 				$this->buildGraphSetResolvableModuleHelper($sModFQCN);
 		}
 		$this->graphBuilt = true;
-
+	//	$sTempDir = AfrSysTempDir::sysGetTempDirAliasSubDir($this);
+	//	$sTempDir = Afr::getTempDir(). DIRECTORY_SEPARATOR.'AfrModuleBox-RT.php';
+		$sTempDir = AfrTenant::getTempDir(). DIRECTORY_SEPARATOR.'AfrModuleBox-RT.php';
+		//TODO: closures serialize via OPIS
 	}
 
 
@@ -227,14 +236,15 @@ trait AfrModuleBoxHelperTrait {
 		foreach ($this->aModuleEffectiveConfigs as $modFQCN => $mconfig) {
 			if (!empty($mconfig[self::bDisabledModule])) continue;
 //			if(!$this->isResolvableModule($modFQCN,true)) continue; //TODO: setez wrap key si in modul repalced???
-//			if($this->getModuleReplacementMap($modFQCN,false)) continue; //TODO: setez wrap key si in modul repalced???
-			if(!empty($this->aModuleReplacementMap[$modFQCN])) continue; //TODO: setez wrap key si in modul repalced???
+			if($this->getModuleReplacementMap($modFQCN,false)) continue; //TODO: setez wrap key si in modul repalced???
+//			if(!empty($this->aModuleReplacementMap[$modFQCN])) continue; //TODO: setez wrap key si in modul repalced???
+			//TODO: mod replacer in conjuction with WrapKey CODE sFunctionalityWrapKey
 			foreach ($mconfig[self::aFunctionalities] as $sFuncInterfaceFqcn => $aFuncConf) {
 				if (!empty($aFuncConf[self::bExcludedFunctionality])) continue;
-				$k = $this->getFunctionalityWrapKey($modFQCN, $sFuncInterfaceFqcn, $aFuncConf[self::sFuncConcreteFQCN]);
-				$this->aModuleEffectiveConfigs[$modFQCN][self::aFunctionalities][$sFuncInterfaceFqcn][self::sFunctionalityWrapKey] = $k;
+				$wrapKey = $this->makeFunctionalityWrapKey($modFQCN, $sFuncInterfaceFqcn, $aFuncConf[self::sFuncConcreteFQCN]);
+				$this->aModuleEffectiveConfigs[$modFQCN][self::aFunctionalities][$sFuncInterfaceFqcn][self::sFunctionalityWrapKey] = $wrapKey;
 				//SET PARENTS BY KEY
-				$this->aFunctionalityRelatedModulesByKeyMap[$k][$modFQCN][$sFuncInterfaceFqcn] = $aFuncConf[self::sFuncConcreteFQCN]; //pile up by key
+				$this->aFunctionalityRelatedModulesByKeyMap[$wrapKey][$modFQCN][$sFuncInterfaceFqcn] = $aFuncConf[self::sFuncConcreteFQCN]; //pile up by key
 			}
 		}
 		//getFunctionalityEffectiveConfig(object $oFunctionalityInstance): ?array
@@ -374,6 +384,7 @@ trait AfrModuleBoxHelperTrait {
 	 */
 	protected function resolveUsingAppContainer(string $sFQCN) //K
 	{
+		Afr::app()->sLogsDirT;
 		return Afr::app() ?
 			Afr::app()->container()->get($sFQCN) :
 			AfrContainerFacade::getContainer()->get($sFQCN);
@@ -381,23 +392,7 @@ trait AfrModuleBoxHelperTrait {
 
 
 
-	/**
-	 * @throws AfrModuleException
-	 * @throws AfrEnvException
-	 */
-	protected function getModuleReplacementMap(string $sModuleFqcn, bool $bBuildGraphIfNeeded = true): ?string //K
-	{
-		if ($bBuildGraphIfNeeded) $this->buildGraphIfNeeded();
 
-		if (!empty($this->aModuleReplacementMap[$sModuleFqcn])) {
-			if (is_array($this->aModuleReplacementMap[$sModuleFqcn])) {
-				return end($this->aModuleReplacementMap[$sModuleFqcn]) ?: null;
-			} elseif (is_string($this->aModuleReplacementMap[$sModuleFqcn])) {
-				return $this->aModuleReplacementMap[$sModuleFqcn] ?: null;
-			}
-		}
-		return null;
-	}
 
 
 }

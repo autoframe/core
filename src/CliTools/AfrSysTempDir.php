@@ -2,6 +2,7 @@
 
 namespace Autoframe\Core\CliTools;
 
+use Autoframe\Core\Afr\Afr;
 use Autoframe\Core\Arr\Merge\AfrArrMergeProfileClass;
 use Autoframe\Core\FileSystem\DirPath\AfrDirPathClass;
 
@@ -28,6 +29,8 @@ class AfrSysTempDir
 
 	public static function sysGetTempDir(): string
 	{
+		//use in project Afr::getTempDir(); returns  => AfrSysTempDir::sysGetTempDir() . DIRECTORY_SEPARATOR . self::getTenantAlias();
+
 		//can be updated at runtime
 		if (defined($c = '\AFR_SYS_TEMP_DIR')) {
 			return constant($c);

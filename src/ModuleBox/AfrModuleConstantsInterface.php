@@ -27,8 +27,12 @@ interface AfrModuleConstantsInterface
 	const snModuleExtends = 'snModuleExtends';
 	const iResolvableModule = 'iResolvableModule'; //0 = false; 1 = true resolvable by this module; 2 = resolvable by extender
 
-	const aFunctionalities = 'aFunctionalities';
+	const RESOLVE_NONE = 0;
+	const RESOLVE_DIRECT = 1;
+	const RESOLVE_REPLACED = 2;
 
+
+	const aFunctionalities = 'aFunctionalities';
 
 	//MODULES[aFunctionalities][funcInterface]
 	const sFuncConcreteFQCN = 'sFuncConcreteFQCN';
@@ -36,11 +40,10 @@ interface AfrModuleConstantsInterface
 	const bSingletonFunctionalityWithMergedSettings = 'bSingletonFunctionalityWithMergedSettings';
 	const sBridgeFunctionalityOnCommonInstanceKey = 'sBridgeFunctionalityOnCommonInstanceKey';
 	const sFunctionalityWrapKey = 'sFunctionalityWrapKey';
+	const anFunctionalitySettings = 'anFunctionalitySettings';
+	const onFunctionalityApplySettingsClosure = 'onFunctionalityApplySettingsClosure';
 	//DEPRECATED: 	const aFunctionalityParentsModInterface = 'aFunctionalityParentsModInterface';
 
-	const RESOLVE_NONE = 0;
-	const RESOLVE_DIRECT = 1;
-	const RESOLVE_REPLACED = 2;
 
 
 }

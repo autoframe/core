@@ -12,19 +12,6 @@ namespace Autoframe\Core\ModuleBox;
 
 interface AfrFunctionalityInterface extends AfrModuleConstantsInterface
 {
-	// generic marker/base interface
-	// No members here; used for type grouping.
-
-	//todo stocare in cheie
-	public function attachParentModuleFQCN(string $sModuleFQCN):self;
-
-	/**
-	 * Can have one or more parents in case of singletons
-	 * @return array
-	 */
-	public function getAttachedParentModulesFQCN():array;
-
-	public function attachParentModuleInstance(AfrModuleInterface $oModule);
 
 	/**
 	 * @param string $sModuleFQCN

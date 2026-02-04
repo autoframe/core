@@ -57,6 +57,8 @@ trait AfrModuleTrait
 				AfrModuleConstantsInterface::bSingletonFunctionalityWithMergedSettings => false,
 				AfrModuleConstantsInterface::sBridgeFunctionalityOnCommonInstanceKey => 'SomeCommonInstance',
 				AfrModuleConstantsInterface::bExcludedFunctionality  => false,
+				AfrModuleConstantsInterface::anFunctionalitySettings  => [],
+				AfrModuleConstantsInterface::onFunctionalityApplySettingsClosure  => function ($anSettings) {},
 			]
 		];
 		return rand(2, 3) > 1 ? $aFnModel : static::getDefaultFunctionalitiesConfigFromFile();

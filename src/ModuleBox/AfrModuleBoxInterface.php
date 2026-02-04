@@ -4,7 +4,10 @@ declare(strict_types=1);
 namespace Autoframe\Core\ModuleBox;
 
 
-
+use Autoframe\Core\Container\Exception\AfrContainerException;
+use Autoframe\Core\Event\Exception\AfrEventException;
+use Autoframe\Core\ModuleBox\Exception\AfrModuleException;
+use Autoframe\Core\ModuleBox\Exception\AfrModuleFunctionalityException;
 use Closure;
 
 interface AfrModuleBoxInterface extends AfrModuleConstantsInterface
@@ -13,9 +16,9 @@ interface AfrModuleBoxInterface extends AfrModuleConstantsInterface
 	 * Register a module instance and its configuration.
 	 *
 	 * @param AfrModuleInterface $oModule
-	 * @param array              $aConfig Raw module config as loaded from manifest/app config
+	 * @param array $aModConfig Raw module config as loaded from manifest/app config
 	 */
-	public function registerModuleInstance(AfrModuleInterface $oModule, array $aConfig = []): void;
+	public function registerModuleInstance(AfrModuleInterface $oModule, array $aModConfig = []): void;
 
 
 	/**
@@ -57,17 +60,45 @@ interface AfrModuleBoxInterface extends AfrModuleConstantsInterface
 	 * - Can return an array of instances (if multiple implementations exist and $single is false).
 	 * - Falls back to the DI container if no module can provide it.
 	 *
-	 * @param string      $sFuncInterfaceFqcn Interface to resolve
-	 * @param string|null $preferredFqcn When $single = true and multiple implementations exist,
-	 *                                   this preferred concrete FQCN can be used to select one.
+	 * @param string $sFuncInterfaceFqcn Interface to resolve
 	 *
-	 * @return AfrFunctionalityInterface|AfrFunctionalityInterface[]|object|object[]|null
+	 * @return object[]|null
 	 */
-	public function resolveFunctionality(
-		string  $sFuncInterfaceFqcn,
-		?string $preferredFqcn = null
+	public function resolveFunctionalityGroup(
+		string  $sFuncInterfaceFqcn
 	);
 
-	public function getEffectiveModulesList(): array;
-	public function getEffectiveFunctionalitiesList(): array;
+	public function getModulesEffectiveConfigsList(): array;
+
+	public function getFunctionalityList(): array;
+
+
+	/**
+	 * @param string $sFuncInterfaceFqcn
+	 * @param string $sModuleFqcn
+	 * @return object|null
+	 * @throws AfrContainerException
+	 * @throws AfrEventException
+	 * @throws AfrModuleException
+	 * @throws AfrModuleFunctionalityException
+	 */
+	public function resolveFunctionalityByModuleFQCN(string $sFuncInterfaceFqcn, string $sModuleFqcn): ?object;
+
+	public function getModuleEffectiveConfigs(string $sModuleFqcn): ?array;
+
+	public function isResolvableModule(string $sModuleFqcn, bool $bCountReplacersAsTrue): bool;
+	public function isResolvedModule(string $sModuleFqcn, bool $bCountReplacersAsTrue, bool $bCountEmptyInstanceAsResolved = false): bool;
+
+	/**
+	 * @param string $sFuncInterfaceFqcn
+	 * @param AfrModuleInterface $qModuleInstance
+	 * @return object|null
+	 * @throws AfrContainerException
+	 * @throws AfrEventException
+	 * @throws AfrModuleException
+	 * @throws AfrModuleFunctionalityException
+	 */
+	public function resolveFunctionalityByModuleInstance(string $sFuncInterfaceFqcn, AfrModuleInterface $qModuleInstance): ?object;
+
+	public function getFunctionalityEffectiveConfig(object $oFunctionalityInstance): ?array;
 }
