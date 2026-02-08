@@ -11,4 +11,9 @@ class AfrSmtpEmailSenderClass implements AfrEmailSenderInterface
 		// For now, just a stub.
 		// mail($to, $subject, $body); // or use a library via DI.
 	}
+
+	public function attachFunctionalityEffectiveRunTimeParameters(array $aEffectiveConfigs)
+	{
+		// TODO: Implement attachFunctionalityEffectiveRunTimeParameters() method.
+	}
 }
