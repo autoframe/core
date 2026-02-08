@@ -56,9 +56,7 @@ $box->registerModuleFQCN(AfrMailExtenderModuleClass::class, [
 $resolvedBaseModule = $box->resolveModule(AfrMailBaseModuleClass::class);
 
 // Resolving the email sender as single instance:
-$emailSender = $box->resolveFunctionality(
+$emailSender = $box->resolveFunctionalityGroup(
 	AfrEmailSenderInterface::class,
-	[],
-	true
 );
 // $emailSender is either the module-provided implementation or a container fallback.

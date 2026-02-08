@@ -38,6 +38,8 @@ interface AfrModuleConstantsInterface
 	const sFuncConcreteFQCN = 'sFuncConcreteFQCN';
 	const bExcludedFunctionality = 'bExcludedFunctionality';
 	const bSingletonFunctionalityWithMergedSettings = 'bSingletonFunctionalityWithMergedSettings';
+	const bMergeFunctionalityIntKeys = 'bMerge⚠️Functionality❗Int❗Keys';
+	const bMergeFunctionalityFlushOldConfig = 'bMergeFunctionalityFlushOldConfig';
 	const sBridgeFunctionalityOnCommonInstanceKey = 'sBridgeFunctionalityOnCommonInstanceKey';
 	const sFunctionalityWrapKey = 'sFunctionalityWrapKey';
 	const anFunctionalitySettings = 'anFunctionalitySettings';

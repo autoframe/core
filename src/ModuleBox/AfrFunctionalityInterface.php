@@ -14,8 +14,6 @@ interface AfrFunctionalityInterface extends AfrModuleConstantsInterface
 {
 
 	/**
-	 * @param string $sModuleFQCN
-	 * @return mixed
 	 * Aici daca am mai multe instante ma va afecta? Instante ale modulului si ale functionalitatilor
 	 * Daca vorbesc de login-uri diferite, asta inseamna ca trebuie sa am mai multe config-uri de module sau de functionalitati?
 	 *

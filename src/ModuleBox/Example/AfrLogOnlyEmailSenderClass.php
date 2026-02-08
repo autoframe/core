@@ -11,4 +11,9 @@ class AfrLogOnlyEmailSenderClass implements AfrEmailSenderInterface
 		// In real usage, you would log to a PSR-3 logger.
 		// error_log("[Mail] TO=$to SUBJECT=$subject BODY=$body");
 	}
+
+	public function attachFunctionalityEffectiveRunTimeParameters(array $aEffectiveConfigs)
+	{
+		// TODO: Implement attachFunctionalityEffectiveRunTimeParameters() method.
+	}
 }
