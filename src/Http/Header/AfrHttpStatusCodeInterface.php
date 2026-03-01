@@ -1,0 +1,153 @@
+<?php
+
+namespace Autoframe\Core\Http\Header;
+
+interface AfrHttpStatusCodeInterface {
+	const STATUS = [
+		// 1xx Informational
+		100 => 'Continue',
+		101 => 'Switching Protocols',
+		102 => 'Processing',
+		103 => 'Early Hints',
+
+		// 2xx Success
+		200 => 'OK',
+		201 => 'Created',
+		202 => 'Accepted',
+		203 => 'Non-Authoritative Information',
+		204 => 'No Content',
+		205 => 'Reset Content',
+		206 => 'Partial Content',
+		207 => 'Multi-Status',
+		208 => 'Already Reported',
+		226 => 'IM Used',
+
+		// 3xx Redirection
+		300 => 'Multiple Choices',
+		301 => 'Moved Permanently',
+		302 => 'Found',
+		303 => 'See Other',
+		304 => 'Not Modified',
+		305 => 'Use Proxy',
+		307 => 'Temporary Redirect',
+		308 => 'Permanent Redirect',
+
+		// 4xx Client Errors
+		400 => 'Bad Request',
+		401 => 'Unauthorized',
+		402 => 'Payment Required',
+		403 => 'Forbidden',
+		404 => 'Not Found',
+		405 => 'Method Not Allowed',
+		406 => 'Not Acceptable',
+		407 => 'Proxy Authentication Required',
+		408 => 'Request Timeout',
+		409 => 'Conflict',
+		410 => 'Gone',
+		411 => 'Length Required',
+		412 => 'Precondition Failed',
+		413 => 'Content Too Large',
+		414 => 'URI Too Long',
+		415 => 'Unsupported Media Type',
+		416 => 'Range Not Satisfiable',
+		417 => 'Expectation Failed',
+		418 => 'I\'m a teapot',
+		421 => 'Misdirected Request',
+		422 => 'Unprocessable Content',
+		423 => 'Locked',
+		424 => 'Failed Dependency',
+		425 => 'Too Early',
+		426 => 'Upgrade Required',
+		428 => 'Precondition Required',
+		429 => 'Too Many Requests',
+		431 => 'Request Header Fields Too Large',
+		451 => 'Unavailable For Legal Reasons',
+
+		// 5xx Server Errors
+		500 => 'Internal Server Error',
+		501 => 'Not Implemented',
+		502 => 'Bad Gateway',
+		503 => 'Service Unavailable',
+		504 => 'Gateway Timeout',
+		505 => 'HTTP Version Not Supported',
+		506 => 'Variant Also Negotiates',
+		507 => 'Insufficient Storage',
+		508 => 'Loop Detected',
+		510 => 'Not Extended',
+		511 => 'Network Authentication Required',
+	];
+
+	const DESCRIPTION = [
+		// 1xx Informational
+		100 => 'The server has received the request headers and the client should proceed to send the request body.',
+		101 => 'The server is switching protocols as requested by the client.',
+		102 => 'The server has received and is processing the request, but no response is available yet.',
+		103 => 'The server returns preliminary response headers before the final response.',
+
+		// 2xx Success
+		200 => 'The request succeeded and the server returned the requested resource.',
+		201 => 'The request succeeded and a new resource was created.',
+		202 => 'The request was accepted for processing, but processing has not been completed.',
+		203 => 'The request succeeded, but the returned metadata may be from a third-party source.',
+		204 => 'The request succeeded, but there is no content to return.',
+		205 => 'The request succeeded, and the client should reset the document view.',
+		206 => 'The server is delivering only part of the resource due to a range header.',
+		207 => 'The response contains multiple status codes for different parts of a multi-status request.',
+		208 => 'Members of a DAV binding have already been enumerated in a previous response.',
+		226 => 'The server fulfilled a GET request and applied one or more instance manipulations.',
+
+		// 3xx Redirection
+		300 => 'The request has multiple possible responses; the client should choose one.',
+		301 => 'The requested resource has been permanently moved to a new URL.',
+		302 => 'The requested resource is temporarily available at a different URL.',
+		303 => 'The response to the request can be found at another URL using GET.',
+		304 => 'The resource has not been modified since the last request.',
+		305 => 'The requested resource must be accessed through the proxy given by the response.',
+		307 => 'The resource is temporarily redirected and the same HTTP method must be used.',
+		308 => 'The resource is permanently redirected and the same HTTP method must be used.',
+
+		// 4xx Client Errors
+		400 => 'The server could not understand the request due to invalid syntax or malformed input.',
+		401 => 'Authentication is required; the request must include valid credentials.',
+		402 => 'Payment is required to access the requested resource (rarely used in practice).',
+		403 => 'The server understood the request but refuses to authorize it.',
+		404 => 'The requested resource could not be found on the server.',
+		405 => 'The resource exists, but the HTTP method used is not allowed for it.',
+		406 => 'The server cannot produce a response matching the client\'s Accept headers.',
+		407 => 'Proxy authentication is required; the client must authenticate with the proxy.',
+		408 => 'The server timed out waiting for the request to complete.',
+		409 => 'The request conflicts with the current state of the resource.',
+		410 => 'The resource is permanently gone and will not be available again.',
+		411 => 'A Content-Length header is required but was not provided.',
+		412 => 'One or more preconditions in request headers were not met.',
+		413 => 'The request payload is too large for the server to process.',
+		414 => 'The requested URI is too long for the server to process.',
+		415 => 'The media type of the request body is not supported by the server.',
+		416 => 'The requested byte range cannot be satisfied for the target resource.',
+		417 => 'The server cannot meet the requirements of the Expect request header.',
+		418 => 'The server refuses the attempt to brew coffee with a teapot (joke status code).',
+		421 => 'The request was directed to a server that is not able to produce a response for it.',
+		422 => 'The request syntax is correct, but the server cannot process the contained instructions.',
+		423 => 'The resource that is being accessed is locked.',
+		424 => 'The request failed because it depended on another request that failed.',
+		425 => 'The server is unwilling to process a request that might be replayed.',
+		426 => 'The client must switch to a different protocol to proceed.',
+		428 => 'The origin server requires the request to be conditional.',
+		429 => 'The client has sent too many requests in a given amount of time.',
+		431 => 'The server refuses to process the request because header fields are too large.',
+		451 => 'The resource is unavailable due to legal reasons.',
+
+		// 5xx Server Errors
+		500 => 'The server encountered an unexpected condition that prevented it from fulfilling the request.',
+		501 => 'The server does not support the functionality required to fulfill the request.',
+		502 => 'The server received an invalid response from an upstream server.',
+		503 => 'The server is temporarily unavailable, usually due to overload or maintenance.',
+		504 => 'The server did not receive a timely response from an upstream server.',
+		505 => 'The server does not support the HTTP protocol version used in the request.',
+		506 => 'Transparent content negotiation for the request results in a circular reference.',
+		507 => 'The server is unable to store the representation needed to complete the request.',
+		508 => 'The server detected an infinite loop while processing the request.',
+		510 => 'Further extensions to the request are required for the server to fulfill it.',
+		511 => 'The client needs to authenticate to gain network access.',
+	];
+}
