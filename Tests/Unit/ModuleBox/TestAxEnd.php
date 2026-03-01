@@ -29,7 +29,7 @@ class TestAxEnd implements AfrModuleInterface
 				AfrModuleConstantsInterface::bSingletonFunctionalityWithMergedSettings => false,
 	//			AfrModuleConstantsInterface::sBridgeFunctionalityOnCommonInstanceKey => 'BridgeStuffAx',
 				AfrModuleConstantsInterface::bExcludedFunctionality  => false,
-				AfrModuleConstantsInterface::anFunctionalitySettings  =>  ['TestAx','Ax99'=>'TestAxEnd'],
+				AfrModuleConstantsInterface::anFuncSettings  =>  ['TestAx','Ax99'=>'TestAxEnd'],
 				AfrModuleConstantsInterface::onFunctionalityApplySettingsClosure  => function (TestFniBridgeStuff $oInstance,$anSettings) {
 					if($anSettings) $oInstance->bridgeAction(implode('&',(array)$anSettings));
 				},

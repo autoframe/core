@@ -28,7 +28,7 @@ class TestExtL1Ext6A implements AfrModuleInterface
 				AfrModuleConstantsInterface::bSingletonFunctionalityWithMergedSettings => false,
 				AfrModuleConstantsInterface::sBridgeFunctionalityOnCommonInstanceKey => 'ExtL16A-Unreferenced~~~~~',
 				AfrModuleConstantsInterface::bExcludedFunctionality => false,
-				AfrModuleConstantsInterface::anFunctionalitySettings => ['ExtL16A' => 'ExtL16A','Ext-L16A'],
+				AfrModuleConstantsInterface::anFuncSettings => ['ExtL16A' => 'ExtL16A','Ext-L16A'],
 				AfrModuleConstantsInterface::onFunctionalityApplySettingsClosure => function (TestFniBridgeStuff $oInstance, $anSettings) {
 					//if ($anSettings) $oInstance->bridgeAction(implode('*', (array)$anSettings));
 					if (is_array($anSettings)) sort($anSettings);

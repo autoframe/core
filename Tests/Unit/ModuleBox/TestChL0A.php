@@ -31,7 +31,7 @@ class TestChL0A implements AfrModuleInterface
 				AfrModuleConstantsInterface::bSingletonFunctionalityWithMergedSettings => false,
 			//	AfrModuleConstantsInterface::sBridgeFunctionalityOnCommonInstanceKey => 'BridgeStuffAx',
 				AfrModuleConstantsInterface::bExcludedFunctionality  => false,
-				AfrModuleConstantsInterface::anFunctionalitySettings  => ['CHL0A','cHloa'=>'loa'],
+				AfrModuleConstantsInterface::anFuncSettings  => ['CHL0A','cHloa'=>'loa'],
 				AfrModuleConstantsInterface::onFunctionalityApplySettingsClosure  => function (TestFniBridgeStuff $oInstance,$anSettings) {
 					if($anSettings) $oInstance->bridgeAction(implode(';',(array)$anSettings));
 				},

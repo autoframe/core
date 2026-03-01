@@ -25,7 +25,7 @@ class TestReplL1RepExt7A4A4B implements AfrModuleInterface
 		return [
 			TestFniEatPie::class => [
 				AfrModuleConstantsInterface::sFuncConcreteFQCN => TestFnxEatPie::class,
-				AfrModuleConstantsInterface::anFunctionalitySettings => ['P1' => 'Blue'],
+				AfrModuleConstantsInterface::anFuncSettings => ['P1' => 'Blue'],
 				AfrModuleConstantsInterface::onFunctionalityApplySettingsClosure => function (TestFniEatPie $oInstance, $anSettings) {
 					if (is_array($anSettings)) sort($anSettings);
 					if ($anSettings) $oInstance->eatPie(implode('~', (array)$anSettings));
@@ -33,7 +33,7 @@ class TestReplL1RepExt7A4A4B implements AfrModuleInterface
 			],
 			TestFniEat::class => [
 				AfrModuleConstantsInterface::sFuncConcreteFQCN => TestFnxEatPie::class,
-				AfrModuleConstantsInterface::anFunctionalitySettings => ['P2' => 'Red'],
+				AfrModuleConstantsInterface::anFuncSettings => ['P2' => 'Red'],
 				AfrModuleConstantsInterface::onFunctionalityApplySettingsClosure => function (TestFniEat $oInstance, $anSettings) {
 					if (is_array($anSettings)) sort($anSettings);
 					if ($anSettings) $oInstance->eatSome(implode('~', (array)$anSettings));

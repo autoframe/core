@@ -26,7 +26,7 @@ class TestBaseLoExt3A implements AfrModuleInterface
 			TestFniEat::class => [
 				AfrModuleConstantsInterface::sFuncConcreteFQCN => TestFnxEatTwo::class,
 				AfrModuleConstantsInterface::bExcludedFunctionality => false,
-				AfrModuleConstantsInterface::anFunctionalitySettings => [6, 7, 8,9],
+				AfrModuleConstantsInterface::anFuncSettings => [6, 7, 8,9],
 				AfrModuleConstantsInterface::onFunctionalityApplySettingsClosure => function (TestFniEat $oInstance, $anSettings) {
 					if ($anSettings) $oInstance->eatSome(implode(';', (array)$anSettings));
 				},

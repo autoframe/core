@@ -29,7 +29,7 @@ class TestSelfL0 implements AfrModuleInterface
 				AfrModuleConstantsInterface::bSingletonFunctionalityWithMergedSettings => true,
 //				AfrModuleConstantsInterface::sBridgeFunctionalityOnCommonInstanceKey => '',
 //				AfrModuleConstantsInterface::bExcludedFunctionality => false,
-				AfrModuleConstantsInterface::anFunctionalitySettings => [22],
+				AfrModuleConstantsInterface::anFuncSettings => [22],
 				AfrModuleConstantsInterface::onFunctionalityApplySettingsClosure => function (TestFniSleep $oInstance, $anSettings) {
 					if ($anSettings) $oInstance->sleepMinutes(array_sum($anSettings));
 				},

@@ -29,7 +29,7 @@ class TestChL0B implements AfrModuleInterface
 		return [
 			TestFniSleep::class => [
 				AfrModuleConstantsInterface::sFuncConcreteFQCN => TestFnxSleepTwo::class,
-				AfrModuleConstantsInterface::anFunctionalitySettings => [27],
+				AfrModuleConstantsInterface::anFuncSettings => [27],
 				AfrModuleConstantsInterface::onFunctionalityApplySettingsClosure => function (TestFniSleep $oInstance, $anSettings) {
 					if ($anSettings) $oInstance->sleepMinutes(array_sum($anSettings));
 				},

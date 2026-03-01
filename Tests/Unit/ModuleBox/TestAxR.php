@@ -29,7 +29,7 @@ class TestAxR implements AfrModuleInterface
 			AfrModuleConstantsInterface::bSingletonFunctionalityWithMergedSettings => false,
 		//	AfrModuleConstantsInterface::sBridgeFunctionalityOnCommonInstanceKey => 'BridgeStuffAx',
 			AfrModuleConstantsInterface::bExcludedFunctionality  => false,
-			AfrModuleConstantsInterface::anFunctionalitySettings  => ['TestAxR','RL99'=>'ReplacerOfTestAxEnd'],
+			AfrModuleConstantsInterface::anFuncSettings  => ['TestAxR','RL99'=>'ReplacerOfTestAxEnd'],
 			AfrModuleConstantsInterface::onFunctionalityApplySettingsClosure  => function (TestFniBridgeStuff $oInstance,$anSettings) {
 				if($anSettings) $oInstance->bridgeAction(implode(';',(array)$anSettings));
 			},
