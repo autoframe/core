@@ -48,19 +48,32 @@ class ModuleBoxTest extends TestCase
 	{
 		echo __CLASS__ . '->' . __FUNCTION__ . PHP_EOL;
 
-		AfrModuleBoxClass::$bDebug = true;
+//		AfrModuleBoxClass::$bDebug = true;
 
 		AfrModuleBoxClass::getInstance()->registerModuleFQCN(TestBxEnd::class);
 		$aModulesToLoad = self::$aModulesReg;
-		shuffle($aModulesToLoad);
-		foreach ($aModulesToLoad as $module) {
-			AfrModuleBoxClass::getInstance()->registerModuleFQCN($module);
+		for ($i = 0; $i < rand(1,4); $i++) {
+			shuffle($aModulesToLoad);
+			AfrModuleBoxClass::getInstance()->hardFlushInstances(true);
+			AfrModuleBoxClass::getInstance()->registerModuleFqcnListFromAppConfig($aModulesToLoad, (bool)rand(0, 1));
+			$aList = AfrModuleBoxClass::getInstance()->getModulesEffectiveConfigsList();
 		}
 
+		//	shuffle($aModulesToLoad);
+		//	AfrModuleBoxClass::getInstance()->registerModuleFqcnListFromAppConfig($aModulesToLoad,true);
+		//	foreach ($aModulesToLoad as $module)
+		//		AfrModuleBoxClass::getInstance()->registerModuleFQCN($module);
 
-		$aList = AfrModuleBoxClass::getInstance()->getModulesEffectiveConfigsList();
-		$this->assertSame(true, isset($aList[TestBaseLoExt3A::class]));
+
+//		$aList = AfrModuleBoxClass::getInstance()->getModulesEffectiveConfigsList();
+//		print_r($aModulesToLoad);	print_r(array_keys($aList)); die;
+		$this->assertSame(true, isset($aList[TestBaseLoExt3A::class]), print_r($aList, true));
 		$this->assertSame(true, isset($aList[TestAxEnd::class]));
+
+		$this->assertSame(false, isset($aList[TestBxEnd::class]));
+
+		AfrModuleBoxClass::getInstance()->registerModuleFQCN(TestBxEnd::class);
+		$aList = AfrModuleBoxClass::getInstance()->getModulesEffectiveConfigsList();
 		$this->assertSame(true, isset($aList[TestBxEnd::class]));
 		AfrModuleBoxClass::$bDebug = false;
 
@@ -121,16 +134,15 @@ class ModuleBoxTest extends TestCase
 		$this->assertSame(TestFnxBridgeStuff::class . '~bridgeAction:TestAxR;ReplacerOfTestAxEnd', $oRqOriginalButGotRepalced->getTested());
 		$this->assertSame(false, spl_object_id($oRqOriginalButGotRepalced) === spl_object_id($oExtended));
 		//Ax is repalced by AxR and extended BxEnd
-	//	print_r($oBox->getFunctionalityEffectiveConfig($oExtended));
+		//	print_r($oBox->getFunctionalityEffectiveConfig($oExtended));
 		$this->assertSame(TestFnxBridgeStuff::class . '~bridgeAction:TestAx&TestAxEnd', $oExtended->getTested());
-
 
 
 		//forcing a new wrap key and mergind the run time settings here:
 		$oBox->registerModuleFQCN(TestAxR::class, [AfrModuleConstantsInterface::aFunctionalities => [ //augument settings:
 			TestFniBridgeStuff::class => [
 				AfrModuleConstantsInterface::sBridgeFunctionalityOnCommonInstanceKey => 'BridgeStuffAxR_' . __FUNCTION__,//force new wrap key
-				AfrModuleConstantsInterface::anFunctionalitySettings => ['RL99' => 'Augumented'],
+				AfrModuleConstantsInterface::anFuncSettings => ['RL99' => 'Augumented'],
 			]
 		]]);
 		$nRepalcedAugumented = $oBox->resolveFunctionalityByModuleFQCN(TestFniBridgeStuff::class, TestAxEnd::class);
@@ -142,12 +154,11 @@ class ModuleBoxTest extends TestCase
 		$oBox->registerModuleFQCN(TestUnrefereedMod1::class);
 		$oBridgeExt1 = $oBox->resolveFunctionalityByModuleFQCN(TestFniBridgeStuff::class, TestExtL1Ext6A::class);
 		$oBridgeUnr = $oBox->resolveFunctionalityByModuleFQCN(TestFniBridgeStuff::class, TestUnrefereedMod1::class);
-	//	print_r($oBox->getFunctionalityEffectiveConfig($oBridgeUCh_));
+		//	print_r($oBox->getFunctionalityEffectiveConfig($oBridgeUCh_));
 		$this->assertSame($oBridgeExt1, $oBridgeUnr);
 		$this->assertSame(TestFnxBridgeStuffTwo::class . '~bridgeAction:Ext-L16A_ExtL16A_UnrefereedMod1', $oBridgeExt1->getTested());
 		//$this->assertSame($oBridgeUCh_, $oBridgeUCh__);
 	}
-
 
 
 	/** @test */
@@ -162,10 +173,10 @@ class ModuleBoxTest extends TestCase
 		$oL0 = $oBox->resolveFunctionalityByModuleFQCN(TestFniEat::class, TestBaseLoExt3A::class);
 //			print_r($oBox->getFunctionalityEffectiveConfig($oL2));print_r($oBox->getFunctionalityEffectiveConfig($oL1));
 
-		$aS2 = $oBox->getFunctionalityEffectiveConfig($oL2)[AfrModuleConstantsInterface::anFunctionalitySettings];
-		$aS0 = $oBox->getFunctionalityEffectiveConfig($oL0)[AfrModuleConstantsInterface::anFunctionalitySettings];
-		$this->assertSame('A,7,8,D,E', implode(',',$aS2));
-		$this->assertSame('6,7,8,9', implode(',',$aS0));
+		$aS2 = $oBox->getFunctionalityEffectiveConfig($oL2)[AfrModuleConstantsInterface::anFuncSettings];
+		$aS0 = $oBox->getFunctionalityEffectiveConfig($oL0)[AfrModuleConstantsInterface::anFuncSettings];
+		$this->assertSame('A,7,8,D,E', implode(',', $aS2));
+		$this->assertSame('6,7,8,9', implode(',', $aS0));
 
 		$oBox->registerModuleFQCN(TestExtL2Fin6B::class, [AfrModuleConstantsInterface::aFunctionalities => [ //augument settings:
 			TestFniEat::class => [
@@ -176,17 +187,15 @@ class ModuleBoxTest extends TestCase
 		$oL22 = $oBox->resolveFunctionalityByModuleFQCN(TestFniEat::class, TestExtL2Fin6B::class);
 		$oL0 = $oBox->resolveFunctionalityByModuleFQCN(TestFniEat::class, TestBaseLoExt3A::class);
 
-		$aS2 = $oBox->getFunctionalityEffectiveConfig($oL22)[AfrModuleConstantsInterface::anFunctionalitySettings];
-		$aS0 = $oBox->getFunctionalityEffectiveConfig($oL0)[AfrModuleConstantsInterface::anFunctionalitySettings];
+		$aS2 = $oBox->getFunctionalityEffectiveConfig($oL22)[AfrModuleConstantsInterface::anFuncSettings];
+		$aS0 = $oBox->getFunctionalityEffectiveConfig($oL0)[AfrModuleConstantsInterface::anFuncSettings];
 		//print_r($oBox->getFunctionalityEffectiveConfig($oL22));print_r($oBox->getFunctionalityEffectiveConfig($oL1));
 
-		$this->assertSame('6,7,8,9,A,D,E', implode(',',$aS2));
-		$this->assertSame('6,7,8,9', implode(',',$aS0));
-
+		$this->assertSame('6,7,8,9,A,D,E', implode(',', $aS2));
+		$this->assertSame('6,7,8,9', implode(',', $aS0));
 
 
 	}
-
 
 
 	/** @test */
@@ -208,20 +217,20 @@ class ModuleBoxTest extends TestCase
 
 		$oTwo = $oBox->resolveFunctionalityByModuleFQCN(TestFniSleep::class, TestChL0B::class);
 
-		$sTested = TestFnxSleep::class.'~sleepMinutes:22';
-		$sTested2 = TestFnxSleepTwo::class.'~sleepMinutes:27';
+		$sTested = TestFnxSleep::class . '~sleepMinutes:22';
+		$sTested2 = TestFnxSleepTwo::class . '~sleepMinutes:27';
 		$this->assertSame($oS0, $oS1);
 		$this->assertSame($oS0, $oRx);
-		$this->assertSame($oUx,$oS0);
-	//	print_r($oBox->getFunctionalityEffectiveConfig($oUx));
-	//	print_r($oBox->getModuleEffectiveConfigs(TestUnrefereedMod1::class,true));
-		$this->assertSame(true,$oTwo instanceof TestFnxSleepTwo);
+		$this->assertSame($oUx, $oS0);
+		//	print_r($oBox->getFunctionalityEffectiveConfig($oUx));
+		//	print_r($oBox->getModuleEffectiveConfigs(TestUnrefereedMod1::class,true));
+		$this->assertSame(true, $oTwo instanceof TestFnxSleepTwo);
 		//$this->assertNotSame($oUx,$oTwo);
-		$this->assertSame( $sTested, $oS0->getTested());
-		$this->assertSame( $sTested, $oS1->getTested());
-		$this->assertSame( $sTested, $oRx->getTested());
-		$this->assertSame( $sTested, $oUx->getTested());
-		$this->assertSame( $sTested2, $oTwo->getTested());
+		$this->assertSame($sTested, $oS0->getTested());
+		$this->assertSame($sTested, $oS1->getTested());
+		$this->assertSame($sTested, $oRx->getTested());
+		$this->assertSame($sTested, $oUx->getTested());
+		$this->assertSame($sTested2, $oTwo->getTested());
 	}
 
 
@@ -235,10 +244,133 @@ class ModuleBoxTest extends TestCase
 		$oPie = $oBox->resolveFunctionalityByModuleFQCN(TestFniEatPie::class, TestReplL1RepExt7A4A4B::class);
 		$oEat = $oBox->resolveFunctionalityByModuleFQCN(TestFniEat::class, TestReplL1RepExt7A4A4B::class);
 
-		$this->assertSame(true,$oPie instanceof TestFniEat);
-		$this->assertSame(true,$oEat instanceof TestFniEat);
+		$this->assertSame(true, $oPie instanceof TestFniEat);
+		$this->assertSame(true, $oEat instanceof TestFniEat);
 		$this->assertSame($oPie, $oEat);
-		$this->assertSame( TestFnxEatPie::class.'~eatSome:eatPie:Blue~Red', $oPie->getTested());
+		$this->assertSame(TestFnxEatPie::class . '~eatSome:eatPie:Blue~Red', $oPie->getTested());
+
+	}
+
+	/** @test */
+	public function testGetFunctionalityGroupForResolving()
+	{
+		echo __CLASS__ . '->' . __FUNCTION__ . PHP_EOL;
+		$oBox = AfrModuleBoxClass::getInstance();
+		$oBox->registerModuleFQCN(TestReplL1RepExt7A4A4B::class);
+
+
+		$aInterfaceListGroups = [];
+		$aInterfaceList = [TestFniEatPie::class, TestFniEat::class, TestFniBridgeStuff::class, TestFniSingletonActivity::class, TestFniSleep::class];
+		foreach ($aInterfaceList as $sFqcnInterface) {
+			$aInterfaceListGroups[$sFqcnInterface] = $oBox->getFunctionalityGroupForResolving($sFqcnInterface);
+		}
+
+		//only TestFnxEatPie class / check structure and instance
+		$this->assertSame(1, count($aInterfaceListGroups[TestFniEatPie::class]));
+		$t = array_pop($aInterfaceListGroups[TestFniEatPie::class]);
+		$this->assertSame(TestFnxEatPie::class, $t['c']);
+		$this->assertSame(TestFniEatPie::class, $t['i']);
+		$this->assertSame(TestReplL1RepExt7A4A4B::class, $t['m']);
+		$atG = $oBox->resolveFunctionalityGroup(TestFniEatPie::class, false, [$t]);
+		$otG = array_pop($atG);
+		$this->assertSame(true, $otG instanceof TestFnxEatPie);
+
+		//PIE rexcludes / filtrations
+		$t2ModExcl = $oBox->getFunctionalityGroupForResolving(TestFniEatPie::class, [TestReplL1RepExt7A4A4B::class]);
+		$this->assertSame(0, count($t2ModExcl));
+		$t2ModIncl = $oBox->getFunctionalityGroupForResolving(TestFniEatPie::class, [], [TestReplL1RepExt7A4A4B::class]);
+		$this->assertSame(1, count($t2ModIncl));
+		$t2FnExcl = $oBox->getFunctionalityGroupForResolving(TestFniEatPie::class, [], [], [TestFnxEatPie::class]);
+		$this->assertSame(0, count($t2FnExcl));
+		$t2FnIncl = $oBox->getFunctionalityGroupForResolving(TestFniEatPie::class, [], [], [], [TestFnxEatPie::class]);
+		$this->assertSame(1, count($t2FnIncl));
+
+		//test that the functionality instances are unique when resolving a interface
+		foreach ($aInterfaceListGroups as $sFqcnIntToTest =>$aTestFniBridgeStuff){
+			$aFniBridgeStuffInstances = $oBox->resolveFunctionalityGroup($sFqcnIntToTest, false, $aTestFniBridgeStuff);
+			$aFniBridgeStuffInstancesSpl = [];
+			foreach ($aFniBridgeStuffInstances as $oInstanceStuff) {
+				$iSpl = spl_object_id($oInstanceStuff);
+				$this->assertSame(true, empty($aFniBridgeStuffInstancesSpl[$iSpl]));
+				$aFniBridgeStuffInstancesSpl[$iSpl] = $oInstanceStuff;
+			}
+		}
+
+
+		foreach ( $oBox->resolveFunctionalityGroup(
+			TestFniBridgeStuff::class,
+			false,
+			$oBox->getFunctionalityGroupForResolving(
+				TestFniBridgeStuff::class,
+				[],[],[],[]
+			)
+		) as $oInstanceStuff)
+			$this->assertSame(true, $oInstanceStuff instanceof TestFnxBridgeStuff || $oInstanceStuff instanceof TestFnxBridgeStuffTwo);
+
+
+		foreach ( $oBox->resolveFunctionalityGroup(
+			TestFniBridgeStuff::class,
+			false,
+			$oBox->getFunctionalityGroupForResolving(
+				TestFniBridgeStuff::class,
+				[],[],[TestFnxBridgeStuffTwo::class],[]
+			)
+		) as $oInstanceStuff)
+			$this->assertSame(true, $oInstanceStuff instanceof TestFnxBridgeStuff);
+
+
+		foreach ( $oBox->resolveFunctionalityGroup(
+			TestFniBridgeStuff::class,
+			false,
+			$oBox->getFunctionalityGroupForResolving(
+				TestFniBridgeStuff::class,
+				[],[],[],[TestFnxBridgeStuffTwo::class]
+			)
+		) as $oInstanceStuff)
+			$this->assertSame(true, $oInstanceStuff instanceof TestFnxBridgeStuffTwo);
+
+		foreach ( $oBox->resolveFunctionalityGroup(
+			TestFniBridgeStuff::class,
+			false,
+			$oBox->getFunctionalityGroupForResolving(
+				TestFniBridgeStuff::class,
+				[TestChL0A::class,TestAxR::class,TestBxEnd::class],[],[],[]
+			)
+		) as $oInstanceStuff)
+			$this->assertSame(true, $oInstanceStuff instanceof TestFnxBridgeStuffTwo);
+
+
+		foreach ( $oBox->resolveFunctionalityGroup(
+			TestFniBridgeStuff::class,
+			false,
+			$oBox->getFunctionalityGroupForResolving(
+				TestFniBridgeStuff::class,
+				[],[TestChL0A::class,TestAxR::class,TestBxEnd::class],[],[]
+			)
+		) as $oInstanceStuff)
+			$this->assertSame(true, $oInstanceStuff instanceof TestFnxBridgeStuff);
+
+
+		foreach ( $oBox->resolveFunctionalityGroup(
+			TestFniBridgeStuff::class,
+			false,
+			$oBox->getFunctionalityGroupForResolving(
+				TestFniBridgeStuff::class,
+				[],[TestBxEnd::class],[],[]
+			)
+		) as $oInstanceStuff)
+			$this->assertSame(true, $oInstanceStuff instanceof TestFnxBridgeStuff);
+
+
+			$this->assertSame([], $oBox->resolveFunctionalityGroup(
+				TestFniBridgeStuff::class,
+				false,
+				$oBox->getFunctionalityGroupForResolving(
+					TestFniBridgeStuff::class,
+					[],[],[TestFnxBridgeStuff::class,TestFnxBridgeStuffTwo::class],[]
+				)
+			));
+
 
 	}
 
