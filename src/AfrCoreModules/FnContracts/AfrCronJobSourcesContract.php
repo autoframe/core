@@ -8,7 +8,7 @@ use Autoframe\Core\Http\Request\AfrRequestInterface;
 interface AfrCronJobSourcesContract // extends AfrCliConstantsInterface
 {
 
-	//TODO: 2026: AfrConJobSources::getSourcesFreshFromModules() //TODO!!!!!!
+	//TODO: 2026: AfrConJobSources::registerCronJobSourcesFromModules() //TODO!!!!!!
 
 	const FGC = 'file.get.contents';
 	const URL_S = 'curl';

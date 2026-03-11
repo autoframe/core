@@ -16,7 +16,7 @@ use Autoframe\Core\Module\AfrModuleInterface;
  * AfrConJobSources::getInstance()->addUrlSource('demo','http://localhost:808/core/src/Cron/AfrCronJobDaemon.DemoCron.txt');
  * }
  * else{
- * AfrConJobSources::getInstance()->getSourcesFreshFromModules();
+ * AfrConJobSources::getInstance()->registerCronJobSourcesFromModules();
  * }
  */
 
@@ -72,14 +72,14 @@ class AfrCronJobSourceToRefactor
 
 	public function pushCronJobSources(): ?array
 	{
-		//TODO C:\xampp\htdocs\core\src\Cron\AfrConJobSources.php @ getSourcesFreshFromModules() K
+		//TODO C:\xampp\htdocs\core\src\Cron\AfrConJobSources.php @ registerCronJobSourcesFromModules() K
 		//TODO:  Module BOX FACTORY LIKE CONTAINER K Afr::app()->box() K
 		// INTEFACE FOR MOD BOX K
 		// ADD TO AFR::APP K
 		//TODO src/Afr/AfrExecutionThread.php @ $this->aStep[self::MODULE_READ]
 		// MODULE CORE REGISTER
 		// MODULE CUSTOM REGISTER + LOCAL CONFIG from APP TENANT/ ENV ? CUSTOM FILE
-		// TODO: AfrConJobSources::getSourcesFreshFromModules() //TODO!!!!!!
+		// TODO: AfrConJobSources::registerCronJobSourcesFromModules() //TODO!!!!!!
 		/**
 		 * $aModules = [//todo check default list?? @ AfrModuleBox OLD
 		 * AfrCore::class => [
@@ -97,7 +97,7 @@ class AfrCronJobSourceToRefactor
 			->addSourceFromClosure('cc', function () {});
 
 
-		AfrConJobSources::getInstance()->getSourcesFreshFromModules();
+		AfrConJobSources::getInstance()->registerCronJobSourcesFromModules();
 
 	}
 }

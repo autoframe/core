@@ -8,12 +8,7 @@ use Autoframe\Core\Cron\Log\AfrCronLoggerInterface;
 use Autoframe\Core\DesignPatterns\Singleton\AfrSingletonAbstractClass;
 use Autoframe\Core\Env\Exception\AfrEnvException;
 use Autoframe\Core\Exception\AfrException;
-use Autoframe\Core\Module\AfrModuleBox;
-use Autoframe\Core\Module\AfrModuleCLIRoutesInterface;
-use Autoframe\Core\Module\AfrModuleInterface;
 use Autoframe\Core\CliTools\AfrSysTempDir;
-use Autoframe\Core\Tenant\AfrTenant;
-use Autoframe\Core\Http\Request\AfrCliConstantsInterface;
 use Autoframe\Core\AfrCoreModules\FnContracts\AfrCronJobSourcesContract;
 
 final class AfrConJobSources extends AfrSingletonAbstractClass
@@ -36,9 +31,8 @@ final class AfrConJobSources extends AfrSingletonAbstractClass
 	/**
 	 * @throws AfrException
 	 */
-	public function getSourcesFreshFromModules() //TODO!!!!!!
+	public function registerCronJobSourcesFromModules() //TODO use from modules/ functionalities that have CRON_JOB_SOURCES.php
 	{
-		//LOADER din modul, sau on demand?
 		//TODO: REMOVE THIS
 		die('TODO: IMPLEMENT ' . __FUNCTION__);
 		//	AfrConJobSources::getInstance()->addFileSource('demo','http://localhost:808/core/src/Cron/AfrCronJobDaemon.DemoCron.txt');
@@ -48,10 +42,7 @@ final class AfrConJobSources extends AfrSingletonAbstractClass
 		}
 		$this->flushSources();
 	//	AfrCliConstantsInterface::CLI_CRON_JOB_REQUEST;
-		Afr::app()
-			->container()
-			->get(AfrModuleBox::class)
-			->registerModulesThatImplementTheInterface(AfrModuleCLIRoutesInterface::class); //TODO!!!!!!
+		Afr::app()->box();
 	}
 
 	/**

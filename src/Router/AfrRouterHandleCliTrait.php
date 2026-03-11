@@ -67,7 +67,7 @@ trait AfrRouterHandleCliTrait
 			if (1) {
 				AfrConJobSources::getInstance()->addUrlSource('demo', 'http://localhost:808/core/src/Cron/AfrCronJobDaemon.DemoCron.txt');
 			} else {
-				AfrConJobSources::getInstance()->getSourcesFreshFromModules();
+				AfrConJobSources::getInstance()->registerCronJobSourcesFromModules();
 			}
 
 			AfrCronJobDaemon::make(
