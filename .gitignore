@@ -4,6 +4,7 @@ composer.lock
 .phpunit.result.cache
 .phpunit.result
 .idea/
+.claude/
 baseTest
 
 error_log

@@ -1,0 +1,14 @@
+[
+    {
+        "cronTime": "*\/2 * * * *",
+        "command": "\/executed.php args"
+    },
+    {
+        "cronTime": "* * * * *",
+        "command": "RESPAWN_DAEMON"
+    },
+    {
+        "cronTime": "* * * * *",
+        "command": "EveryTime args"
+    }
+]

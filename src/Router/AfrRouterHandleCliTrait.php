@@ -63,13 +63,9 @@ trait AfrRouterHandleCliTrait
 			if ($bIsCronWorker && empty($sWorkerValue)) {
 				throw new AfrRouterException('Cron Worker payload is not configured! This must be a base64 @_');
 			}
+			AfrConJobSources::getInstance()->registerCronJobSourcesFromModules();
 			//TODO: 2026: sa mut addUrlSource si citirea direct in daemon
-			if (1) {
-				AfrConJobSources::getInstance()->addUrlSource('demo', 'http://localhost:808/core/src/Cron/AfrCronJobDaemon.DemoCron.txt');
-			} else {
-				AfrConJobSources::getInstance()->registerCronJobSourcesFromModules();
-			}
-
+//			AfrConJobSources::getInstance()->addUrlSource('demo', 'http://localhost:808/core/src/Cron/AfrCronJobDaemon.DemoCron.txt');
 			AfrCronJobDaemon::make(
 				$oCronLogger = Afr::app()->container()->get(AfrCronLoggerInterface::class), //AfrCronLoggerClass::getInstance();
 				$bIsCronWorker ? $sWorkerValue : null

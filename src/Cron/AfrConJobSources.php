@@ -3,19 +3,21 @@
 namespace Autoframe\Core\Cron;
 
 use Autoframe\Core\Afr\Afr;
+use Autoframe\Core\AfrCoreModules\FnContracts\AfrCronJobSourcesContract;
 use Autoframe\Core\Cron\Log\AfrCronLoggerClass;
 use Autoframe\Core\Cron\Log\AfrCronLoggerInterface;
 use Autoframe\Core\DesignPatterns\Singleton\AfrSingletonAbstractClass;
 use Autoframe\Core\Env\Exception\AfrEnvException;
 use Autoframe\Core\Exception\AfrException;
 use Autoframe\Core\CliTools\AfrSysTempDir;
-use Autoframe\Core\AfrCoreModules\FnContracts\AfrCronJobSourcesContract;
+use Autoframe\Core\ModuleBox\AfrModuleBoxFacade;
+
 
 final class AfrConJobSources extends AfrSingletonAbstractClass
 {
-	const FGC = AfrCronJobSourcesContract::FGC;
-	const URL_S = AfrCronJobSourcesContract::URL_S;
-	const CLOSURE_FN = AfrCronJobSourcesContract::CLOSURE_FN;
+	const FGC = 'file.get.contents';
+	const URL_S = 'curl';
+	const CLOSURE_FN = 'closure';
 	protected array $aSources = [];
 	protected ?array $aJobs = null;
 	protected array $aCronSourceNotFoundSafeguard = [];
@@ -29,20 +31,24 @@ final class AfrConJobSources extends AfrSingletonAbstractClass
 	protected ?AfrCronLoggerInterface $oAfrCronLogger = null;
 
 	/**
+	 * Resolves all modules that implement AfrCronJobSourcesContract
+	 * and calls registerCronJobSources() on each via __invoke().
+	 *
+	 * @return int Total number of registered cron job sources
 	 * @throws AfrException
 	 */
-	public function registerCronJobSourcesFromModules() //TODO use from modules/ functionalities that have CRON_JOB_SOURCES.php
+	public function registerCronJobSourcesFromModules(): int
 	{
-		//TODO: REMOVE THIS
-		die('TODO: IMPLEMENT ' . __FUNCTION__);
-		//	AfrConJobSources::getInstance()->addFileSource('demo','http://localhost:808/core/src/Cron/AfrCronJobDaemon.DemoCron.txt');
+		$oBox = !empty(Afr::app()) ? Afr::app()->box() : AfrModuleBoxFacade::getBox();
 
-		if (empty(Afr::app())) {
-			throw new AfrException('Afr app not configured');
-		}
 		$this->flushSources();
-	//	AfrCliConstantsInterface::CLI_CRON_JOB_REQUEST;
-		Afr::app()->box();
+		$iTotal = 0;
+		/** @var AfrCronJobSourcesContract[] $aOCronJobSources */
+		$aOCronJobSources = $oBox->resolveFunctionalityGroup(AfrCronJobSourcesContract::class);
+		foreach ($aOCronJobSources as $oCronJobSourceGroup) {
+			$iTotal += $oCronJobSourceGroup(); // __invoke calls registerCronJobSources()
+		}
+		return $iTotal;
 	}
 
 	/**
@@ -222,7 +228,7 @@ final class AfrConJobSources extends AfrSingletonAbstractClass
 		return $this;
 	}
 
-	//TODO:  fallback logger din DAEMON / WORKER DACA GASESC ACOLO!!!!
+	//TODO:  fallback logger from DAEMON / WORKER if a instance is found there!!!!
 	public function log(string $sMessage, bool $bError = false, int $exitCode = null): void
 	{
 		if (!$this->oAfrCronLogger) {
@@ -333,7 +339,7 @@ final class AfrConJobSources extends AfrSingletonAbstractClass
 			} else {
 				$sSinceTs = !empty($this->aCronLoadTime[$sSourceAlias]) ? date('Y-m-d H:i:sO', $this->aCronLoadTime[$sSourceAlias]) : 'NEVER';
 				$sErrMsg = trim(
-					'Unable open job file: ' . $sSourceAlias . ', ' . $sUrl . ' since Ts(' . $sSinceTs .	')' . (error_get_last()['message'] ?? '')
+					'Unable open job file: ' . $sSourceAlias . ', ' . $sUrl . ' since Ts(' . $sSinceTs . ')' . (error_get_last()['message'] ?? '')
 				);
 			}
 		}
@@ -354,7 +360,7 @@ final class AfrConJobSources extends AfrSingletonAbstractClass
 		$this->flushJobsForAlias($sSourceAlias);
 		if (strlen($sContents) < 10) {
 			$iLoaded = 0;
-			if(!$bLoadedFromCacheFile){
+			if (!$bLoadedFromCacheFile) {
 				$this->log('Cron jobs url source is empty: ' . $sUrl . ' B64:' . base64_encode($sContents), true);
 			}
 		} else {

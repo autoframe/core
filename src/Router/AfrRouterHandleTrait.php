@@ -91,7 +91,7 @@ trait AfrRouterHandleTrait
 		$aOHttpRoutes = Afr::app()->box()->resolveFunctionalityGroup(AfrHttpRoutesContract::class);
 		/** @var AfrHttpRoutesContract $oRouteGroup */
 		foreach ($aOHttpRoutes as $oRouteGroup) {
-			$oRouteGroup();//			$oRouteGroup->registerHttpRoutes($oRequest);
+			$oRouteGroup();//	__invoke instead of	$oRouteGroup->registerHttpRoutes();
 		}
 
 //		AfrCore::getInstance()->registerHTTPRoutes(); //todo DEPRECATE OLD MODULE box
