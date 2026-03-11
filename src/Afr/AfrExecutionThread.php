@@ -196,9 +196,7 @@ final class AfrExecutionThread
 		// Todo: 2.2 de module depind restul de functionalitati, deci critice: DA, adica sesiuni, db, etc
 
 		$this->aStep[self::CONTEXT_MODULE_READ] = function () {
-//			AfrModuleBox::getInstance()->applyDefaultTenantConfig(); //TODO deprecat -> deprecated
 			Afr::app()->box()->applyDefaultTenantConfig();
-			//	AfrModuleBoxFacade::getBox()->applyDefaultTenantConfig();
 		};
 		$this->aStep[self::CONTEXT_MODULE_CONTAINER_BINDINGS] = function () {};  //TODO: deprecated
 		$this->aStep[self::CONTEXT_MODULE_SETTINGS] = function () {};   //TODO: deprecated

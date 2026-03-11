@@ -5,7 +5,8 @@ composer.lock
 .phpunit.result
 .idea/
 .claude/
-baseTest
+baseTest/
+afrDeployTest/
 
 error_log
 *.env

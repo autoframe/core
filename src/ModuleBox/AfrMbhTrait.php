@@ -1253,7 +1253,7 @@ trait AfrMbhTrait
 
 		$this->registerModuleFqcnListFromAppConfigLoop(include(self::AFR_CORE_CONFIG_FILE));
 
-		$sTenantConfigFile = AfrTenant::getAfrDefaultTenantConfigsForFqcn(static::class);
+		$sTenantConfigFile = AfrTenant::getAfrDefaultTenantConfigsForFqcn(AfrModuleBoxFacade::class);
 		if (!empty($sTenantConfigFile) ) {
 			$aTenantConfig = (array)(include ($sTenantConfigFile));
 			$this->registerModuleFqcnListFromAppConfigLoop($aTenantConfig);
@@ -1268,7 +1268,7 @@ trait AfrMbhTrait
 
 	public static function sampleTenantDefaultConfig(): ?string
 	{
-		return file_get_contents(__DIR__ . DIRECTORY_SEPARATOR . 'config.sample.modules.php');
+		return file_get_contents(__DIR__ . DIRECTORY_SEPARATOR . 'config.sample.AfrModuleBox.php');
 
 	}
 

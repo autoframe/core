@@ -18,7 +18,7 @@ use Autoframe\Core\Exception\AfrException;
 use Autoframe\Core\FileSystem\DirPath\AfrDirPathClass;
 use Autoframe\Core\Http\Header\AfrHttpStatusCode;
 use Autoframe\Core\InterfaceToConcrete\AfrToConcreteStrategiesClass;
-use Autoframe\Core\Module\AfrModuleBox;
+use Autoframe\Core\ModuleBox\AfrModuleBoxFacade;
 
 /**
  * This class manages configuration settings and processes for an application that supports multiple tenants.
@@ -41,7 +41,7 @@ class AfrTenant
 		AfrEvent::class,
 		AfrDefaultBindings::class,
 		AfrToConcreteStrategiesClass::class,
-	//	AfrModuleBox::class,
+		AfrModuleBoxFacade::class,
 	];
 
 	public string $sTenantAlias;
@@ -71,11 +71,10 @@ class AfrTenant
 		$this->sTenantAlias = $sTenantAlias;
 	}
 
-	public static function pushDefaultTenantConfigs(array $aFQCN_implementing_AfrDefaultTenantConfigsInterface)
+	public static function pushDefaultTenantConfigs(array $aFQCN_implementing_AfrDefaultTenantConfigsInterface = [])
 	{
-		if (!$aFQCN_implementing_AfrDefaultTenantConfigsInterface) {
-			return;
-		}
+		if (!$aFQCN_implementing_AfrDefaultTenantConfigsInterface) return;
+
 		static::$aAfrDefaultTenantConfigs = array_merge(
 			static::$aAfrDefaultTenantConfigs,
 			$aFQCN_implementing_AfrDefaultTenantConfigsInterface
@@ -378,7 +377,8 @@ class AfrTenant
 				static::$sAppTenantAlias = '';
 			}
 			if ($sErrMsg) {
-				throw new AfrException($sErrMsg);
+				if(!defined('AFR_DEPLOY_PATH')) throw new AfrException($sErrMsg);
+				echo $sErrMsg; die(0);
 			}
 		} else {
 			include($sTf);
@@ -482,23 +482,23 @@ class AfrTenant
 		}
 
 
-		foreach (static::$aTenantCfgIns as $oTenant) {
-			if (!file_exists($htaccessFile = $oTenant->sHtmlDir . DIRECTORY_SEPARATOR . '.htaccess')) {
-				copy(__DIR__ . DIRECTORY_SEPARATOR . '.htaccess.sample', $htaccessFile);
-				$aActionMessages[] = 'Sample htaccess initialized ' . $htaccessFile;
-			}
-			//TODO: tenant-alias.php
-			$tenantEntryPhp = static::getBaseDirPath() . DIRECTORY_SEPARATOR .
-				self::AFR_BOOTSTRAP_PHP . '.' . $oTenant->sTenantAlias . '.php';
-			if (!file_exists($tenantEntryPhp)) {
-				file_put_contents(
-					$tenantEntryPhp,
-					"<?php\n" .
-					'$_ENV["AFR_TENANT_CLI"] = "' . $oTenant->sTenantAlias . '";' . PHP_EOL .
-					'include(__DIR__.DIRECTORY_SEPARATOR."' . self::AFR_BOOTSTRAP_PHP . '.php");'
-				);
-				$aActionMessages[] = 'Tenant Entry php initialized ' . $tenantEntryPhp;
-			}
+		if (!file_exists($htaccessFile = self::getPublicHtmlDir() . DIRECTORY_SEPARATOR . '.htaccess')) {
+			$aActionMessages[] = (
+				copy(__DIR__ . DIRECTORY_SEPARATOR . '.htaccess.sample', $htaccessFile) ?
+					'Sample htaccess initialized ' : 'UNABLE TO SAVE '
+				) . $htaccessFile;
+		}
+
+		$tenantEntryPhp = static::getBaseDirPath() . DIRECTORY_SEPARATOR .
+			self::AFR_BOOTSTRAP_PHP . '.' . self::getTenantAlias() . '.php';
+		if (!file_exists($tenantEntryPhp)) {
+			file_put_contents(
+				$tenantEntryPhp,
+				"<?php\n" .
+				'$_ENV["AFR_TENANT_CLI"] = "' . self::getTenantAlias() . '";' . PHP_EOL .
+				'include(__DIR__.DIRECTORY_SEPARATOR."' . self::AFR_BOOTSTRAP_PHP . '.php");'
+			);
+			$aActionMessages[] = 'Tenant Entry php initialized ' . $tenantEntryPhp;
 		}
 
 
@@ -523,9 +523,9 @@ class AfrTenant
 	{
 		foreach ($aDirs as $sPath) {
 			if (is_string($sPath) && !is_dir($sPath)) {
-				if (!AfrDirPathClass::dirExistAndWritableS($sPath, true, 0775)) {
+				if (AfrDirPathClass::dirExistAndWritableS($sPath, true, 0775))
 					$aErrors[] = 'Directory initialised: ' . $sPath;
-				}
+				else $aErrors[] = 'Unable to create and write directory: ' . $sPath;
 			} elseif (is_array($sPath)) {
 				static::mkdir($sPath, $aErrors);
 			}

@@ -4,7 +4,8 @@ require_once __DIR__ . '/vendor/autoload.php';
 use Autoframe\Core\Afr\Afr;
 
 
-const AFR_BASE_DIR = __DIR__ . DIRECTORY_SEPARATOR . 'baseTest';
+//const AFR_BASE_DIR = __DIR__ . DIRECTORY_SEPARATOR . 'baseTest';
+const AFR_BASE_DIR = __DIR__ . DIRECTORY_SEPARATOR . 'afrDeployTest';
 
 
 $aReport = Afr::makeApp()->run(); //print_r($aReport);

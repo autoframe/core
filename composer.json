@@ -37,6 +37,9 @@
   "bin": [
     "afr-deploy"
   ],
+  "scripts": {
+    "afr-deploy": "php afr-deploy"
+  },
   "suggest": {
     "ext-sockets": "Socket connection client - server",
     "ext-zlib": "Sock connection compression",

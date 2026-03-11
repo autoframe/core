@@ -89,7 +89,7 @@ class AfrDefaultBindings implements AfrDefaultTenantConfigsInterface
 		static::bind(include $sBindingsFile);
 	}
 
-	public static function sampleTenantDefaultConfig(): string
+	public static function sampleTenantDefaultConfig(): ?string
 	{
 		return file_get_contents(__DIR__ . DIRECTORY_SEPARATOR . 'config.sample.AfrDefaultBindings.php');
 	}

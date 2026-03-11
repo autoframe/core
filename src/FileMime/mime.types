@@ -1,4 +1,4 @@
-# https://svn.apache.org/repos/asf/httpd/httpd/trunk/docs/conf/mime.types Tue, 18 Mar 2025 10:25:43 GMT
+# https://svn.apache.org/repos/asf/httpd/httpd/trunk/docs/conf/mime.types Wed, 11 Mar 2026 17:41:01 GMT
 # This file maps Internet media types to unique file extension(s).
 # Although created for httpd, this file is used by many software systems
 # and has been placed in the public domain for unlimited redistribution.
@@ -1091,6 +1091,7 @@ application/vnd.smart.teacher			teacher
 application/vnd.solent.sdkm+xml			sdkm sdkd
 application/vnd.spotfire.dxp			dxp
 application/vnd.spotfire.sfs			sfs
+application/vnd.sqlite3					sqlite sqlite3
 # application/vnd.sss-cod
 # application/vnd.sss-dtf
 # application/vnd.sss-ntf
@@ -1548,6 +1549,10 @@ image/cgm					cgm
 # image/fits
 image/g3fax					g3
 image/gif					gif
+image/heic					heic
+image/heic-sequence			heics
+image/heif					heif
+image/heif-sequence			heifs
 image/ief					ief
 # image/jls
 # image/jp2

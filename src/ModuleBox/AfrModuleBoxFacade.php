@@ -6,12 +6,13 @@ use Autoframe\Core\Afr\Afr;
 use Autoframe\Core\Container\Exception\AfrContainerException;
 use Autoframe\Core\Event\Exception\AfrEventException;
 use Autoframe\Core\Exception\AfrException;
+use Autoframe\Core\Tenant\AfrDefaultTenantConfigsInterface;
 
 
 /**
  * @mixin AfrModuleBoxInterface
  */
-final class AfrModuleBoxFacade
+final class AfrModuleBoxFacade implements AfrDefaultTenantConfigsInterface
 {
 	/**
 	 * @var string implementing AfrModuleBoxInterface
@@ -72,5 +73,8 @@ final class AfrModuleBoxFacade
 		return self::getBox()->$method(...$args);
 	}
 
-
+	public static function sampleTenantDefaultConfig(): ?string
+	{
+		return file_get_contents(__DIR__ . DIRECTORY_SEPARATOR . 'config.sample.AfrModuleBox.php');
+	}
 }
