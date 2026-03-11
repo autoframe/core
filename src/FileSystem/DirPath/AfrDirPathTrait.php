@@ -229,7 +229,16 @@ trait AfrDirPathTrait
 	 */
 	public function dirExistAndWritable(string $dir, bool $bCreate = true, ?int $expectedPermissions = null, bool $bClearStatCache = false): bool
 	{
-		$expectedPermissions ??= $this->getExpectedDirPermissions(); // can return 0775 or similar
+		return static::dirExistAndWritableS($dir, $bCreate, $expectedPermissions, $bClearStatCache);
+
+	}
+
+	/**
+	 * @throws AfrEnvException
+	 */
+	public static function dirExistAndWritableS(string $dir, bool $bCreate = true, ?int $expectedPermissions = null, bool $bClearStatCache = false): bool
+	{
+		$expectedPermissions ??= static::getExpectedDirPermissions(); // can return 0775 or similar
 		$expectedPermissionsOctal = $expectedPermissions & 0777;
 		$dir = rtrim($dir, '\\/');
 		if ($dir === '') return false;
@@ -242,18 +251,18 @@ trait AfrDirPathTrait
 			if (!$bCreate) return false;
 			if (!@mkdir($dir, $expectedPermissions, true)) return false;
 			if (!is_dir($dir)) return false;
-			$this->attemptToSetPermissions($dir, $expectedPermissions);
-			return $this->writeTestFile($testFile);
+			static::attemptToSetPermissions($dir, $expectedPermissions);
+			return static::writeTestFile($testFile);
 		}
 		// Directory exists: fast path — if PHP thinks it's writable for the current user, we're done
 		if (@is_writable($dir)) return true;
 
-		$this->attemptToSetPermissions($dir, $expectedPermissions);
-		return $this->writeTestFile($testFile);
+		static::attemptToSetPermissions($dir, $expectedPermissions);
+		return static::writeTestFile($testFile);
 
 	}
 
-	protected function writeTestFile(string $testFile): bool
+	protected static function writeTestFile(string $testFile): bool
 	{
 		// After creation, actually verify write ability
 		$fp = @fopen($testFile, 'xb'); // exclusive create (no clobber), binary for portability
@@ -272,7 +281,7 @@ trait AfrDirPathTrait
 	 * @param int $expectedPermissions
 	 * @return void
 	 */
-	protected function attemptToSetPermissions(string $dir, int $expectedPermissions): void
+	protected static function attemptToSetPermissions(string $dir, int $expectedPermissions): void
 	{
 		// POSIX-style mode enforcement (umask-safe); on Windows this is mostly a no-op, but cheap
 		if (DIRECTORY_SEPARATOR !== '\\') {
@@ -287,7 +296,7 @@ trait AfrDirPathTrait
 	/**
 	 * @throws AfrEnvException
 	 */
-	public function getExpectedDirPermissions(): int
+	public static function getExpectedDirPermissions(): int
 	{
 		$sKey = 'AFR_EXPECTED_DIR_PERMISSIONS';
 		$iFallback = 0775;

@@ -67,9 +67,7 @@ class AfrDefaultBindings implements AfrDefaultTenantConfigsInterface
 	 */
 	public static function setAutoframeDefaultContainerBindings(bool $bForce = false): void
 	{
-		if (!empty(self::$aSet[__FUNCTION__]) && !$bForce) {
-			return;
-		}
+		if (!empty(self::$aSet[__FUNCTION__]) && !$bForce) return;
 		self::$aSet[__FUNCTION__] = true;
 		static::bind(static::getDefaultContainerBindingsMap());
 	}
@@ -79,7 +77,7 @@ class AfrDefaultBindings implements AfrDefaultTenantConfigsInterface
 	 */
 	public static function applyDefaultTenantConfig(bool $bForce = false): void
 	{
-		$sBindingsFile = AfrTenant::getAfrDefaultTenantConfigsForFqcn(static::class);
+		$sBindingsFile = Afr::getAfrDefaultTenantConfigsForFqcn(static::class);
 		if (empty($sBindingsFile) || (!empty(self::$aSet[__FUNCTION__]) && !$bForce)) {
 			return;
 		}
@@ -101,11 +99,12 @@ class AfrDefaultBindings implements AfrDefaultTenantConfigsInterface
 	 */
 	public static function bind(array $aBound): void
 	{
+		$oContainer = Afr::app() ? Afr::app()->container() : AfrContainerFacade::getContainer();
 		foreach ($aBound as $sAbstractFQCN => $mImplementationOrClosure) {
 			if (is_array($mImplementationOrClosure)) {
-				Afr::app()->container()->bind(...$mImplementationOrClosure);
+				$oContainer->bind(...$mImplementationOrClosure);
 			} else {
-				Afr::app()->container()->bind($sAbstractFQCN, $mImplementationOrClosure);
+				$oContainer->bind($sAbstractFQCN, $mImplementationOrClosure);
 			}
 		}
 	}
@@ -130,7 +129,7 @@ class AfrDefaultBindings implements AfrDefaultTenantConfigsInterface
 			//	AfrRouter::class => AfrRouter::class, //todo change :D
 
 			AfrRequestInterface::class => AfrRequestClass::class,
-			AfrContainerInterface::class => [AfrContainerInterface::class, get_class(Afr::app()->container()), true], //self resolve container as singleton on first bind
+			AfrContainerInterface::class => [AfrContainerInterface::class, Afr::app() ? get_class(Afr::app()->container()) : AfrContainerFacade::xetContainerClass(), true], //self resolve container as singleton on first bind
 
 			AfrSessionInterface::class => AfrSessionPhp::class,
 
@@ -156,8 +155,8 @@ class AfrDefaultBindings implements AfrDefaultTenantConfigsInterface
 			AfrLockInterface::class => AfrLockFileClass::class,
 
 			#DAEMON
-			AfrCronLogChannelInterface::class=>AfrCronLogChannelDoNotLog::class,
-			AfrCronLoggerInterface::class=>AfrCronLoggerClass::class,
+			AfrCronLogChannelInterface::class => AfrCronLogChannelDoNotLog::class,
+			AfrCronLoggerInterface::class => AfrCronLoggerClass::class,
 			AfrBackgroundWorkerInterface::class => AfrBackgroundWorkerClass::class,
 
 		];

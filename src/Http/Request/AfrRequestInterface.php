@@ -25,8 +25,6 @@ use Autoframe\Core\Http\Request\Exception\AfrHttpRequestException;
 interface AfrRequestInterface
 {
 
-	const AllowedHTTPRequestMethods = ['GET', 'POST', 'HEAD', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'];
-
 	/**
 	 * @throws AfrContainerException
 	 * @throws AfrEnvException

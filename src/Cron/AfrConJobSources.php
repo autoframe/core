@@ -13,13 +13,14 @@ use Autoframe\Core\Module\AfrModuleCLIRoutesInterface;
 use Autoframe\Core\Module\AfrModuleInterface;
 use Autoframe\Core\CliTools\AfrSysTempDir;
 use Autoframe\Core\Tenant\AfrTenant;
-
+use Autoframe\Core\Http\Request\AfrCliConstantsInterface;
+use Autoframe\Core\AfrCoreModules\FnContracts\AfrCronJobSourcesContract;
 
 final class AfrConJobSources extends AfrSingletonAbstractClass
 {
-	const FGC = 'file.get.contents';
-	const URL_S = 'curl';
-	const CLOSURE_FN = 'closure';
+	const FGC = AfrCronJobSourcesContract::FGC;
+	const URL_S = AfrCronJobSourcesContract::URL_S;
+	const CLOSURE_FN = AfrCronJobSourcesContract::CLOSURE_FN;
 	protected array $aSources = [];
 	protected ?array $aJobs = null;
 	protected array $aCronSourceNotFoundSafeguard = [];
@@ -37,6 +38,7 @@ final class AfrConJobSources extends AfrSingletonAbstractClass
 	 */
 	public function getSourcesFreshFromModules() //TODO!!!!!!
 	{
+		//LOADER din modul, sau on demand?
 		//TODO: REMOVE THIS
 		die('TODO: IMPLEMENT ' . __FUNCTION__);
 		//	AfrConJobSources::getInstance()->addFileSource('demo','http://localhost:808/core/src/Cron/AfrCronJobDaemon.DemoCron.txt');
@@ -45,7 +47,7 @@ final class AfrConJobSources extends AfrSingletonAbstractClass
 			throw new AfrException('Afr app not configured');
 		}
 		$this->flushSources();
-		AfrRouterConstantsInterface::CLI_CRON_JOB_REQUEST;
+	//	AfrCliConstantsInterface::CLI_CRON_JOB_REQUEST;
 		Afr::app()
 			->container()
 			->get(AfrModuleBox::class)

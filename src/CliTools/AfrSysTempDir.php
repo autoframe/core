@@ -5,6 +5,7 @@ namespace Autoframe\Core\CliTools;
 use Autoframe\Core\Afr\Afr;
 use Autoframe\Core\Arr\Merge\AfrArrMergeProfileClass;
 use Autoframe\Core\FileSystem\DirPath\AfrDirPathClass;
+use Autoframe\Core\String\Obj\AfrFqcn;
 
 /**
  * Temp dir concepts:
@@ -46,21 +47,19 @@ class AfrSysTempDir
 
 	/**
 	 * @param string|object $soAliasSubDir
+	 * @param string|null $sSysTmpDir
 	 * @return string
 	 */
-	public static function sysGetTempDirAliasSubDir($soAliasSubDir): string
+	public static function sysGetTempDirAliasSubDir($soAliasSubDir, string $sSysTmpDir = null): string
 	{
-		$soAliasSubDir = is_object($soAliasSubDir) ? get_class($soAliasSubDir) : (string)$soAliasSubDir;
-		$soAliasSubDir = trim(trim($soAliasSubDir),'\\');
-		if(strpos($soAliasSubDir, '\\') !== false) { //handle class names
-			$soAliasSubDir = array_slice(explode('\\', $soAliasSubDir), -1, 1)[0];
-		}
-		if(empty($soAliasSubDir)) return static::sysGetTempDir();
+		if (empty($sSysTmpDir)) $sSysTmpDir = static::sysGetTempDir();
+		if (empty($soAliasSubDir)) return $sSysTmpDir;
 
-		$soAliasSubDir =
-			static::sysGetTempDir() . DIRECTORY_SEPARATOR .
-			preg_replace('/[^A-Za-z0-9_-]/', '_', $soAliasSubDir);
-		return static::existAndWritable($soAliasSubDir) ? $soAliasSubDir : static::sysGetTempDir();
+		$snClassDirName = AfrFqcn::getClassBaseNameFromObjectOrFQCN($soAliasSubDir);
+		if (empty($snClassDirName)) return $sSysTmpDir;
+
+		$snClassDirNamePath = $sSysTmpDir . DIRECTORY_SEPARATOR . $snClassDirName;
+		return static::existAndWritable($snClassDirNamePath) ? $snClassDirNamePath : $sSysTmpDir;
 	}
 
 	protected static function getCurrentHash(): string
@@ -85,10 +84,14 @@ class AfrSysTempDir
 
 	protected static function getAlternativeTempDir(): string
 	{
-		$sPath = trim((string)getenv('TMP'));
+		$sPath = trim((string)ini_get('sys_temp_dir'));
+		$sPath = empty($sPath) ? trim((string)getenv('TMPDIR')) : $sPath;
 		$sPath = empty($sPath) ? trim((string)getenv('TEMP')) : $sPath;
+		$sPath = empty($sPath) ? trim((string)getenv('TMP')) : $sPath;
+		$sPath = empty($sPath) ? trim((string)getenv('TMP')) : $sPath;
 		if (empty($sPath)) {
-			$sPath = DIRECTORY_SEPARATOR == '/' ? '/tmp' : 'C:\\Windows\\TEMP';
+			$sPath = DIRECTORY_SEPARATOR == '/' ? '/tmp' :
+				($_SERVER['SystemRoot'] ?? 'C:\\Windows') . '\\TEMP';
 		}
 		return $sPath;
 	}
@@ -240,6 +243,6 @@ class AfrSysTempDir
 
 	protected static function existAndWritable(string $dir, bool $bCreate = true): bool
 	{
-		return AfrDirPathClass::getInstance()->dirExistAndWritable($dir, $bCreate);
+		return AfrDirPathClass::dirExistAndWritableS($dir, $bCreate);
 	}
 }

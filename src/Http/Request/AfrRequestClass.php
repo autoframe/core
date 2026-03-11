@@ -14,6 +14,7 @@ use Autoframe\Core\Exception\AfrException;
 use Autoframe\Core\FileSystem\DirPath\AfrDirPathClass;
 use Autoframe\Core\Http\Request\Exception\AfrHttpRequestException;
 use Autoframe\Core\Tenant\AfrTenant;
+use Autoframe\Core\AfrCoreModules\FnContracts\AfrHttpRoutesContract;
 use Closure;
 
 
@@ -367,7 +368,7 @@ class AfrRequestClass extends AfrSingletonAbstractClass implements AfrRequestInt
 			$oInstance->server['REQUEST_METHOD'] ??= (count($oInstance->post) + count($oInstance->files) > 0 ? 'POST' : 'GET');
 		}
 		if ($oInstance->server['REQUEST_METHOD'] !== ($_SERVER['REQUEST_METHOD'] ?? '') &&
-			!in_array($oInstance->server['REQUEST_METHOD'], static::AllowedHTTPRequestMethods)) {
+			!in_array($oInstance->server['REQUEST_METHOD'], AfrHttpRoutesContract::AllowedHTTPRequestMethods)) {
 			throw new AfrException('Invalid HTTP request method: ' . $oInstance->server['REQUEST_METHOD']);
 		}
 		$oInstance->server['REQUEST_METHOD_ORIGINAL'] = $oInstance->server['REQUEST_METHOD'];

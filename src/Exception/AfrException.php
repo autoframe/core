@@ -22,6 +22,7 @@ if (!class_exists(__NAMESPACE__ . '\AfrException', false)) {
 
 	class AfrException extends Exception implements Throwable
 	{
+		protected static array $iLoopLevel = [];
 		/**
 		 * Construct the exception. Note: The message is NOT binary safe.
 		 * Redefine the exception so message isn't optional
@@ -32,7 +33,15 @@ if (!class_exists(__NAMESPACE__ . '\AfrException', false)) {
 		 */
 		public function __construct($message, $code = 0, Throwable $previous = null)
 		{
+
+			if(isset(self::$iLoopLevel[get_class($this)])){
+				debug_print_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
+				die('Circular Exceptions detected!'."\n".$message);
+			}
+			self::$iLoopLevel[get_class($this)]=true;
+
 			parent::__construct($message, $code, $previous);
+			//debug_print_backtrace();die("\n\n\t$message\n\n");
 			if (!$this instanceof \Autoframe\Core\Event\Exception\AfrEventException) {
 				//prevent infinite looping
 				try {
@@ -43,6 +52,7 @@ if (!class_exists(__NAMESPACE__ . '\AfrException', false)) {
 				} catch (\Autoframe\Core\Event\Exception\AfrEventException $e) {
 				}
 			}
+			unset(self::$iLoopLevel[get_class($this)]);
 		}
 
 		/**

@@ -3,9 +3,12 @@
 namespace Autoframe\Core\Router;
 
 use Autoframe\Core\DesignPatterns\Singleton\AfrSingletonAbstractClass;
+use Autoframe\Core\Event\AfrEvent;
 use Autoframe\Core\Event\Exception\AfrEventException;
 use Autoframe\Core\Http\Header\AfrHttpHeader;
-use Autoframe\Core\Module\Exception\AfrModuleException;
+use Autoframe\Core\Http\Header\AfrHttpStatusCode;
+use Autoframe\Core\Http\Request\AfrRequestClass;
+use Autoframe\Core\ModuleBox\Exception\AfrModuleException;
 use Autoframe\Core\Router\Contracts\AfrRouterConstantsInterface;
 use Autoframe\Core\Router\Contracts\AfrRouterInterface;
 use Autoframe\Core\Router\Exception\AfrRouterException;
@@ -37,7 +40,7 @@ class AfrRouter extends AfrSingletonAbstractClass implements AfrRouterInterface,
 	protected array $aCodeRoutes = []; //main routes
 	protected array $aAfterRoutes = []; //run after code routes
 
-	public function setHttpStatusHandler(int $iHttpStatus, ?Closure $oClosure): self
+	public function setHttpStatusHandler(int $iHttpStatus, ?Closure $oClosure): self //TODO
 	{
 		static::$aStateHandlers[$iHttpStatus] = $oClosure;
 		return $this;
@@ -55,6 +58,11 @@ class AfrRouter extends AfrSingletonAbstractClass implements AfrRouterInterface,
 			AfrHttpHeader::getInstance()->setHttpResponseCode(404);
 			echo '404 Page not found!';
 		};
+		static::$aStateHandlers[405] ??= function ($oAfrRequestClass = null) {
+			AfrHttpHeader::getInstance()->setHttpResponseCode(405);
+			$sRequestMethod = $oAfrRequestClass instanceof AfrRequestClass ? $oAfrRequestClass->getHttpRequestMethodOriginal() : null;
+			echo AfrHttpStatusCode::getInstance()->hStatusHeaderAndHtml(405, ($sRequestMethod ?? '') . ' Method Not Allowed');
+		};
 	}
 
 	/**
@@ -63,12 +71,16 @@ class AfrRouter extends AfrSingletonAbstractClass implements AfrRouterInterface,
 	 * @return int
 	 * @throws AfrEventException
 	 * @throws AfrModuleException
-	 * @throws AfrRouterException
+	 * @throws AfrRouterException|\ReflectionException
 	 */
 	public function registerHTTPRoutesFromModule(array $aRoutes, string $baseRoute = ''): int
 	{
+		AfrEvent::dispatchEvent();
 		$curBaseRoute = $this->baseRoute; // Track current base route
 		$this->baseRoute = rtrim($baseRoute, '/');
+		if (strlen($this->baseRoute) > 0 && substr($this->baseRoute, 0, 1) !== '/') {
+			$this->baseRoute = '/' . trim($this->baseRoute, '/');
+		}
 
 		$iRegistered = 0;
 		foreach ($aRoutes as $sType => $aRouteClusterInfo) {
@@ -105,41 +117,41 @@ class AfrRouter extends AfrSingletonAbstractClass implements AfrRouterInterface,
 		return $iRegistered;
 	}
 
-
-	public function registerCLIRoutesFromModule(
-		array $aRoutes,
-		bool $bMergeQA = true,
-		bool $bMergeInline = true,
-		bool $bMergeCrons = true
-	): int
-	{
-		$iRegistered = 0;
-		foreach ($aRoutes as $sType => $aRouteClusterInfo) {
-			if (!in_array($sType, [static::CLI_CRON_JOB_REQUEST, static::CLI_INLINE, static::CLI_QA_REQUEST])) {
-				throw new AfrModuleException('Invalid routes type group: ' . $sType);
-			} elseif (!is_array($aRouteClusterInfo)) {
-				throw new AfrModuleException("Routes group `$sType` should be an array");
-			}
-			foreach ($aRouteClusterInfo as $sKeyCluster => $mStack) {
-				if (!is_string($sKeyCluster)) {
-					throw new AfrModuleException(
-						'The CLI routes must be have a string key in order to respect ' .
-						'SOLID open/close principle when extending modules'
-					);
+	/*
+		public function registerCLIRoutesFromModule(
+			array $aRoutes,
+			bool $bMergeQA = true,
+			bool $bMergeInline = true,
+			bool $bMergeCrons = true
+		): int
+		{
+			$iRegistered = 0;
+			foreach ($aRoutes as $sType => $aRouteClusterInfo) {
+				if (!in_array($sType, [static::CLI_CRON_JOB_REQUEST, static::CLI_INLINE, static::CLI_QA_REQUEST])) {
+					throw new AfrModuleException('Invalid routes type group: ' . $sType);
+				} elseif (!is_array($aRouteClusterInfo)) {
+					throw new AfrModuleException("Routes group `$sType` should be an array");
 				}
-			}
-			// php index.php --QA=initTenantFileSystem OR php index.php QA
-			if ($sType === static::CLI_QA_REQUEST) {
 				foreach ($aRouteClusterInfo as $sKeyCluster => $mStack) {
-					// $mStack should be an array of closures OR Closure that returns array of closures
-					$iRegistered += AfrCliQaRouter::addActionGroup($sKeyCluster, $mStack, $bMergeQA);
+					if (!is_string($sKeyCluster)) {
+						throw new AfrModuleException(
+							'The CLI routes must be have a string key in order to respect ' .
+							'SOLID open/close principle when extending modules'
+						);
+					}
 				}
+				// php index.php --QA=initTenantFileSystem OR php index.php QA
+				if ($sType === static::CLI_QA_REQUEST) {
+					foreach ($aRouteClusterInfo as $sKeyCluster => $mStack) {
+						// $mStack should be an array of closures OR Closure that returns array of closures
+						$iRegistered += AfrCliQaRouter::addActionGroup($sKeyCluster, $mStack, $bMergeQA);
+					}
+				}
+
 			}
-
+			return $iRegistered;
 		}
-		return $iRegistered;
-	}
-
+	*/
 
 	public function debugRoutes(bool $closureDump = false): array
 	{

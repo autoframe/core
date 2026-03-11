@@ -2,218 +2,232 @@
 
 namespace Autoframe\Core\Afr;
 
+use Autoframe\Core\AfrCoreModules\AfrCoreAll;
 use Autoframe\Core\CliTools\AfrCliHttpDetect;
+use Autoframe\Core\Container\AfrContainerFacade;
 use Autoframe\Core\Container\AfrDefaultBindings;
 use Autoframe\Core\Database\Connection\AfrDbConnectionManagerFacade;
 use Autoframe\Core\Database\Orm\Action\CnxActionFacade;
+use Autoframe\Core\DesignPatterns\Singleton\AfrSingletonClassicTrait;
+use Autoframe\Core\Env\AfrEnvFacade;
+use Autoframe\Core\Env\AfrEnvInterface;
+use Autoframe\Core\Event\Exception\AfrEventException;
 use Autoframe\Core\Exception\AfrException;
+use Autoframe\Core\Http\Header\AfrHttpHeader;
 use Autoframe\Core\Http\Request\AfrRequestClass;
 use Autoframe\Core\Http\Request\AfrRequestInterface;
 use Autoframe\Core\Module\AfrModuleBox;
+use Autoframe\Core\ModuleBox\AfrModuleBoxClass;
+use Autoframe\Core\ModuleBox\AfrModuleBoxFacade;
 use Autoframe\Core\Router\Contracts\AfrRouterInterface;
 use Autoframe\Core\Session\AfrSessionPhp;
 use Autoframe\Core\Tenant\AfrTenant;
 use Autoframe\Core\Event\AfrEvent;
+use Closure;
 
 $_SERVER['REQUEST_TIME_FLOAT'] ??= microtime(true);
 
-class AfrExecutionThread
+final class AfrExecutionThread
 {
+	use AfrSingletonClassicTrait;
+
 	//TODO: BINDINGS DE INCLUS FILA CONFIG.php si verificat daca se executa la includere cu use!!!  => C:\xampp\htdocs\core\src\Afr\AfrBindings.php
 	//TODO refactorizare THF CONFIGURABLE
 	//TODO check core\object\* namespace
 	//TODO: lista module si incarcare din lista
 	// rute, functionalitati, middleware, controlere
 	// selector aw - extins - fixed + bindings
-	const AFR_CONTAINER_BINDINGS = 'container.bindings';
-	const SET_CONSTANTS_FOR_ALL_TENANTS = 'setConstantsAllTenants';
-	const THREAD_INIT = 'thread.init';
-	const TENANT_LOAD = 'tenant.load';
-	const TENANT_BINDINGS = 'tenant.bindings';
+	const BOOTSTRAP1_SET_BASE_DIR = 'bst.set.base.dir';
+	const BOOTSTRAP_BASEDIR_CONSTANTS_FOR_ALL_TENANTS = 'bst.constants.all.tenants';
+	const BOOTSTRAP3_AFR_DEFAULT_CONTAINER_BINDINGS = 'container.bindings';
 
-	const TENANT_EXTRA_CONFIG = 'tenant.extraConfig';
-	const AFR_EVENT_CONFIG = 'event.config';
-	const ENV_LOAD = 'env.load';
-	const ENV_EXTRA = 'env.extraConfig';
-	const PHP_INI_FROM_ENV = 'env.phpIni';
-	const THF_CONFIGURABLE_CONFIG = 'thfc.cnf';
-	const SESSION_CONFIG = 'ses.cnf';
-	const FILE_SYSTEM_CONFIG = 'fs.cnf';
-	const CACHE_CONFIG = 'cache.cnf';
-	const DB_CONFIG = 'db.cnf';
-	const MODULE_READ = 'mod.read'; //TODO from tenant read by class:: and cached by tenant
-	const MODULE_CONTAINER_BINDINGS = 'mod.bindings';
-	const MODULE_SETTINGS = 'mod.settings';
-	const REQUEST_INIT = 'request.init';
-	const ROUTER_BEFORE = 'router.before';
+	const BOOTSTRAP1_TENANT_ALIAS_LOAD = 'tenant.load';
+	const BOOTSTRAP2_MAKE_AFR_AVAILABLE = 'make.afr.available';
+	const BOOTSTRAP3_TENANT_CONTAINER_BINDINGS = 'tenant.bindings';
+	const BOOTSTRAP7_SHUTDOWN_FX = 'shutdownFx';
 
-	const ROUTER_INIT = 'router.init';
-	const ROUTE_HANDEL = 'route.handel';
-	const VIEW_RENDER = 'view.render';
-	const SHUTDOWN_FX = 'shutdownFx';
 
-	const ORDER = [
-		self::SET_CONSTANTS_FOR_ALL_TENANTS, // sBaseDirPath/constants.php
-		self::AFR_CONTAINER_BINDINGS,// //AfrDefaultBindings::default(); ..src/Afr/AfrBindings.php
-		self::THREAD_INIT, //Afr::app()->container()->bind('thread', static::class); Afr::app()->container()->registerInstance(static::class, $this);
-		self::TENANT_LOAD, // AfrTenant::loadConfig();
-		self::AFR_EVENT_CONFIG, // AfrTenant::loadConfig();
-		self::TENANT_BINDINGS, //AfrDefaultBindings::applyDefaultTenantConfig();
+	const BOOTSTRAP4_TENANT_EVENT_CONFIG = 'event.config';
+	const BOOTSTRAOP5_ENV_LOAD = 'env.load';
+//	const BOOTSTRAP_ENV_EXTRA = 'env.extraConfig';
+	const BOOTSTRAP6_PHP_INI_FROM_ENV = 'env.phpIni';
+	const CONTEXT_HTTP_UNTRUSTED_REQUEST = 'env.checkUntrustedHttpRequest';
+	const CONTEXT_THF_CONFIGURABLE_CONFIG = 'thfc.cnf';
+	const CONTEXT_SESSION_CONFIG = 'ses.cnf';
+	const CONTEXT_FILE_SYSTEM_CONFIG = 'fs.cnf';
+	const CONTEXT_CACHE_CONFIG = 'cache.cnf';
+	const CONTEXT_DB_CONFIG = 'db.cnf';
+	const CONTEXT_MODULE_READ = 'mod.read'; //TODO from tenant read by class:: and cached by tenant
+	const CONTEXT_MODULE_CONTAINER_BINDINGS = 'mod.bindings';
+	const CONTEXT_MODULE_SETTINGS = 'mod.settings';
+	const RRR_REQUEST_INIT = 'request.init';
+	const RRR_ROUTER_BEFORE = 'router.before';
+	const RRR_ROUTER_INIT = 'router.init';
+	const RRR_ROUTE_HANDEL = 'route.handel';
+	const RRR_VIEW_RENDER = 'view.render';
 
-		self::TENANT_EXTRA_CONFIG, //blank
-		self::ENV_LOAD, // Afr::app()->env()->readEnv( 30.day,  sBaseDirPath/getTenantAlias.$_ENV['AFR_ENV'].env )
-		self::ENV_EXTRA,//blank
-		self::PHP_INI_FROM_ENV, //AfrPhpIni::applyPhpIniEnvConfig()
-		self::MODULE_READ,
-		self::MODULE_CONTAINER_BINDINGS,
-		self::MODULE_SETTINGS,
-		self::THF_CONFIGURABLE_CONFIG,
-		self::FILE_SYSTEM_CONFIG,
-		self::CACHE_CONFIG,
-		self::DB_CONFIG, // AfrDbConnectionManagerFacade::getInstance
-		self::SESSION_CONFIG,
-		self::REQUEST_INIT, //Afr::app()->setCustomRequest(AfrDefaultRequestClass::getInstance());   //TODO as dep injection into container
-		self::ROUTER_BEFORE, //TODO
-		self::ROUTER_INIT, //TODO
-		self::ROUTE_HANDEL,  // TODO return (static::$oRouterInstance)();
-		self::VIEW_RENDER, //TODO return static::$oRouterInstance->getCollectedResultsFromRoutes();
-		self::SHUTDOWN_FX,
+	public static array $aStep1Bootstrap = [
+		self::BOOTSTRAP1_SET_BASE_DIR, //  sBaseDirPath/constants.php @ AfrTenant::includeCommonTenantConstantsAllFromBaseDir()
+		self::BOOTSTRAP_BASEDIR_CONSTANTS_FOR_ALL_TENANTS, //  sBaseDirPath/constants.php @ AfrTenant::includeCommonTenantConstantsAllFromBaseDir()
+		self::BOOTSTRAP1_TENANT_ALIAS_LOAD, // AfrTenant::loadConfigResolveTenantAliasProcessConfigOrInitSample();
+		self::BOOTSTRAP3_AFR_DEFAULT_CONTAINER_BINDINGS,// //AfrDefaultBindings::default(); ..src/Afr/AfrBindings.php
+		self::BOOTSTRAP3_TENANT_CONTAINER_BINDINGS, //AfrDefaultBindings::applyDefaultTenantConfig(); AFTER Afr::loadConfigResolveTenantAlias...
+		self::BOOTSTRAP4_TENANT_EVENT_CONFIG, // AfrEvent::applyDefaultTenantConfig(); //TODO: test!!!  AFTER Afr::loadConfigResolveTenantAlias...
+		self::BOOTSTRAOP5_ENV_LOAD, // Afr::app()->env()->readEnv( 35.day,  sBaseDirPath/getTenantAlias.$_ENV['AFR_ENV'].env )
+		self::BOOTSTRAP2_MAKE_AFR_AVAILABLE, //  Afr::makeInstanceAvailable($oAfr);
+//		self::BOOTSTRAP_ENV_EXTRA,//blank
+		self::BOOTSTRAP6_PHP_INI_FROM_ENV, //AfrPhpIni::applyPhpIniEnvConfig() // //depends on env
+		self::BOOTSTRAP7_SHUTDOWN_FX,
+	];
+	public static array $aStep2Context = [
+		self::CONTEXT_HTTP_UNTRUSTED_REQUEST, //AfrCliHttpDetect::isUntrustedHttpRequest(null,$bE500IfUntrusted=true);
+		self::CONTEXT_MODULE_READ,
+		self::CONTEXT_MODULE_CONTAINER_BINDINGS,
+		self::CONTEXT_MODULE_SETTINGS,
+		self::CONTEXT_THF_CONFIGURABLE_CONFIG,
+		self::CONTEXT_FILE_SYSTEM_CONFIG,
+		self::CONTEXT_CACHE_CONFIG,
+		self::CONTEXT_DB_CONFIG, // AfrDbConnectionManagerFacade::getInstance
+		self::CONTEXT_SESSION_CONFIG,
+	];
+	public static array $aStep3RequestRouteRender = [
+		self::RRR_REQUEST_INIT, //Afr::app()->setCustomRequest(AfrDefaultRequestClass::getInstance());   //TODO as dep injection into container
+		self::RRR_ROUTER_BEFORE, //TODO
+		self::RRR_ROUTER_INIT, //TODO
+		self::RRR_ROUTE_HANDEL,  // TODO return (self::$oRouterInstance)();
+		self::RRR_VIEW_RENDER, //TODO return self::$oRouterInstance->getCollectedResultsFromRoutes();
 	];
 
-	protected static array $aExecuteBeforeStep = [];
-	protected static array $aOverwriteStep = [];
-	protected static array $aExecuteAfterStep = [];
-	protected static array $aCustomOrder = [];
-	protected static ?array $aRunQueue = null;
-	protected static array $aReport = [];
 
-	protected array $aStep = []; //from populateSteps()
-	protected string $sBaseDirPath;
-	protected static AfrRouterInterface $oRouterInstance; //TODO getInstanceCheck
-	protected static AfrExecutionThread $instance;
+	protected array $aStep = []; //from initSteps()
 
+	protected array $aRulateDeja = [];
+	protected array $aRulateReturn = [];
+
+	protected array $aExecuteBeforeStep = [];
+	protected array $aExecuteAfterStep = [];
 	/**
-	 * @throws AfrException
+	 * @var true
 	 */
-	public function __construct()
+	protected bool $bRunning = false;
+
+
+	protected function __construct()
 	{
-
-		if (!empty(self::$instance)) {
-			throw new AfrException('Thread is already instantiated!');
-		}
-		self::$instance = $this;
-		if (empty(Afr::app())) {
-			if (defined('\AFR_BASE_DIR')) {
-				Afr::makeApp(); //fallback init
-			} else {
-				throw new AfrException('Unable to configure the base directory!');
-			}
-		}
-		$this->sBaseDirPath = Afr::app()->getAppBaseDirectory();
-		if(!AfrCliHttpDetect::isCli()){
-			//TODO: https://www.php.net/manual/en/features.dtrace.dtrace.php
-			// event tracing
-			//connection_status(); // 0 - NORMAL; 1 - ABORTED; 2 - TIMEOUT; 3 - ABORTED and TIMEOUT
-			ignore_user_abort(true); //continue http requests
-		}
-
-
 		$this->initSteps();
 	}
 
 
 	protected function initSteps(): void
 	{
-
-		$this->aStep[self::SET_CONSTANTS_FOR_ALL_TENANTS] = function () {
-//			AfrTenant::includeCommonConstantsAllTenants();
-		};
-		$this->aStep[self::AFR_CONTAINER_BINDINGS] = function () {
-		//	AfrDefaultBindings::default();
-		};
-
-		$this->aStep[self::THREAD_INIT] = function () {
-			Afr::app()->container()->bind('thread', static::class);
-			Afr::app()->container()->registerInstance(static::class, $this);
+		$this->aStep[self::BOOTSTRAP1_SET_BASE_DIR] = function (Afr $oAfr = null) {
+			//$sTenantFQCN = !empty(Afr::$sTenantFQCN) ? Afr::$sTenantFQCN : (Afr::app() ? get_class(Afr::app()) : AfrTenant::class);
+			/** @var Afr|null $oAfr */
+			if ($oAfr) $oAfr::setBaseDirPath($oAfr->getAppBaseDirectory());
+			else Afr::setBaseDirPath(Afr::app()->getAppBaseDirectory()); //AfrTenant::setBaseDirPath
 		};
 
-
-		$this->aStep[self::TENANT_LOAD] = function () {
-			AfrTenant::loadConfig(); //loads: sBaseDirPath/tenant.env.php
+		$this->aStep[self::BOOTSTRAP_BASEDIR_CONSTANTS_FOR_ALL_TENANTS] = function (Afr $oAfr = null) {
+			//$sTenantFQCN = !empty(Afr::$sTenantFQCN) ? Afr::$sTenantFQCN : (Afr::app() ? get_class(Afr::app()) : AfrTenant::class);
+			/** @var Afr|null $oAfr */
+			if ($oAfr) $oAfr::includeCommonTenantConstantsAllFromBaseDir();
+			else Afr::includeCommonTenantConstantsAllFromBaseDir(); //AfrTenant::setBaseDirPath
 		};
 
-		$this->aStep[self::AFR_EVENT_CONFIG] = function () {
-			AfrEvent::applyDefaultTenantConfig(); //TODO: test!!!
+		$this->aStep[self::BOOTSTRAP1_TENANT_ALIAS_LOAD] = function () {
+			Afr::loadConfigResolveTenantAliasProcessConfigOrInitSample(); //loads: sBaseDirPath/tenant.env.php
 		};
 
-		$this->aStep[self::TENANT_BINDINGS] = function () {
-		//	AfrDefaultBindings::applyDefaultTenantConfig();
+
+		$this->aStep[self::BOOTSTRAP2_MAKE_AFR_AVAILABLE] = function (Afr $oAfr) {
+			Afr::makeInstanceAvailable($oAfr);
 		};
 
-		$this->aStep[self::TENANT_EXTRA_CONFIG] = function () {};
+
+		$this->aStep[self::BOOTSTRAP3_AFR_DEFAULT_CONTAINER_BINDINGS] = function () {
+			AfrDefaultBindings::setAutoframeDefaultContainerBindings();
+			//AfrDefaultBindings::applyDefaultTenantConfig(); // AFTER Afr::loadConfigResolveTenantAliasProcessConfigOrInitSample()
+		};
 
 
-		$this->aStep[self::ENV_LOAD] = function () {
-			$oEnv = Afr::app()->env();
+		$this->aStep[self::BOOTSTRAP3_TENANT_CONTAINER_BINDINGS] = function () {
+			AfrDefaultBindings::applyDefaultTenantConfig(); // AFTER Afr::loadConfigResolveTenantAliasProcessConfigOrInitSample()
+			// // AfrDefaultBindings::setAutoframeDefaultContainerBindings();
+			//	AfrDefaultBindings::applyDefaultTenantConfig();// MOVED INTO Afr::__construct()
+		};
+
+		$this->aStep[self::BOOTSTRAP4_TENANT_EVENT_CONFIG] = function () {
+			AfrEvent::applyDefaultTenantConfig();
+		};
+
+
+		$this->aStep[self::BOOTSTRAOP5_ENV_LOAD] = function () {
+			$oEnv = Afr::app() ?
+				Afr::app()->env() :
+				AfrEnvFacade::getEnvInstance()->setBaseDir(Afr::getBaseDirPath());
 			//	$oEnv->readEnv(0); //load env files from __DIR__ without cache
-			$aRead = $oEnv->readEnv(
-				3600 * 24 * 35,
-				[
-					$this->sBaseDirPath .
-					DIRECTORY_SEPARATOR .
-					AfrTenant::getTenantAlias() .
-					'.' . $_ENV['AFR_ENV'] . '.env'
-				],
-				false
-			)->getEnv(); // print_r($aRead);die('!AFR_ENV!');
+			$iCacheSeconds = intval($_ENV['AFR_ENV_CACHE_SECONDS'] ??
+				(defined($c = 'AFR_ENV_CACHE_SECONDS') ? constant($c) : 3600 * 24 * 35));
+			$aRead = $oEnv->readEnv($iCacheSeconds, [Afr::getTenantEnvFile()], false)->getEnv(); // print_r($aRead);die('!AFR_ENV!');
 			//	$oEnv->setEnv('FOO', 'BAR'); //set *[FOO]=BAR
 			//	$oEnv->getEnv('AFR_ENV'); //get env key
 			//	$oEnv->getEnv(); //get all env keys as array
-			if(!empty($aRead)){
+			if (!empty($aRead)) {
 				$oEnv->registerEnv(
-					!empty($aRead['MUTABLE_OVERWRITE_ENV']??true),
-					!empty($aRead['REGISTER_PUT_ENV']??false)
+					!empty($aRead['MUTABLE_OVERWRITE_ENV'] ?? true),
+					!empty($aRead['REGISTER_PUT_ENV'] ?? false)
 				);
 			}
 
 		};
 
-
-		$this->aStep[self::ENV_EXTRA] = function () {};
-		$this->aStep[self::PHP_INI_FROM_ENV] = function () {
-			AfrPhpIni::applyPhpIniEnvConfig();
+		//	$this->aStep[self::BOOTSTRAP_ENV_EXTRA] = function () {};
+		$this->aStep[self::BOOTSTRAP6_PHP_INI_FROM_ENV] = function () {
+			AfrPhpIni::applyPhpIniEnvConfig(); //depends on env
 		};
-		$this->aStep[self::MODULE_READ] = function () {
-			AfrModuleBox::getInstance()->applyDefaultTenantConfig();
-		};
-		$this->aStep[self::MODULE_CONTAINER_BINDINGS] = function () {};
-		$this->aStep[self::MODULE_SETTINGS] = function () {};
 
-		$this->aStep[self::THF_CONFIGURABLE_CONFIG] = function () {
+		$this->aStep[self::CONTEXT_HTTP_UNTRUSTED_REQUEST] = function () {
+			AfrCliHttpDetect::isUntrustedHttpRequest(null, true);
+		};
+
+		// Todo: -1. core modules granular register
+		// Todo: -2. custom modules AIO register config VIA @@ AfrModuleBoxClass::getInstance()->applyDefaultTenantConfig()
+		// Todo: 2.1 cache? but how??? trebuie sa fac core + module in one go? conectare la db??
+		// Todo: 2.2 de module depind restul de functionalitati, deci critice: DA, adica sesiuni, db, etc
+
+		$this->aStep[self::CONTEXT_MODULE_READ] = function () {
+//			AfrModuleBox::getInstance()->applyDefaultTenantConfig(); //TODO deprecat -> deprecated
+			Afr::app()->box()->applyDefaultTenantConfig();
+			//	AfrModuleBoxFacade::getBox()->applyDefaultTenantConfig();
+		};
+		$this->aStep[self::CONTEXT_MODULE_CONTAINER_BINDINGS] = function () {};  //TODO: deprecated
+		$this->aStep[self::CONTEXT_MODULE_SETTINGS] = function () {};   //TODO: deprecated
+
+		$this->aStep[self::CONTEXT_THF_CONFIGURABLE_CONFIG] = function () {
 			//TODO SOMETIME: AfrConfig | AfrConfigFactory
 		};
-		$this->aStep[self::FILE_SYSTEM_CONFIG] = function () {};
-		$this->aStep[self::CACHE_CONFIG] = function () {};
-		$this->aStep[self::DB_CONFIG] = function () {
-			$sDbsConfig = Afr::app()->env()->getEnv('AFR_ENV_DBS_JSON','[]');
+		$this->aStep[self::CONTEXT_FILE_SYSTEM_CONFIG] = function () {};
+		$this->aStep[self::CONTEXT_CACHE_CONFIG] = function () {};
+		$this->aStep[self::CONTEXT_DB_CONFIG] = function () {
+			$sDbsConfig = Afr::app()->env()->getEnv('AFR_ENV_DBS_JSON', '[]');
 			foreach (json_decode($sDbsConfig, true) as $mDbConfig) {
-				if(is_string($mDbConfig) && strpos($mDbConfig, '|||') !== false) {
+				if (is_string($mDbConfig) && strpos($mDbConfig, '|||') !== false) {
 					$mDbConfig = explode('|||', $mDbConfig);
 				}
 				AfrDbConnectionManagerFacade::getInstance()->defineConnectionAlias(...$mDbConfig);
-			//	echo "\n".__FILE__.':'.__LINE__."\n"; print_r($mDbConfig);
+				//	echo "\n".__FILE__.':'.__LINE__."\n"; print_r($mDbConfig);
 			}
 			//die;
 			//	$oAfrCnx = CnxActionFacade::withConnAlias('test');
 		};
-		$this->aStep[self::SESSION_CONFIG] = function () {
-			if(Afr::app()->env()->getEnv('SES_PROFILE')){
-			//	AfrSessionPhp::getInstance()->sessionConfigAfr();
+		$this->aStep[self::CONTEXT_SESSION_CONFIG] = function () {
+			if (Afr::app()->env()->getEnv('SES_PROFILE')) {
+				//	AfrSessionPhp::getInstance()->sessionConfigAfr();
 				AfrSessionPhp::getInstance()->session_start();
 			}
 		};
 
-		$this->aStep[self::REQUEST_INIT] = function () {
+		$this->aStep[self::RRR_REQUEST_INIT] = function () {
 			Afr::app()->setRequest(
 				Afr::app()->container()->get(
 					AfrRequestInterface::class
@@ -222,119 +236,140 @@ class AfrExecutionThread
 
 //			AfrDefaultRequestClass::getInstance(); //Afr::app()->setCustomRequest(AfrDefaultRequestClass::getInstance());
 		};
-		$this->aStep[self::ROUTER_BEFORE] = function () {
+		$this->aStep[self::RRR_ROUTER_BEFORE] = function () {
 			Afr::app()->request();
 		};
 
 
-		$this->aStep[self::ROUTER_INIT] = function () {
+		$this->aStep[self::RRR_ROUTER_INIT] = function () {
 			Afr::app()->request();
-			static::$oRouterInstance = Afr::app()->router(); //TODO: test singleton
-			if (!static::$oRouterInstance instanceof AfrRouterInterface) {
-				throw new AfrException('Router class does not implement AfrRouterInterface!');
-			}
+			/*		self::$oRouterInstance = Afr::app()->router(); //TODO: test singleton
+					if (!self::$oRouterInstance instanceof AfrRouterInterface) {
+						throw new AfrException('Router class does not implement AfrRouterInterface!');
+					}*/
+			Afr::app()->router();
 		};
 
-		$this->aStep[self::ROUTE_HANDEL] = function () {
-			return (static::$oRouterInstance)(
+		$this->aStep[self::RRR_ROUTE_HANDEL] = function () {
+			return (Afr::app()->router())( //invoke
+				Afr::app()->request(),
+				Afr::app()->thread()->getStep(
+					Afr::app()->thread()::RRR_VIEW_RENDER
+				),
+			);
+
+			/*return (self::$oRouterInstance)(
 				Afr::app()->request(),
 				$this->aStep[self::VIEW_RENDER]
-			);
+			);*/
 		};
 
-		$this->aStep[self::VIEW_RENDER] = function () {
+		$this->aStep[self::RRR_VIEW_RENDER] = function () {
 			return false;
-			return static::$oRouterInstance->getCollectedResultsFromRoutes();
+			return self::$oRouterInstance->getCollectedResultsFromRoutes();
 		};
 
-		$this->aStep[self::SHUTDOWN_FX] = function () {};
+		$this->aStep[self::BOOTSTRAP7_SHUTDOWN_FX] = function () {};
 
 	}
 
-	public static function getInstance(): AfrExecutionThread
+
+	public function getReport(): array
 	{
-		return self::$instance ?? (new self());
+		return $this->aRulateReturn;
 	}
 
-
-	public function run(): array
+	/**
+	 * @throws AfrEventException
+	 * @throws \ReflectionException
+	 */
+	protected function runSingleStep($onClosure, string $sStepSubName, ?object $oAfr)
 	{
-		AfrEvent::dispatchEvent('AfrExceptionThread.Run');
-		static::$aRunQueue ??= static::customOrder();
-		foreach (static::$aRunQueue as $k => $sStepName) {
-			static::runStep($k);
-		}
-		return static::$aReport;
-	}
-
-	public function runStepByStep(): ?array
-	{
-		static::$aRunQueue ??= static::customOrder();
-		foreach (static::$aRunQueue as $k => $sStepName) {
-			return static::runStep($k);
+		if (empty($aRulateDeja[$sStepSubName])) {
+			$this->aRulateDeja[$sStepSubName] = true;
+			if ($onClosure instanceof \Closure) {
+				AfrEvent::dispatchEvent('AfrExecutionThread.' . $sStepSubName);
+				if ($oAfr) $onClosure = $onClosure->bindTo($oAfr, $oAfr);
+				return $this->aRulateReturn[$sStepSubName] = ($oAfr ? $onClosure($oAfr) : $onClosure());
+			} elseif (!empty($onClosure)) {
+				AfrEvent::dispatchEvent('AfrExecutionThread.' . $sStepSubName, [$sStepSubName => 'NOT A CLOSURE!']);
+			}
 		}
 		return null;
 	}
 
-	protected function runStep($k): array
+	/**
+	 * @throws \ReflectionException
+	 * @throws AfrEventException
+	 */
+	protected function runStepGroup(array $aSteps, ?object $oAfr = null): ?array
 	{
-		$sStepName = static::$aRunQueue[$k];
-		unset($this->aStep[$k]);
-		if (!empty(static::$aExecuteBeforeStep[$sStepName])) {
-			foreach (static::$aExecuteBeforeStep[$sStepName] as $i => $closure) {
-				$aPartial[$sStepName . '@b' . $i] = static::$aReport[$sStepName . '@b' . $i] = $closure();
-			}
+		if ($this->bRunning) return null;
+		$this->bRunning = true;
+		$aReturn = [];
+		foreach ($aSteps as $sStepName) {
+			foreach ($this->aExecuteBeforeStep[$sStepName] ?? [] as $i => $onClosure)
+				$aReturn[$sStepName . '@b' . $i] = $this->runSingleStep($onClosure, $sStepName . '@b' . $i, $oAfr);
+
+			if (!empty($this->aStep[$sStepName]))
+				$aReturn[$sStepName] = $this->runSingleStep($this->aStep[$sStepName], $sStepName, $oAfr);
+
+			foreach ($this->aExecuteAfterStep[$sStepName] ?? [] as $i => $onClosure)
+				$aReturn[$sStepName . '@a' . $i] = $this->runSingleStep($onClosure, $sStepName . '@a' . $i, $oAfr);
 		}
-		if (!empty(static::$aOverwriteStep[$sStepName])) {
-			$aPartial[$sStepName . '@o'] = static::$aReport[$sStepName . '@o'] = static::$aOverwriteStep[$sStepName]();
-		} elseif (!empty($this->aStep[$sStepName])) {
-			$aPartial[$sStepName . '@s'] = static::$aReport[$sStepName . '@s'] = $this->aStep[$sStepName]();
-		}
-		if (!empty(static::$aExecuteAfterStep[$sStepName])) {
-			foreach (static::$aExecuteAfterStep[$sStepName] as $i => $closure) {
-				$aPartial[$sStepName . '@a' . $i] = static::$aReport[$sStepName . '@a' . $i] = $closure();
-			}
-		}
-		return $aPartial ?? [];
+		$this->bRunning = false;
+		return $aReturn;
+	}
+
+	public function getStep(string $sStepName): ?Closure
+	{
+		return $this->aStep[$sStepName] ?? null;
+	}
+
+	/**
+	 * @throws \ReflectionException
+	 * @throws AfrEventException
+	 */
+	public function runBootstrap(?object $oAfr = null): ?array
+	{
+		AfrEvent::dispatchEvent('AfrExecutionThread.' . __FUNCTION__);
+		return $this->runStepGroup(self::$aStep1Bootstrap, $oAfr);
+	}
+
+	/**
+	 * @throws \ReflectionException
+	 * @throws AfrEventException
+	 */
+	public function runContext(?object $oAfr = null): ?array
+	{
+		AfrEvent::dispatchEvent('AfrExecutionThread.' . __FUNCTION__);
+		return $this->runStepGroup(self::$aStep2Context, $oAfr);
+	}
+
+	/**
+	 * @throws \ReflectionException
+	 * @throws AfrEventException
+	 */
+	public function runRequestRouteRender(?object $oAfr = null): ?array
+	{
+		AfrEvent::dispatchEvent('AfrExecutionThread.' . __FUNCTION__);
+		return $this->runStepGroup(self::$aStep3RequestRouteRender, $oAfr);
+	}
+
+	public function overwriteStep(string $sStep, ?Closure $closure)
+	{
+		self::getInstance()->aStep[$sStep] = $closure;
+	}
+
+	public function executeBeforeStep(string $sStep, Closure $closure)
+	{
+		self::getInstance()->aExecuteBeforeStep[$sStep][] = $closure;
 	}
 
 
-	public static function customOrder(array $aCustomOrder = []): array
+	public function executeAfterStep(string $sStep, Closure $closure)
 	{
-		if (!empty($aCustomOrder)) {
-			static::$aCustomOrder = $aCustomOrder;
-		} elseif (empty(static::$aCustomOrder)) {
-			static::$aCustomOrder = static::ORDER;
-		}
-		return static::$aCustomOrder;
-	}
-
-	public static function executeBeforeStep(string $sStep, \Closure $closure)
-	{
-		static::$aExecuteBeforeStep[$sStep][] = $closure;
-	}
-
-	public static function overwriteStep(string $sStep, \Closure $closure)
-	{
-		static::$aOverwriteStep[$sStep] = $closure;
-	}
-
-
-	public static function executeAfterStep(string $sStep, \Closure $closure)
-	{
-		static::$aExecuteAfterStep[$sStep][] = $closure;
-	}
-
-	public static function getReport(): array
-	{
-		return [
-			'before' => static::$aExecuteBeforeStep,
-			'step' => static::$aOverwriteStep,
-			'after' => static::$aExecuteAfterStep,
-			'order' => static::customOrder(),
-			'queue' => static::$aRunQueue,
-			'report' => static::$aReport,
-		];
+		self::getInstance()->aExecuteAfterStep[$sStep][] = $closure;
 	}
 
 }

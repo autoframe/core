@@ -132,7 +132,6 @@ class AfrEnv extends AfrSingletonAbstractClass implements AfrEnvInterface
 	{
 
 		if (!is_dir($sDir)) {
-			debug_print_backtrace();
 			throw new AfrEnvException('Unable to set the ENV project DIRECTORY: ' . $sDir);
 		}
 		$this->sBaseDir = strtr(rtrim($sDir, '\/'), DIRECTORY_SEPARATOR === '/' ? '\\' : '/', DIRECTORY_SEPARATOR);
@@ -321,7 +320,7 @@ class AfrEnv extends AfrSingletonAbstractClass implements AfrEnvInterface
 				DIRECTORY_SEPARATOR .
 				(AfrTenant::getTenantAlias() ?? '_') . '.' . $_ENV['AFR_ENV'] .
 				//'_' . substr(md5(serialize($this->aEnvDirsFiles)), 10, 8) .
-				'.env.php';
+				'.env.cache.php';
 		}
 		return $this->sCacheFile;
 	}

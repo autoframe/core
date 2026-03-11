@@ -99,7 +99,7 @@ class AfrLiteContainer implements AfrContainerInterface
 						$this->make($implementingClass, $parameters);
 				}
 			}
-
+		//	debug_print_backtrace(1);die;
 			throw new AfrContainerException('Class is not instantiable: ' . $abstract, 22);
 		}
 		$constructor = $reflectionClass->getConstructor();

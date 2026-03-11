@@ -5,7 +5,10 @@ namespace Autoframe\Core\Router;
 use Autoframe\Core\Event\AfrEvent;
 use Autoframe\Core\Event\Exception\AfrEventException;
 use Autoframe\Core\Http\Header\AfrHttpHeader;
+use Autoframe\Core\Http\Request\AfrHttpConstantsInterface;
+use Autoframe\Core\Http\Request\AfrRequestInterface;
 use Autoframe\Core\Router\Exception\AfrRouterException;
+use Autoframe\Core\AfrCoreModules\FnContracts\AfrHttpRoutesContract;
 use Closure;
 
 trait AfrRouterRegisterTrait
@@ -41,7 +44,7 @@ trait AfrRouterRegisterTrait
 	 */
 	public function registerRouteAllMethods(string $pattern, $fn, array $routeOptions = []): self
 	{
-		return $this->registerCodeRoute(static::ALLOWED_METHODS_HTTP, $pattern, $fn, $routeOptions);
+		return $this->registerCodeRoute(AfrHttpRoutesContract::AllowedHTTPRequestMethods, $pattern, $fn, $routeOptions);
 	}
 
 	/**
@@ -49,7 +52,7 @@ trait AfrRouterRegisterTrait
 	 */
 	public function registerRouteAnyMethod(string $pattern, $fn, array $routeOptions = []): self
 	{
-		return $this->registerCodeRoute(static::ALLOWED_METHODS_HTTP, $pattern, $fn, $routeOptions);
+		return $this->registerCodeRoute(AfrHttpRoutesContract::AllowedHTTPRequestMethods, $pattern, $fn, $routeOptions);
 	}
 
 	/**
@@ -61,7 +64,7 @@ trait AfrRouterRegisterTrait
 	 */
 	public function registerRouteGetMethod(string $pattern, $fn, array $routeOptions = []): self
 	{
-		return $this->registerCodeRoute([static::GET], $pattern, $fn, $routeOptions);
+		return $this->registerCodeRoute([AfrHttpRoutesContract::GET], $pattern, $fn, $routeOptions);
 	}
 
 	/**
@@ -73,7 +76,7 @@ trait AfrRouterRegisterTrait
 	 */
 	public function registerRoutePostMethod(string $pattern, $fn, array $routeOptions = []): self
 	{
-		return $this->registerCodeRoute([static::POST], $pattern, $fn, $routeOptions);
+		return $this->registerCodeRoute([AfrHttpRoutesContract::POST], $pattern, $fn, $routeOptions);
 	}
 
 	/**
@@ -85,7 +88,7 @@ trait AfrRouterRegisterTrait
 	 */
 	public function registerRoutePatchMethod(string $pattern, $fn, array $routeOptions = []): self
 	{
-		return $this->registerCodeRoute([static::PATCH], $pattern, $fn, $routeOptions);
+		return $this->registerCodeRoute([AfrHttpRoutesContract::PATCH], $pattern, $fn, $routeOptions);
 	}
 
 	/**
@@ -97,7 +100,7 @@ trait AfrRouterRegisterTrait
 	 */
 	public function registerRouteDeleteMethod(string $pattern, $fn, array $routeOptions = []): self
 	{
-		return $this->registerCodeRoute([static::DELETE], $pattern, $fn, $routeOptions);
+		return $this->registerCodeRoute([AfrHttpRoutesContract::DELETE], $pattern, $fn, $routeOptions);
 	}
 
 	/**
@@ -109,7 +112,7 @@ trait AfrRouterRegisterTrait
 	 */
 	public function registerRoutePutMethod(string $pattern, $fn, array $routeOptions = []): self
 	{
-		return $this->registerCodeRoute([static::PUT], $pattern, $fn, $routeOptions);
+		return $this->registerCodeRoute([AfrHttpRoutesContract::PUT], $pattern, $fn, $routeOptions);
 	}
 
 	/**
@@ -121,7 +124,7 @@ trait AfrRouterRegisterTrait
 	 */
 	public function registerRouteOptionsMethod(string $pattern, $fn, array $routeOptions = []): self
 	{
-		return $this->registerCodeRoute([static::OPTIONS], $pattern, $fn, $routeOptions);
+		return $this->registerCodeRoute([AfrHttpRoutesContract::OPTIONS], $pattern, $fn, $routeOptions);
 	}
 
 
@@ -187,9 +190,9 @@ trait AfrRouterRegisterTrait
 			throw new AfrRouterException('Invalid route type: ' . $sType);
 		}
 
-		if($pattern==='*'){ //fix short wildcard
-			$pattern = '/.*';
-		}
+		//fix short wildcard
+		if ($pattern === '*') $pattern = '/.*';
+
 		//used in mount method
 		$pattern = $this->baseRoute . '/' . trim($pattern, '/');
 		$pattern = $this->baseRoute ? rtrim($pattern, '/') : $pattern;
@@ -198,15 +201,16 @@ trait AfrRouterRegisterTrait
 		//	$routeOptions = array_filter($routeOptions, function ($v) { return (bool)$v; }); //optimise for print_r
 		//	$routeOptions = array_map(function ($v) { return is_array($v) ? implode("; ", $v) : $v; }, $routeOptions); //optimise for print_r
 
-		$fnStack_I = count($this->aFnStack);
-		$this->aFnStack[] = [$fn, $routeOptions];
+		$fnStack_I = is_object($fn) ? 'o'.spl_object_id($fn) : 'k'.count($this->aFnStack);
+		//$fnStack_I = count($this->aFnStack);
+		$this->aFnStack[$fnStack_I] = [$fn, $routeOptions];
 
-		$bAnyRoute = empty($aHTTP_methods) || $aHTTP_methods === static::ALLOWED_METHODS_HTTP;
+		$bAnyRoute = empty($aHTTP_methods) || $aHTTP_methods === AfrHttpConstantsInterface::AllowedHTTPRequestMethods;
 		if ($bAnyRoute) {
-			$aHTTP_methods = static::ALLOWED_METHODS_HTTP;
+			$aHTTP_methods = AfrHttpConstantsInterface::AllowedHTTPRequestMethods;
 		}
 		foreach ($aHTTP_methods as $method) {
-			if (!$bAnyRoute && !in_array($method, static::ALLOWED_METHODS_HTTP)) {
+			if (!$bAnyRoute && !in_array($method, AfrHttpConstantsInterface::AllowedHTTPRequestMethods)) {
 				throw new AfrRouterException('Invalid route request method: ' . $method);
 			}
 			$route = [
@@ -234,7 +238,7 @@ trait AfrRouterRegisterTrait
 		if ($fromPattern == $toFixed) {
 			return $this;
 		}
-		return $this->registerMiddlewareRoute(static::ALLOWED_METHODS_HTTP, $fromPattern, function () use ($toFixed, $code, $strip_params, $build_query) {
+		return $this->registerMiddlewareRoute(AfrHttpRoutesContract::AllowedHTTPRequestMethods, $fromPattern, function () use ($toFixed, $code, $strip_params, $build_query) {
 			AfrHttpHeader::getInstance()->headerRedirect3xx($code, $toFixed, $strip_params, $build_query);
 		});
 	}

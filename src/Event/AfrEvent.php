@@ -104,7 +104,7 @@ class AfrEvent implements AfrDefaultTenantConfigsInterface
 
 	public static bool $bSlimTrace = true;
 	public static ?array $aPrevTrace = null;
-	public static int $iDefaultTraceDepth = 5;
+	public static int $iDefaultTraceDepth = 2;
 
 	/**
 	 * Bool means on or off, else int is the chance to trigger rand(0,x)<1
@@ -132,10 +132,9 @@ class AfrEvent implements AfrDefaultTenantConfigsInterface
 
 	public static function applyDefaultTenantConfig(): void
 	{
-		if (!empty(static::$bDefaultTenantConfigWasApplied)) {
-			return;
-		}
-		if (!empty($sConfigFilePath = AfrTenant::getAfrDefaultTenantConfigsForFqcn(static::class))) {
+		if (!empty(static::$bDefaultTenantConfigWasApplied)) return;
+
+		if (!empty($sConfigFilePath = Afr::getAfrDefaultTenantConfigsForFqcn(static::class))) {
 			static::$bDefaultTenantConfigWasApplied = true;
 			if (file_exists($sConfigFilePath)) {
 				static::extendConfigFlagsFromArray((include $sConfigFilePath));
@@ -149,7 +148,7 @@ class AfrEvent implements AfrDefaultTenantConfigsInterface
 	 * @param int|null $iTraceDepth
 	 * @param bool|null $mMemoryUsage
 	 * @return array
-	 * @throws AfrEventException
+	 * @throws AfrEventException|\ReflectionException
 	 */
 	public static function dispatchEvent(
 		string $sEvent = '',
@@ -179,7 +178,10 @@ class AfrEvent implements AfrDefaultTenantConfigsInterface
 			self::X_DELTA_TIME => $t - end(self::$aTriggeredEventsStats)[self::X_EVENT_TIME],
 		];
 
-		if ($mMemoryUsage || self::$mMemoryUsage === true || is_integer(self::$mMemoryUsage) && rand(0, self::$mMemoryUsage) < 1) {
+		if ($mMemoryUsage || self::$mMemoryUsage === true ||
+			is_integer(self::$mMemoryUsage) && rand(0, self::$mMemoryUsage) < 1 ||
+			self::getConfigFlag($sEvent, self::X_MEMORY_MB)
+		) {
 			$aData[self::X_MEMORY_MB] = round((memory_get_usage() / (1024 * 1024)), 2);
 		}
 
@@ -235,7 +237,6 @@ class AfrEvent implements AfrDefaultTenantConfigsInterface
 					//	self::X_TIMING => microtime(true),
 					self::X_EVENT_TIME => $t = (microtime(true) - self::$aTriggeredEventsStats[0][self::X_TIMING]) * 1000,
 					self::X_DELTA_TIME => $t - end(self::$aTriggeredEventsStats)[self::X_EVENT_TIME],
-
 				];
 			}
 		}
@@ -318,14 +319,11 @@ class AfrEvent implements AfrDefaultTenantConfigsInterface
 			try {
 				return Afr::app()->env()->getEnv($sKey, $mDefault);
 			} catch (Throwable $e) {
-				if ($mCatch !== null) {
-					return $mCatch;
-				}
+				if ($mCatch !== null) return $mCatch;
 			}
-		} elseif (!empty($_ENV[$sKey])) {
-			return $_ENV[$sKey];
 		}
-		return $mDefault;
+		return $_ENV[$sKey] ?? $mDefault;
+
 	}
 
 
@@ -450,12 +448,11 @@ class AfrEvent implements AfrDefaultTenantConfigsInterface
 	 */
 	protected static function getTraceDepth(?int $iTraceDepth, string $sEvent): int
 	{
-		if (!Afr::app()) { //app not booted
-			return is_null($iTraceDepth) ? self::$iDefaultTraceDepth : $iTraceDepth;
-		}
-
 		if (is_integer($cFlagVal = self::getConfigFlag($sEvent, self::X_TRACE))) {
 			return $cFlagVal; //can overwrite any other setting
+		}
+		if (!Afr::app()) { //app not booted
+			return is_null($iTraceDepth) ? self::$iDefaultTraceDepth : $iTraceDepth;
 		}
 		if (static::getEnv('AFR_EVENT_X_TRACE', false)) {
 			if (($cFlagVal = (int)static::getEnv('AFR_EVENT_TRACE_DEPTH_' . $sEvent, -1, -1)) > -1) {
@@ -469,7 +466,7 @@ class AfrEvent implements AfrDefaultTenantConfigsInterface
 
 	protected static function logArgs(string $sEvent): bool
 	{
-		if (!Afr::app() || self::getConfigFlag($sEvent, self::X_ARGS)) {
+		if (self::getConfigFlag($sEvent, self::X_ARGS)) { // !Afr::app() ||
 			return true;
 		}
 		if (

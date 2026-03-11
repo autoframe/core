@@ -3,27 +3,26 @@
 namespace Autoframe\Core\ModuleBox;
 
 use Autoframe\Core\Afr\Afr;
-use Autoframe\Core\CliTools\AfrSysTempDir;
 use Autoframe\Core\Container\AfrContainerFacade;
 use Autoframe\Core\Container\Exception\AfrContainerException;
 use Autoframe\Core\Env\Exception\AfrEnvException;
 use Autoframe\Core\Error\AfrError;
 use Autoframe\Core\Event\Exception\AfrEventException;
-use Autoframe\Core\FileSystem\CacheToPhpFile\AfrCachePhpFile;
+use Autoframe\Core\Exception\AfrException;
+use Autoframe\Core\FileSystem\CacheToPhpFile\AfrCachePhpFileToArray;
 use Autoframe\Core\ModuleBox\Exception\AfrModuleException;
 use Autoframe\Core\ModuleBox\Exception\AfrModuleFunctionalityException;
 use Autoframe\Core\Tenant\AfrTenant;
 use Closure;
+use ReflectionException;
+use Throwable;
 
 trait AfrMbhTrait
 {
 
 	public static bool $bDebug = false;
-	//TODO:
-	//TODO:
-	//TODO:
-	//TODO:
-	//TODO: CACHE INSTANCE VIA OPIS!
+	protected ?int $iCacheSeconds = 3600; #AFR_MODULE_BOX_CACHE_SECONDS
+	protected ?bool $bTenantCache = null; #AFR_MODULE_BOX_CACHE_FLAG_TENANT_MODULES
 	protected bool $graphBuilt = false; //Lazy-build flag for $effectiveConfigs / replacement / extension maps.
 
 	protected array $aRunTimeFunctionCache = [];
@@ -41,7 +40,7 @@ trait AfrMbhTrait
 	 * @var array<string,array>
 	 */
 	protected array $aModuleConfigs = [];// holds registered modules config and acts as a base for effective configs
-	protected array $aModuleEffectiveConfigs = []; //Effective configuration after applying extend/replace rules.
+	protected array $aModuleEffectiveConfigs = []; //Effective configuration after applying extended/replace rules.
 	protected array $aTempOrderedConfigKeys = []; //temp reorder dependency
 
 
@@ -59,6 +58,26 @@ trait AfrMbhTrait
 	protected array $aBridgeFunctionalityOnCommonInstanceKeyMap = [];//map [$sFuncInterfaceFqcn . '+' . $sBridgeKey][$modFQCN] = true;
 	protected array $aFunctionalityRelatedModulesByKeyMap = [];//map [$wrapKey][$modFQCN][$sFuncInterfaceFqcn] = $aFuncConf[self::sFuncConcreteFQCN];
 
+	protected static array $aFnRunTrace = [];
+
+	protected static array $aCacheProps = [
+		'graphBuilt',
+		'aRunTimeFunctionCache',
+//		'aModulesInstances',
+		'aPushedModules',
+		'aModuleConfigs',
+		'aModuleEffectiveConfigs',
+		'aTempOrderedConfigKeys',
+		'aModuleReplacementMap',
+		'aModuleExtensionMap',
+		'aModuleIsExtenderOfOtherModule',
+		'aModuleIsReplacerOfOtherModule',
+//		'aWrapFunctionalitiesInstances',
+//		'aWrapFunctionalitiesInstancesSplMap',
+		'aFunctionalityConcreteFqcnAsSingletonMap',
+		'aBridgeFunctionalityOnCommonInstanceKeyMap',
+		'aFunctionalityRelatedModulesByKeyMap',
+	];
 
 	/** @throws AfrModuleException */
 	public function registerModuleFQCN(string $sFqcnModule, array $aModConfig = []): void //K
@@ -66,21 +85,55 @@ trait AfrMbhTrait
 		$this->pushModuleConfig($sFqcnModule, $sFqcnModule, $aModConfig);
 	}
 
+	/**
+	 * @throws AfrModuleException
+	 */
 	public function registerModuleUsingClosure(string $sFqcnModule, Closure $oClosure, array $aModConfig = []): void //K
 	{
 		$this->pushModuleConfig($oClosure, $sFqcnModule, $aModConfig);
 	}
 
+	/**
+	 * @throws AfrModuleException
+	 */
 	public function registerModuleInstance(AfrModuleInterface $oModule, array $aModConfig = []): void //K
 	{
 		$this->pushModuleConfig($oModule, get_class($oModule), $aModConfig);
 	}
 
-	public function registerModuleFqcnListFromAppConfig(array $aConfigFQCN = []): void //K
+	/**
+	 * @throws AfrEventException
+	 * @throws AfrException
+	 * @throws AfrModuleException
+	 * @throws AfrEnvException
+	 * @throws AfrContainerException
+	 * @throws ReflectionException
+	 */
+	public function registerModuleFqcnListFromAppConfig(array $aConfigFQCN, bool $bCache, bool $bLoadFrameworkConfig = true): void //K
+	{
+		if ($bCache && $this->loadFromCache()) return;
+		if ($bLoadFrameworkConfig && empty($this->aPushedModules))
+			$this->registerModuleFqcnListFromAppConfigLoop(include(self::AFR_CORE_CONFIG_FILE));
+
+		$this->registerModuleFqcnListFromAppConfigLoop($aConfigFQCN);
+		if ($bCache) {
+			$this->buildGraphIfNeeded();
+			$this->setCache();
+		}
+	}
+
+	/**
+	 * @throws AfrModuleException
+	 */
+	public function registerModuleFqcnListFromAppConfigLoop(array $aConfigFQCN): void //K
 	{
 		foreach ($aConfigFQCN as $sKey => $aFqcnConfig) {
-			if (is_string($sKey)) { //class name is as key
+			if (is_string($sKey) && strlen($sKey) > 4) { //class name is as key
 				$this->registerModuleFQCN($sKey, (array)$aFqcnConfig);
+				continue;
+			}
+			if (is_string($aFqcnConfig) && strlen($aFqcnConfig) > 4) {
+				$this->registerModuleFQCN($aFqcnConfig);
 				continue;
 			}
 			if (empty($aFqcnConfig) || !is_array($aFqcnConfig)) continue;
@@ -95,7 +148,7 @@ trait AfrMbhTrait
 	protected function pushModuleConfig($module, string $sFQCN, array $aConfig = []): void //K
 	{
 		$this->aPushedModules[$sFQCN] = $module; //push instance or fqcn for later resolving
-		if (!class_exists($sFQCN) || !is_subclass_of($sFQCN, AfrModuleInterface::class)) {
+		if (!class_exists($sFQCN) || !is_a($sFQCN, AfrModuleInterface::class,true)) {
 			throw new AfrModuleException($sFQCN . ' is not a subclass of ' . AfrModuleInterface::class);
 		}
 		/** @var AfrModuleInterface $sFQCN */
@@ -115,6 +168,7 @@ trait AfrMbhTrait
 				unset($aFnCfg[self::sFunctionalityWrapKey]); //do not preserve any external wrap keys
 			if (isset($aFnCfg[self::sFuncConcreteFQCN]) && !is_string($aFnCfg[self::sFuncConcreteFQCN]))
 				$aFnCfg[self::sFuncConcreteFQCN] = (string)$aFnCfg[self::sFuncConcreteFQCN];
+			//	$aFnCfg[self::anFuncConfig] ??= [];
 		}
 
 		$this->aModuleConfigs[$sFQCN] = $aConfig;
@@ -270,7 +324,7 @@ trait AfrMbhTrait
 		if (is_string($mReturn)) {//pushed as FQCN|Closure returning FQCN
 			try {
 				$mReturn = $this->resolveUsingAppContainer($mReturn);
-			} catch (\Throwable $e) {
+			} catch (Throwable $e) {
 				throw new AfrModuleException(
 					"Unable to resolve Module using App Container `$sModuleFqcn`@[$mReturn]\n" .
 					$e->getMessage(), $e->getCode(), $e
@@ -333,8 +387,15 @@ trait AfrMbhTrait
 	public function getFunctionalitySettingsByWrapKey(string $sWrapKey): ?array //K
 	{
 		$anConfig = $this->getFunctionalityEffectiveConfigByWrapKey($sWrapKey);
-		$k = self::anFunctionalitySettings;
-		return isset($anConfig[$k]) && is_array($anConfig[$k]) ? $anConfig[$k] : null;
+		return isset($anConfig[self::anFuncSettings]) ? (array)$anConfig[self::anFuncSettings] : null;
+	}
+
+	/** @throws AfrModuleException|AfrEnvException */
+	public function getFunctionalitySettingsByFuncInstance(object $oFunctionalityInstance): ?array //K
+	{
+		if (empty($snKey = $this->getFunctionalityWrapKeyByFuncInstance($oFunctionalityInstance))) return null;
+		$anConfig = $this->getFunctionalityEffectiveConfigByWrapKey($snKey);
+		return isset($anConfig[self::anFuncSettings]) ? (array)$anConfig[self::anFuncSettings] : null;
 	}
 
 	/** @throws AfrModuleException|AfrEnvException */
@@ -398,7 +459,7 @@ trait AfrMbhTrait
 	 * @throws AfrContainerException
 	 * @throws AfrEventException
 	 * @throws AfrModuleException
-	 * @throws AfrModuleFunctionalityException
+	 * @throws AfrModuleFunctionalityException|AfrEnvException
 	 */
 	public function resolveFunctionalityByModuleInstance(string $sFuncInterfaceFqcn, AfrModuleInterface $qModuleInstance): ?object //K
 	{
@@ -482,7 +543,7 @@ trait AfrMbhTrait
 			// perhaps the given interface `$sFuncInterfaceFqcn` extended the module fn original interface
 			$aMatchedSubclasses = [];
 			foreach ($aModuleFunctionalities as $sLoopInterface => $aLoopFnCfg) {
-				if (is_subclass_of($sFuncInterfaceFqcn, $sLoopInterface)) $aMatchedSubclasses[] = $sLoopInterface;
+				if (is_a($sFuncInterfaceFqcn, $sLoopInterface,true)) $aMatchedSubclasses[] = $sLoopInterface;
 			}
 			if (count($aMatchedSubclasses) === 1) {
 				$sFuncInterfaceFqcn = array_pop($aMatchedSubclasses);
@@ -492,7 +553,7 @@ trait AfrMbhTrait
 			// last try for concrete class extenders, in order to reverse engineer the interface
 			$aMatchedConcreteSubclass = [];
 			foreach ($aModuleFunctionalities as $sLoopInterface => $aLoopFnCfg) {
-				if (is_subclass_of($sFuncInterfaceFqcn, $aLoopFnCfg[self::sFuncConcreteFQCN])) $aMatchedConcreteSubclass[] = $sLoopInterface;
+				if (is_a($sFuncInterfaceFqcn, $aLoopFnCfg[self::sFuncConcreteFQCN],true)) $aMatchedConcreteSubclass[] = $sLoopInterface;
 			}
 			if (count($aMatchedConcreteSubclass) === 1) {
 				$sFuncInterfaceFqcn = array_pop($aMatchedConcreteSubclass);
@@ -529,7 +590,7 @@ trait AfrMbhTrait
 			empty($sModuleFqcn) ||
 			!empty($this->aModuleEffectiveConfigs[$sModuleFqcn][self::bDisabledModule]) ||
 			empty($sFuncInterfaceFqcn) ||
-			empty($aModuleFunctionalities = (array)$this->aModuleEffectiveConfigs[$sModuleFqcn][self::aFunctionalities] ?? [])
+			empty($aModuleFunctionalities = (array)($this->aModuleEffectiveConfigs[$sModuleFqcn][self::aFunctionalities] ?? []))
 		) return null;
 
 		//TODO: mod replacer in conjuction with WrapKey CODE sFunctionalityWrapKey
@@ -570,7 +631,7 @@ trait AfrMbhTrait
 				}
 			}
 			if (count($aMultipleInterfacesImplementTheSameConcreteInCurrentModule) > 1) {
-				return $sFuncConcreteFqcn . '@' . $sModuleFqcn . '@' .
+				return $sFuncConcreteFqcn . '*' . $sModuleFqcn . '*' .
 					implode(',', $aMultipleInterfacesImplementTheSameConcreteInCurrentModule);
 			}
 		}
@@ -598,12 +659,15 @@ trait AfrMbhTrait
 		//TODO: mod replacer in conjuction with WrapKey CODE sFunctionalityWrapKey
 		if (!$sWrapKey = $this->getFunctionalityWrapKey($moduleFqcn, $sFuncInterfaceFqcn)) return null;
 
-		//TODO CHECK DOUBLE MESURE A.1 is_subclass_of
+		//TODO CHECK DOUBLE MESURE A.1 is_a || is_subclass_of
 		$sFuncConcreteFqcn = $this->getFunctionalityConcreteByModuleAndInterface($moduleFqcn, $sFuncInterfaceFqcn, false);
 
 //		debug_print_backtrace(DEBUG_BACKTRACE_PROVIDE_OBJECT);
-		if ($sFuncConcreteFqcn !== $sFuncInterfaceFqcn && !is_subclass_of($sFuncConcreteFqcn, $sFuncInterfaceFqcn)) {
-			throw new AfrModuleFunctionalityException("Interface $sFuncInterfaceFqcn is not implemented by $sFuncConcreteFqcn in module $moduleFqcn");
+		if ($sFuncConcreteFqcn !== $sFuncInterfaceFqcn && !is_a($sFuncConcreteFqcn, $sFuncInterfaceFqcn,true)) {
+			throw new AfrModuleFunctionalityException(
+				"Interface $sFuncInterfaceFqcn is not implemented by $sFuncConcreteFqcn in module $moduleFqcn ;\n".
+				"Details: sFuncConcreteFqcn($sFuncConcreteFqcn) !== sFuncInterfaceFqcn($sFuncInterfaceFqcn) && !is_a(sFuncConcreteFqcn, sFuncInterfaceFqcn, true)"
+			);
 		}
 
 		if ($bAutoResolveModule) $this->resolveModule($moduleFqcn); //On demand LAZY?
@@ -614,7 +678,7 @@ trait AfrMbhTrait
 
 		try {
 			$oResolvedFunctionality = $this->resolveUsingAppContainer($sFuncConcreteFqcn);
-		} catch (\Throwable $e) {
+		} catch (Throwable $e) {
 			throw new AfrModuleFunctionalityException(
 				"Unable to resolve Functionality using App Container `$sFuncConcreteFqcn`@($moduleFqcn [$sFuncInterfaceFqcn] )\n" .
 				$e->getMessage(), $e->getCode(), $e);
@@ -659,7 +723,7 @@ trait AfrMbhTrait
 	 * @param bool $bAutoResolveRelatedModules
 	 * @param array|null $aFunctionalityGroupForResolving
 	 * @param bool $bFallbackOnEmptyToContainer
-	 * @return object[]
+	 * @return object[]|AfrFunctionalityInterface[]
 	 * @throws AfrContainerException
 	 * @throws AfrEnvException
 	 * @throws AfrEventException
@@ -678,7 +742,7 @@ trait AfrMbhTrait
 
 		$aReturnInstances = [];
 		foreach ($aFunctionalityGroupForResolving as $sWrapKeyGroup => $aModInt) { //[$sModuleFqcn, $sFuncInterfaceFqcn]
-			$onFunctionalityInstance = $this->getFunctionalityWrap($aModInt[0], $aModInt[1], $bAutoResolveRelatedModules);
+			$onFunctionalityInstance = $this->getFunctionalityWrap($aModInt['m'], $aModInt['i'], $bAutoResolveRelatedModules);
 			if (!empty($onFunctionalityInstance) && is_object($onFunctionalityInstance)) {
 				$sWrapKey = $this->getFunctionalityWrapKeyByFuncInstance($onFunctionalityInstance);
 				$aReturnInstances[$sWrapKey] = $onFunctionalityInstance;
@@ -734,9 +798,9 @@ trait AfrMbhTrait
 			if (!empty($aFuncConfig[self::sFunctionalityWrapKey])) {
 				//any module/interface is good enough for getFunctionalityWrap()
 				$aFunctionalityGroupByWrapKey[$aFuncConfig[self::sFunctionalityWrapKey]] = [
-					$sModuleFqcn,
-					$sFuncInterfaceFqcn,
-					$aFuncConfig[self::sFuncConcreteFQCN]
+					'm' => $sModuleFqcn,
+					'i' => $sFuncInterfaceFqcn,
+					'c' => $aFuncConfig[self::sFuncConcreteFQCN]
 				];
 			}
 		}
@@ -745,7 +809,70 @@ trait AfrMbhTrait
 	}
 
 
+	/**
+	 * @throws AfrEventException
+	 * @throws AfrException
+	 * @throws AfrEnvException
+	 * @throws AfrContainerException
+	 * @throws ReflectionException
+	 */
+	public function setCache(): bool
+	{
+		foreach (static::$aCacheProps as $sProp) $aCache[$sProp] = $this->$sProp;
+		return AfrCachePhpFileToArray::getInstance()->setToCache(
+			$aCache ?? null,
+			$this,
+			$this->xetCacheSeconds(),
+			'ModuleBoxCache'
+		);
+	}
 
+	/**
+	 * @throws AfrException
+	 * @throws AfrEventException
+	 * @throws AfrContainerException
+	 * @throws AfrEnvException
+	 * @throws ReflectionException
+	 */
+	public function loadFromCache(): ?bool
+	{
+		$iSec = $this->xetCacheSeconds();
+		if (empty($iSec)) return false;
+		$aCache = AfrCachePhpFileToArray::getInstance()->getFromCache($this, 'ModuleBoxCache', $iSec);
+		if (!empty($aCache)) {
+			//	echo "getFromCache sec $iSec\n";
+			foreach (static::$aCacheProps as $sProp) $this->$sProp = $aCache[$sProp];
+			return true;
+		} elseif (is_array($aCache)) return false; //empty array
+		return null;
+	}
+
+
+	/** @throws AfrEnvException */
+	public function xetCacheSeconds(int $iCacheSeconds = null): int
+	{
+		if (static::$bDebug) return 0;
+
+		if ($iCacheSeconds !== null) return $this->iCacheSeconds = $iCacheSeconds;
+		if ($this->iCacheSeconds === null && Afr::app()) {
+			$inEnvSeconds = Afr::app()->env()->getEnv('AFR_MODULE_BOX_CACHE_SECONDS');
+			if (is_int($inEnvSeconds)) return $this->iCacheSeconds = $inEnvSeconds;
+		}
+		return (int)$this->iCacheSeconds;
+	}
+
+	/** @throws AfrEnvException */
+	public function xetCacheFlag(bool $bTenantCache = null): bool
+	{
+		if (static::$bDebug) return false;
+
+		if ($bTenantCache !== null) return $this->bTenantCache = $bTenantCache;
+		if ($this->bTenantCache === null && Afr::app()) {
+			$bnEnvSeconds = Afr::app()->env()->getEnv('AFR_MODULE_BOX_CACHE_FLAG_TENANT_MODULES');
+			if (is_bool($bnEnvSeconds)) return $this->bTenantCache = $bnEnvSeconds;
+		}
+		return (bool)$this->bTenantCache;
+	}
 
 
 	///////////////////////////////////////////////////////////////////////////
@@ -787,15 +914,12 @@ trait AfrMbhTrait
 				$this->buildGraphSetResolvableModuleHelper($sModFQCN);
 		}
 		$this->graphBuilt = true;
-		//	$sTempDir = AfrSysTempDir::sysGetTempDirAliasSubDir($this);
-		//	$sTempDir = Afr::getTempDir(). DIRECTORY_SEPARATOR.'AfrModuleBox-RT.php';
-		//	$sTempDir = AfrTenant::getTempDir(). DIRECTORY_SEPARATOR.'AfrModuleBox-RT.php';
-		//TODO: closures serialize via OPIS
-		//AfrCachePhpFile::getInstance();
-		//AfrCachePhpFile::getInstance();
 	}
 
 
+	/**
+	 * @throws AfrModuleException
+	 */
 	protected function buildGraphAutoRegisterMissingDependencyModules(): void
 	{
 		$bRerun = false;
@@ -927,6 +1051,10 @@ trait AfrMbhTrait
 
 	}
 
+	/**
+	 * @throws AfrModuleException
+	 * @throws AfrEnvException
+	 */
 	protected function buildGraphFunctionalityKeysAndParents(): void
 	{
 		//SET INSTANCE WRAP KEY
@@ -1066,7 +1194,7 @@ trait AfrMbhTrait
 
 		if ($bMergeFunctionalityIntKeys === null) {
 			$m = $aNew[self::bMergeFunctionalityIntKeys] ?? ($aOld[self::bMergeFunctionalityIntKeys] ?? null);
-			if ($m !== null) $bMergeFunctionalityIntKeys = (bool) $m;
+			if ($m !== null) $bMergeFunctionalityIntKeys = (bool)$m;
 		}
 
 		if ($aNew[self::bMergeFunctionalityFlushOldConfig] ?? null) {
@@ -1077,7 +1205,7 @@ trait AfrMbhTrait
 		foreach ($aNew as $k => $v) {
 			//if (!isset($aOld[$k])) $aOld[$k] = $v;
 			if (!array_key_exists($k, $aOld)) $aOld[$k] = $v;
-			elseif (is_array($aOld[$k]) && is_array($v)) $aOld[$k] = static::mergeConfig($aOld[$k], $v, $bImplicitInheritOffFlags,$bMergeFunctionalityIntKeys);
+			elseif (is_array($aOld[$k]) && is_array($v)) $aOld[$k] = static::mergeConfig($aOld[$k], $v, $bImplicitInheritOffFlags, $bMergeFunctionalityIntKeys);
 			elseif ($bMergeFunctionalityIntKeys && is_int($k)) $aOld[] = $v;
 			elseif (!$bMergeFunctionalityIntKeys && is_int($k)) $aOld[$k] = $v;
 			else $aOld[$k] = $v;
@@ -1099,13 +1227,49 @@ trait AfrMbhTrait
 			AfrContainerFacade::getContainer()->get($sFQCN);
 	}
 
-	public function hadFlushInstances(bool $bFlushRegistered):self
+	public function hardFlushInstances(bool $bFlushRegistered): self
 	{
 		$this->aModulesInstances = $this->aWrapFunctionalitiesInstances = $this->aWrapFunctionalitiesInstancesSplMap = [];
-		if($bFlushRegistered) $this->aPushedModules = $this->aModuleConfigs = [];
+		if ($bFlushRegistered) $this->aPushedModules = $this->aModuleConfigs = [];
 		$this->graphBuilt = false;
 
 		return $this;
+	}
+
+
+	/**
+	 * @throws AfrException
+	 * @throws AfrEventException
+	 * @throws AfrModuleException
+	 * @throws AfrEnvException
+	 * @throws AfrContainerException
+	 * @throws ReflectionException
+	 */
+	public function applyDefaultTenantConfig(): void
+	{
+		$bCache = $this->xetCacheFlag();
+		if (!empty(self::$aFnRunTrace[__FUNCTION__]) || $bCache && $this->loadFromCache()) return;
+		self::$aFnRunTrace[__FUNCTION__] = true;
+
+		$this->registerModuleFqcnListFromAppConfigLoop(include(self::AFR_CORE_CONFIG_FILE));
+
+		$sTenantConfigFile = AfrTenant::getAfrDefaultTenantConfigsForFqcn(static::class);
+		if (!empty($sTenantConfigFile) ) {
+			$aTenantConfig = (array)(include ($sTenantConfigFile));
+			$this->registerModuleFqcnListFromAppConfigLoop($aTenantConfig);
+		}
+		if ($bCache && !empty($aTenantConfig)) {
+			$this->buildGraphIfNeeded();
+			$this->setCache();
+		}
+
+
+	}
+
+	public static function sampleTenantDefaultConfig(): ?string
+	{
+		return file_get_contents(__DIR__ . DIRECTORY_SEPARATOR . 'config.sample.modules.php');
+
 	}
 
 }

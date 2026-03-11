@@ -15,7 +15,7 @@ use Autoframe\Core\Exception\AfrException;
 final class AfrContainerFacade
 {
 	/**
-	 * @var string implementing AfrContainerInterface
+	 * @var AfrContainerInterface|string implementing AfrContainerInterface
 	 */
 	protected static string $sContainerFQCN = AfrLiteContainer::class;
 
@@ -26,8 +26,11 @@ final class AfrContainerFacade
 	 */
 	public static function xetContainerClass(string $sContainerFQCN = null): string
 	{
-		if (!empty(self::$sContainerFQCN)) {
-			if (!isset(class_implements($sContainerFQCN)[AfrContainerInterface::class])) {
+		if (!empty($sContainerFQCN)) {
+			if (
+				$sContainerFQCN !== AfrLiteContainer::class &&
+				!isset(class_implements($sContainerFQCN)[AfrContainerInterface::class])
+			) {
 				throw new AfrException("The class $sContainerFQCN  does not implement AfrContainerInterface");
 			}
 			self::$sContainerFQCN = $sContainerFQCN;

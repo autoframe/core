@@ -85,7 +85,7 @@ interface AfrDirPathInterface
 
 	public function dirExistAndWritable(string $dir, bool $bCreate = true, ?int $expectedPermissions = null, bool $bClearStatCache = false): bool;
 
-	public function getExpectedDirPermissions(): int;
+	public static function getExpectedDirPermissions(): int;
 
 	/**
 	 * Calculate relative path from $from to $to.

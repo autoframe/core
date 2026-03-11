@@ -4,242 +4,216 @@ namespace Autoframe\Core\String\Obj;
 
 use Closure;
 use ReflectionFunction;
+use ReflectionNamedType;
+use ReflectionParameter;
+use ReflectionType;
 
 class AfrClosureToStr
 {
-	/**
-	 * @param Closure $closure
-	 * @return string
-	 * @throws \ReflectionException
-	 */
 	public static function dump(Closure $closure): string
 	{
-		$reflection = new ReflectionFunction($closure);
-		$file = $reflection->getFileName();
-		$startLine = $reflection->getStartLine();
-		$endLine = $reflection->getEndLine();
+		$rf = new ReflectionFunction($closure);
+
+		$file = $rf->getFileName();
+		$startLine = $rf->getStartLine();
+		$endLine = $rf->getEndLine();
 
 		if ($file === false || $startLine === false || $endLine === false) {
 			return 'Unable to retrieve closure source code.';
 		}
 
-		// Read the file contents
-		$fileLines = file($file);
-		if ($fileLines === false) {
+		$lines = @file($file);
+		if ($lines === false) {
 			return 'Unable to read file containing closure.';
 		}
 
-		// Extract relevant lines
-		$closureCode = implode("", array_slice($fileLines, $startLine - 1, $endLine - $startLine + 1));
-
-		// Use token_get_all to clean up the extracted closure
-		$tokens = token_get_all("<?php\n" . $closureCode);
-		$cleanedCode = '';
-		$inClosure = false;
-		$bracketCount = 0;
-
-		foreach ($tokens as $token) {
-			if (is_array($token)) {
-				if ($token[0] === T_FUNCTION) {
-					$inClosure = true;
-				}
-				if ($inClosure) {
-					$cleanedCode .= $token[1];
-				}
-			} else {
-				if ($inClosure) {
-					$cleanedCode .= $token;
-					if ($token === '{') {
-						$bracketCount++;
-					} elseif ($token === '}') {
-						$bracketCount--;
-						if ($bracketCount === 0) {
-							break;
-						}
-					}
-				}
-			}
-		}
-		return trim($cleanedCode);
-	}
-
-
-
-	/**
-	 * Dumps the source of a Closure / arrow function (fn) as a string.
-	 *
-	 * Limitations (inherent to Reflection):
-	 * - If the closure was created via eval() or internal code, file/lines may be unavailable.
-	 * - If the underlying file changed since runtime, extracted code may mismatch.
-	 *
-	 * @throws \ReflectionException
-	 */
-	public static function dump8x(Closure $closure): string
-	{
-		$ref = new ReflectionFunction($closure);
-
-		$file = $ref->getFileName();
-		$startLine = $ref->getStartLine();
-		$endLine = $ref->getEndLine();
-
-		if (!\is_string($file) || $file === '' || !\is_int($startLine) || !\is_int($endLine) || $startLine < 1 || $endLine < $startLine) {
-			return 'Unable to retrieve closure source code.';
+		$snippet = implode('', array_slice($lines, $startLine - 1, $endLine - $startLine + 1));
+		$src = self::extractClosureSource($snippet);
+		if ($src === '') {
+			return 'Unable to parse closure source code.';
 		}
 
-		$snippet = self::readFileLines($file, $startLine, $endLine);
-		if ($snippet === null || $snippet === '') {
-			return 'Unable to read file containing closure.';
-		}
+		$body = self::extractBody($src);             // "{ ... }"
+		$useClause = self::extractUseClause($src);   // "use (...)"
+		$signature = self::buildSignature($rf, $useClause);
 
-		$code = self::extractClosureFromSnippet($snippet);
-
-		return $code !== '' ? $code : 'Unable to parse closure source code.';
+		return trim($signature . ' ' . $body);
 	}
 
 	/**
-	 * Reads a file line range (1-based inclusive) without loading the whole file.
+	 * Extracts "function (...) { ... }" from a larger snippet.
+	 * Keeps original spacing/comments as much as possible inside the body.
 	 */
-	protected static function readFileLines(string $file, int $startLine, int $endLine): ?string
+	protected static function extractClosureSource(string $snippet): string
 	{
-		try {
-			$fh = new \SplFileObject($file, 'r');
-		} catch (\Throwable $e) {
-			return null;
-		}
-
-		// SplFileObject::seek() is 0-based line index
-		$fh->seek($startLine - 1);
-
-		$out = '';
-		for ($line = $startLine; $line <= $endLine && !$fh->eof(); $line++) {
-			$out .= (string)$fh->current();
-			$fh->next();
-		}
-
-		return $out;
-	}
-
-	/**
-	 * Extracts the first closure/arrow-function expression from a snippet.
-	 * The snippet should already contain the reflected line range.
-	 */
-	protected static function extractClosureFromSnippet(string $snippet): string
-	{
-		// Prefix with PHP tag so token_get_all treats it as code.
 		$tokens = token_get_all("<?php\n" . $snippet);
 
-		$tFn = \defined('T_FN') ? T_FN : -1;
-
-		$start = null;
-		$mode = null; // 'closure' | 'arrow'
-
-		// Find first T_FUNCTION or T_FN in the snippet.
-		$count = \count($tokens);
-		for ($i = 0; $i < $count; $i++) {
-			$tok = $tokens[$i];
-			if (\is_array($tok)) {
-				if ($tok[0] === T_FUNCTION) {
-					$start = $i;
-					$mode = 'closure';
-					break;
-				}
-				if ($tok[0] === $tFn) {
-					$start = $i;
-					$mode = 'arrow';
-					break;
-				}
-			}
-		}
-
-		if ($start === null || $mode === null) {
-			return '';
-		}
-
-		// If immediately preceded by "static", include it.
-		$prev = self::prevNonTrivialTokenIndex($tokens, $start);
-		if ($prev !== null && \is_array($tokens[$prev]) && $tokens[$prev][0] === T_STATIC) {
-			$start = $prev;
-		}
-
 		$out = '';
+		$in = false;
+		$depth = 0;
 
-		if ($mode === 'closure') {
-			$depth = 0;
-			$seenBody = false;
-
-			for ($i = $start; $i < $count; $i++) {
-				$tok = $tokens[$i];
-				$out .= \is_array($tok) ? $tok[1] : $tok;
-
-				if (!\is_array($tok)) {
-					if ($tok === '{') {
-						$depth++;
-						$seenBody = true;
-					} elseif ($tok === '}') {
-						$depth--;
-						if ($seenBody && $depth === 0) {
-							break; // end of closure body
-						}
-					}
+		foreach ($tokens as $t) {
+			if (is_array($t)) {
+				// PHP 7.4: T_FUNCTION; PHP 8+: still T_FUNCTION (closures)
+				if ($t[0] === T_FUNCTION) {
+					$in = true;
 				}
-			}
-
-			return \trim($out);
-		}
-
-		// Arrow function: collect tokens until the expression ends in the outer context.
-		// Stop BEFORE the outer delimiter token (e.g., ',', ')', ';', ']', '}') when not nested.
-		$paren = 0;
-		$brack = 0;
-		$curly = 0;
-
-		for ($i = $start; $i < $count; $i++) {
-			$tok = $tokens[$i];
-
-			if (!\is_array($tok)) {
-				// If we're not nested, and we hit a delimiter that belongs to the surrounding code,
-				// stop before consuming it.
-				if ($paren === 0 && $brack === 0 && $curly === 0) {
-					if ($tok === ';' || $tok === ',' || $tok === ')' || $tok === ']' || $tok === '}') {
-						break;
-					}
-				}
-
-				// Update nesting after deciding delimiter stop.
-				if ($tok === '(') $paren++;
-				elseif ($tok === ')') $paren = \max(0, $paren - 1);
-				elseif ($tok === '[') $brack++;
-				elseif ($tok === ']') $brack = \max(0, $brack - 1);
-				elseif ($tok === '{') $curly++;
-				elseif ($tok === '}') $curly = \max(0, $curly - 1);
-
-				$out .= $tok;
+				if ($in) $out .= $t[1];
 			} else {
-				$out .= $tok[1];
+				if ($in) {
+					$out .= $t;
+					if ($t === '{') $depth++;
+					elseif ($t === '}') {
+						$depth--;
+						if ($depth === 0) break;
+					}
+				}
 			}
 		}
 
-		return \trim($out);
+		return trim($out);
+	}
+
+	protected static function extractBody(string $closureSrc): string
+	{
+		$pos = strpos($closureSrc, '{');
+		if ($pos === false) return '';
+		return trim(substr($closureSrc, $pos));
+	}
+
+	protected static function extractUseClause(string $closureSrc): string
+	{
+		// Everything between ")" of params and "{" of body may contain "use (...)"
+		// We keep it from the source to preserve "&$var" captures.
+		$posClose = strpos($closureSrc, ')');
+		$posOpenBrace = strpos($closureSrc, '{');
+		if ($posClose === false || $posOpenBrace === false || $posOpenBrace <= $posClose) return '';
+
+		$mid = trim(substr($closureSrc, $posClose + 1, $posOpenBrace - $posClose - 1));
+
+		// Find the first "use(" occurrence
+		$u = stripos($mid, 'use');
+		if ($u === false) return '';
+
+		$usePart = trim(substr($mid, $u));
+
+		// Basic sanity check: must start with "use"
+		return (stripos($usePart, 'use') === 0) ? $usePart : '';
+	}
+
+	protected static function buildSignature(ReflectionFunction $rf, string $useClause): string
+	{
+		$parts = [];
+
+		if (method_exists($rf, 'isStatic') && $rf->isStatic()) {
+			$parts[] = 'static';
+		}
+
+		$fn = 'function';
+		if ($rf->returnsReference()) $fn .= ' &';
+		$parts[] = $fn;
+
+		$params = [];
+		foreach ($rf->getParameters() as $p) {
+			$params[] = self::formatParam($p);
+		}
+
+		$sig = implode(' ', $parts) . ' (' . implode(', ', $params) . ')';
+
+		if ($useClause !== '') {
+			// ensure single space separation
+			$sig .= ' ' . trim($useClause);
+		}
+
+		$ret = self::formatType($rf->getReturnType(), false);
+		if ($ret !== '') {
+			$sig .= ': ' . $ret;
+		}
+
+		return $sig;
+	}
+
+	protected static function formatParam(ReflectionParameter $p): string
+	{
+		$s = '';
+
+		$type = self::formatType($p->getType(), true);
+		if ($type !== '') $s .= $type . ' ';
+
+		if ($p->isPassedByReference()) $s .= '&';
+		if ($p->isVariadic()) $s .= '...';
+
+		$s .= '$' . $p->getName();
+
+		// Default values not allowed for variadics
+		if (!$p->isVariadic() && $p->isDefaultValueAvailable()) {
+			if ($p->isDefaultValueConstant()) {
+				$s .= ' = ' . $p->getDefaultValueConstantName();
+			} else {
+				$s .= ' = ' . var_export($p->getDefaultValue(), true);
+			}
+		}
+
+		return $s;
 	}
 
 	/**
-	 * Returns the previous token index that is not whitespace/comment.
+	 * Returns a PHP type string.
+	 * - For non-builtin named types => prefixes "\" to force FQCN.
+	 * - Handles union/intersection types when running on PHP 8+.
 	 */
-	protected static function prevNonTrivialTokenIndex(array $tokens, int $from): ?int
+	protected static function formatType(?ReflectionType $type, bool $allowNullablePrefix): string
 	{
-		for ($i = $from - 1; $i >= 0; $i--) {
-			$tok = $tokens[$i];
-			if (!\is_array($tok)) {
-				// single-char tokens matter
-				return $i;
+		if ($type === null) return '';
+
+		// PHP 8+: union types
+		if (class_exists('ReflectionUnionType') && $type instanceof \ReflectionUnionType) {
+			$parts = [];
+			foreach ($type->getTypes() as $t) {
+				$parts[] = self::formatNamedTypeNoNullable($t);
 			}
-			$id = $tok[0];
-			if ($id === T_WHITESPACE || $id === T_COMMENT || $id === T_DOC_COMMENT) {
-				continue;
-			}
-			return $i;
+			return implode('|', $parts);
 		}
-		return null;
+
+		// PHP 8.1+: intersection types
+		if (class_exists('ReflectionIntersectionType') && $type instanceof \ReflectionIntersectionType) {
+			$parts = [];
+			foreach ($type->getTypes() as $t) {
+				$parts[] = self::formatNamedTypeNoNullable($t);
+			}
+			return implode('&', $parts);
+		}
+
+		// Named type (PHP 7.4+)
+		if ($type instanceof ReflectionNamedType) {
+			$name = self::formatNamedTypeNoNullable($type);
+
+			// In unions, null is explicit; here we can use "?T" for nullable named types.
+			// Avoid "?mixed"/"?void"/"?never" etc.
+			if ($allowNullablePrefix && $type->allowsNull()) {
+				$lower = strtolower(ltrim($name, '\\'));
+				if (!in_array($lower, ['mixed', 'void', 'never', 'null', 'false', 'true'], true)) {
+					// if already contains "null" (won't here), skip; else prefix '?'
+					return '?' . $name;
+				}
+			}
+
+			return $name;
+		}
+
+		// Fallback (shouldn't happen often)
+		return (string)$type;
 	}
 
+	protected static function formatNamedTypeNoNullable(ReflectionNamedType $t): string
+	{
+		$name = $t->getName();
+
+		// For non-builtin class/interface names, force FQCN for portability.
+		if (!$t->isBuiltin() && !in_array($name, ['self', 'parent', 'static'], true)) {
+			$name = '\\' . ltrim($name, '\\');
+		}
+
+		return $name;
+	}
 }

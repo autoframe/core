@@ -4,15 +4,17 @@ namespace Autoframe\Core\Router;
 
 use Autoframe\Core\Afr\Afr;
 use Autoframe\Core\AfrCoreModule\AfrCore;
+use Autoframe\Core\Http\Request\AfrHttpConstantsInterface;
+use Autoframe\Core\AfrCoreModules\FnContracts\AfrHttpRoutesContract;
 use Autoframe\Core\Container\Exception\AfrContainerException;
 use Autoframe\Core\Env\Exception\AfrEnvException;
+use Autoframe\Core\Event\AfrEvent;
 use Autoframe\Core\Event\Exception\AfrEventException;
 use Autoframe\Core\Exception\AfrException;
 use Autoframe\Core\Http\Header\AfrHttpHeader;
+use Autoframe\Core\Http\Header\AfrHttpStatusCode;
 use Autoframe\Core\Http\Header\Exception\AfrHttpHeaderException;
 use Autoframe\Core\Http\Request\AfrRequestInterface;
-use Autoframe\Core\Module\AfrModuleBox;
-use Autoframe\Core\Module\AfrModuleCLIRoutesInterface;
 use Autoframe\Core\Router\Exception\AfrRouterException;
 use Closure;
 
@@ -59,13 +61,9 @@ trait AfrRouterHandleTrait
 	{
 		//todo: to improve the CLI console script call because the request method can be set twice from the InitRequest() and by parameter. This muste be tested!!!
 		//	echo '<pre>'.print_r(thfRouter::getRequestConfig(),true).'</pre>';
-
-		if ($oRequest->isCli()) {
-			return $this->handleCliRoutes($oRequest, $oClosureAfterRoute);
-		} else {
-			AfrCore::getInstance()->registerHTTPRoutes(); //todo misca unde trebuie!!
-			return $this->dispatchHttpRoute($oRequest, $oClosureAfterRoute);
-		}
+		return $oRequest->isCli() ?
+			$this->handleCliRoutes($oRequest, $oClosureAfterRoute) :
+			$this->dispatchHttpRoute($oRequest, $oClosureAfterRoute);
 	}
 
 
@@ -79,15 +77,42 @@ trait AfrRouterHandleTrait
 	 * @throws AfrEventException
 	 * @throws AfrHttpHeaderException
 	 * @throws AfrRouterException
+	 * @throws AfrException|\ReflectionException
 	 */
 	public function dispatchHttpRoute(AfrRequestInterface $oRequest, Closure $oClosureAfterRoute = null): int
 	{
-		$sRequestMethodOriginal = $oRequest->getHttpRequestMethod();
-		if ($oRequest->isCli()) {
-			throw new AfrRouterException('There is no http route to dispatch from a CLI request!');
-		} elseif (!in_array($sRequestMethodOriginal, self::ALLOWED_METHODS_HTTP)) {
+		if ($oRequest->isCli()) return $this->handleCliRoutes($oRequest, $oClosureAfterRoute);
+		//	throw new AfrRouterException('There is no http route to dispatch from a CLI request!');
+		//TODO daca nu este in lista aceasta, nu se va putea initia request!?  vezi populateHttpRoute din clasa de request si confirma context!
+		if (!in_array($oRequest->getHttpRequestMethod(), AfrHttpConstantsInterface::AllowedHTTPRequestMethods)) {
 			$this->methodNotAllowed($oRequest, self::$haltOn405MethodNotAllowed);
+			return 0; //TODO? test zero or 1?
 		}
+		$aOHttpRoutes = Afr::app()->box()->resolveFunctionalityGroup(AfrHttpRoutesContract::class);
+		/** @var AfrHttpRoutesContract $oRouteGroup */
+		foreach ($aOHttpRoutes as $oRouteGroup) {
+			$oRouteGroup();//			$oRouteGroup->registerHttpRoutes($oRequest);
+		}
+
+//		AfrCore::getInstance()->registerHTTPRoutes(); //todo DEPRECATE OLD MODULE box
+		if (empty($this->aCodeRoutes))
+			if (rand(0, 1) > 2) {
+				AfrHttpStatusCode::h500Config(
+					'Tenant: ' . (Afr::getTenantAlias() ?? 'NULL') . '<br>' .
+					'No routes defined by the provided configuration... ⁉️'
+				);
+			} else {
+				//	echo ('Tenant: '.(Afr::getTenantAlias()??'NULL').'<br>No routes defined by the provided configuration... ⁉️'); //TODO remove
+
+				echo AfrHttpStatusCode::getInstanceNoContainerBindings()->hStatusHeaderAndHtml(
+					500, 'Tenant: ' . (Afr::getTenantAlias() ?? 'NULL'),
+					'No routes defined by the provided configuration... ⁉️'
+				);
+				AfrEvent::dispatchEvent();
+				echo '<pre>' . print_r(AfrEvent::getTriggeredEventsLog(), true) . '</pre>';
+				die();
+			}
+
 
 		//correction for HEAD to GET
 		$this->correctHeadRequestMethod($oRequest, true);
@@ -106,7 +131,6 @@ trait AfrRouterHandleTrait
 				$sRequestRouteURI
 			);
 		}
-
 		if (empty($this->aCodeRoutes[$sRequestMethod]) /*&& $sRequestMethod !== 'GET'*/) {
 			$this->methodNotAllowed($oRequest, self::$haltOn405MethodNotAllowed);
 		}
@@ -241,14 +265,14 @@ trait AfrRouterHandleTrait
 	}
 
 	/**
-	 * @param string $sRequestMethod
+	 * @param AfrRequestInterface $oRequest
 	 * @param bool $bExit
 	 * @return void
-	 * @throws AfrRouterException
 	 * @throws AfrContainerException
 	 * @throws AfrEnvException
 	 * @throws AfrEventException
 	 * @throws AfrHttpHeaderException
+	 * @throws AfrRouterException
 	 */
 	protected function methodNotAllowed(AfrRequestInterface $oRequest, bool $bExit = true): void
 	{
@@ -275,13 +299,24 @@ trait AfrRouterHandleTrait
 	protected function invokeRoute($fn, array $params = [])
 	{
 		$aRouteInfo = null; //aRouteInfo array with parametrization options
-		if (!empty($fn['fnStack_I'])) {
+		if (!is_object($fn) && !empty($fn['fnStack_I'])) {
 			$aRouteInfo = $fn;
 			$params['aRegisterRouteOptions'] = $this->aFnStack[$fn['fnStack_I']][1];
 			$fn = $this->aFnStack[$fn['fnStack_I']][0];
 		}
 		if (!empty($aRouteInfo['aRegisterRouteOptions']['redirect'])) {
-			die('redirect neimplementat in router');
+			die('redirect neimplementat in router');//TODO
+			die('redirect neimplementat in router');//TODO
+			die('redirect neimplementat in router');//TODO
+			die('redirect neimplementat in router');//TODO
+			die('redirect neimplementat in router');//TODO
+			die('redirect neimplementat in router');//TODO
+			die('redirect neimplementat in router');//TODO
+			die('redirect neimplementat in router');//TODO
+			die('redirect neimplementat in router');//TODO
+			die('redirect neimplementat in router');//TODO
+			die('redirect neimplementat in router');//TODO
+			die('redirect neimplementat in router');//TODO
 		}
 
 		return self::invokeRouteMethod($fn, $params, true);
@@ -307,7 +342,8 @@ trait AfrRouterHandleTrait
 		if ($fn instanceof Closure || is_callable($fn)) {
 			// Returns the return value of the callback, or FALSE on error.
 			//$r = $fn instanceof Closure ? $fn(...$params) : call_user_func_array($fn, $params) ;
-			$r = $fn(...$params);
+//			$r = $fn($params);	print_r($params); die;
+			$r = $fn(...array_values($params)); //TODO : Array( [aRegisterRouteOptions] => Array  ( [0] => Option1   ))
 			if ($bForceBoolReturn && !$r && $r !== false) {
 				$r = true; //fix void|null|''|0|'0' values for functions to avoid 404 in router
 			}

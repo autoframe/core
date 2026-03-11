@@ -95,13 +95,15 @@ class AfrHttpHeader extends AfrSingletonAbstractClass
 	 * @param int $iCode
 	 * @return bool
 	 * @throws AfrEnvException|AfrHttpHeaderException|AfrEventException
+	 * @throws \ReflectionException
 	 */
 	public function setHttpResponseCode(int $iCode): bool
 	{
+		if(AfrCliHttpDetect::isCli()) return false;
 		AfrEvent::dispatchEvent();
 		$filename = $line = null;
 		if (headers_sent($filename, $line)) {
-			if (Afr::app()->env()->getEnv('HTTP_HEADER_RESPONSE_CODE_ERROR_IS_CRITICAL', true)) {
+			if (Afr::app() && Afr::app()->env()->getEnv('HTTP_HEADER_RESPONSE_CODE_ERROR_IS_CRITICAL', true)) {
 				throw new AfrHttpHeaderException("Header block has already been sent in $filename line $line");
 			}
 			return false;
@@ -369,6 +371,7 @@ class AfrHttpHeader extends AfrSingletonAbstractClass
 	 */
 	public function e500Html(string $str = '', bool $bExit = true, bool $bDevTrace = true, int $iRetryAfter = 120)
 	{
+		AfrEvent::dispatchEvent($str?:'e500Html');
 		$this->h500(false, 0);
 		$sRetryAfter = $this->headerRetryAfter($iRetryAfter);
 		if (empty($str)) {

@@ -5,7 +5,9 @@ namespace Autoframe\Core\CliTools;
 
 use Autoframe\Core\Afr\Afr;
 use Autoframe\Core\Container\Exception\AfrContainerException;
+use Autoframe\Core\Env\Exception\AfrEnvException;
 use Autoframe\Core\Event\Exception\AfrEventException;
+use Autoframe\Core\Http\Header\AfrHttpHeader;
 use Autoframe\Core\Http\Ip\AfrIp;
 use Autoframe\Core\Http\Request\AfrRequestClass;
 
@@ -19,9 +21,8 @@ class AfrCliHttpDetect
 
 	public static function isCli(AfrRequestClass $rq = null): bool
 	{
-		if ($rq) {
-			return $rq->isCli();
-		}
+		if ($rq) return $rq->isCli();
+
 		if (!isset(self::$bIsCliCache)) {
 			self::$bIsCliCache = (PHP_SAPI === 'cli' || PHP_SAPI === 'phpdbg' || http_response_code() === false || defined('STDIN'));
 		}
@@ -105,20 +106,22 @@ class AfrCliHttpDetect
 
 	/**
 	 * @param AfrRequestClass|null $rq
+	 * @param bool $bE500IfUntrusted
 	 * @return bool
 	 * @throws AfrContainerException
-	 * @throws AfrEventException
+	 * @throws AfrEventException|AfrEnvException
 	 */
-	public static function isUntrustedHttpRequest(AfrRequestClass $rq = null): bool
+	public static function isUntrustedHttpRequest(AfrRequestClass $rq = null, bool $bE500IfUntrusted = false): bool
 	{
-		if (static::isCli($rq)) {
-			return false;
-		}
+		if (static::isCli($rq)) return false;
+
 		if (static::isBehindLoadBalancerOrReverseProxy()) {
-			return !in_array(
+			$bUntrusted= !in_array(
 				AfrIp::getInstance()->getRealClientIpAddr($rq),
 				AfrIp::getInstance()->getTrustedProxiesIps()
 			);
+			if($bUntrusted && $bE500IfUntrusted) AfrHttpHeader::getInstance()->e500Html('Untrusted http request detected!');
+			return $bUntrusted;
 		}
 		return false;
 	}
@@ -249,9 +252,8 @@ class AfrCliHttpDetect
 
 		if ($bIncludeArgs) {
 			$aSerArgv = $rq ? $rq->getServerParam('argv', []) : ($_SERVER['argv'] ?? []);
-			if (empty($aSerArgv)) {
-				return $sEntryPoint;
-			}
+			if (empty($aSerArgv)) return $sEntryPoint;
+
 			$aArgv = array_slice($aSerArgv, 1);
 			foreach ($aArgv as &$v) {
 				if (strpos($v, ' ') !== false) {

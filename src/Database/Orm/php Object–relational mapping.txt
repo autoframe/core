@@ -1,0 +1,14 @@
+Doctrine
+Propel
+https://redbeanphp.com/index.php
+https://github.com/gabordemooij/redbean
+
+
+https://en.wikipedia.org/wiki/Doctrine_(PHP)
+https://en.wikipedia.org/wiki/Propel_(PHP)
+
+
+Google calendar:
+id=btn_openhouse_adauga_calendar
+
+https://www.google.com/calendar/render?action=TEMPLATE&text=ccfhycfhfch+Open+House&dates=20221111T040000/20221111T230000&details=LAVINIU+-DEZV-%0A%0ATelefon%3A+0256+000+009%2C0256+000+002%2C0256+000+003%0AEmail%3A+laviniu.bartic%2B13%40imonet.ro%0A%0A+Mai+multe+detalii%3A%0Ahttp%3A%2F%2Ftest-portal.an.rmn.ro%2Fvanzare-apartamente%2Ftimisoara%2Fgirocului%2Fapartament-de-vanzare-3-camere-X40300016&location=ccfhycfhfch&sprop=name

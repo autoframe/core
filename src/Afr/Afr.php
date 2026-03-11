@@ -7,6 +7,7 @@ use Autoframe\Core\Container\AfrContainerFacade;
 use Autoframe\Core\Container\AfrDefaultBindings;
 use Autoframe\Core\Container\Exception\AfrContainerException;
 use Autoframe\Core\Env\AfrEnv;
+use Autoframe\Core\Env\AfrEnvFacade;
 use Autoframe\Core\Env\AfrEnvInterface;
 use Autoframe\Core\Event\AfrEvent;
 use Autoframe\Core\Event\Exception\AfrEventException;
@@ -14,8 +15,12 @@ use Autoframe\Core\Exception\AfrException;
 use Autoframe\Core\Container\AfrContainerInterface;
 use Autoframe\Core\Container\AfrLiteContainer;
 use Autoframe\Core\Http\Header\AfrHttpHeader;
+use Autoframe\Core\Http\Header\AfrHttpStatusCode;
 use Autoframe\Core\Http\Request\AfrRequestClass;
 use Autoframe\Core\Http\Request\AfrRequestInterface;
+use Autoframe\Core\ModuleBox\AfrModuleBoxClass;
+use Autoframe\Core\ModuleBox\AfrModuleBoxFacade;
+use Autoframe\Core\ModuleBox\AfrModuleBoxInterface;
 use Autoframe\Core\Router\AfrRouter;
 use Autoframe\Core\Router\Contracts\AfrRouterInterface;
 use Autoframe\Core\Tenant\AfrTenant;
@@ -26,84 +31,118 @@ $_SERVER['REQUEST_TIME_FLOAT'] ??= microtime(true);
  * TODO define individual static functions from AfrTenant
  * @mixin AfrTenant
  * @method static string|null getTenantAlias()
- * @method static bool isCli()
  * @method static string getHost()
  *
  * @see AfrTenant
  */
 class Afr
 {
-	public static bool $bIgnoreUserAbort = false;
+	const V = '0.1.0a';
 	protected static self $oAfr;
 	protected string $sAppBaseDirectory;
 
-	/**
-	 * @var AfrContainerInterface|AfrLiteContainer
-	 */
+	/** @var AfrContainerInterface|AfrLiteContainer */
 	protected AfrContainerInterface $oAfrContainer;
+
+	/** @var AfrModuleBoxInterface|AfrModuleBoxClass */
+	protected AfrModuleBoxInterface $oAfrBox;
 	/**
 	 * @var AfrEnv|AfrEnvInterface
 	 */
 	protected AfrEnvInterface $oAfrEnv;
 	protected AfrRequestInterface $oAfrRequest;
 
+	/**
+	 * In order to have a SOLID implementation, there are 4 classes that are bound first:
+	 * Afr::class should be only extended. There should be at least one 100% concrete, and that is Afr::class.
+	 * AfrTenant will get statically called from Afr::class, so also concrete, but swappable.
+	 * Container and Env classes have interfaces and facades, but they are needed as a base.
+	 * Conclusion: customize with Afr::makeApp parameters, or mix with constants
+	 * Base dir is totally required, preferred __DIR__
+	 */
+	protected static array $aAltConfig = [
+		'AFR_TENANT_FQCN' => AfrTenant::class,// static calls to AfrTenant::class
+		'AFR_CONTAINER_FQCN' => AfrLiteContainer::class,
+		'AFR_ENV_FQCN' => AfrEnv::class,
+		'AFR_ENV_CACHE_SECONDS' => 3600 * 24 * 35,
+		'bIgnoreUserAbort' => false,
+	];
 
 	/**
 	 * @param string|null $sAppBaseDirectory
-	 * @param string|null $sContainerClass
+	 * @param array|null $aAltConfig
 	 * @return Afr
 	 * @throws AfrException
+	 * @throws \ReflectionException
 	 */
-	public static function makeApp(string $sAppBaseDirectory = null, string $sContainerClass = null): Afr
+	public static function makeApp(
+		string $sAppBaseDirectory = null,
+		array  $aAltConfig = null
+	): Afr
 	{
-		return static::app() ?? new static($sAppBaseDirectory, $sContainerClass);
+		AfrEvent::dispatchEvent(AfrEvent::AFR_BOOTSTRAP.'.makeApp', null, 0);
+		return static::app() ?? new static($sAppBaseDirectory, $aAltConfig);
 	}
+
+	protected static function getAltConfig(string $sKey): ?string
+	{
+		$sKey = trim(strtoupper(trim($sKey)), '\\');
+		if (defined($sKey)) return (string)constant($sKey);
+		if (defined('\\' . $sKey)) return (string)constant('\\' . $sKey);
+		return $_ENV[$sKey] ?? null;
+	}
+
+	protected function setAltConfig(string $sAppBaseDirectory, array $aAltConfig = null): void
+	{
+		foreach (static::$aAltConfig as $sKey => $sValue) {
+			if (($sAltV = static::getAltConfig($sKey)) !== null) {
+				static::$aAltConfig[$sKey] = $sAltV;
+			}
+		}
+		if ($aAltConfig) static::$aAltConfig += $aAltConfig;
+		static::$aAltConfig['AFR_BASE_DIR'] = $sAppBaseDirectory;//used for event
+	}
+
+
+	public static function makeInstanceAvailable(Afr $oThis): void
+	{
+		static::$oAfr ??= $oThis;
+	}
+
 	/**
-	 * @throws AfrException
+	 * @throws AfrException|\ReflectionException
 	 */
 	protected function __construct(
 		string $sAppBaseDirectory = null,
-		string $sContainerClass = null
+		array  $aAltConfig = null
 	)
 	{
-		$this->checkUserAbort();
+		if (!empty(static::$oAfr)) throw new AfrException('Afr already initialized!');
 
-		if (!empty(static::$oAfr)) {
-			throw new AfrException('Afr already initialized!');
+		$sAppBaseDirectory ??=
+			$aAltConfig['AFR_BASE_DIR'] ??
+			static::getAltConfig('AFR_BASE_DIR') ??
+			dirname(AfrCliHttpDetect::getEntryPoint(null, false, false));
+
+		AfrEvent::dispatchEvent(AfrEvent::AFR_BOOTSTRAP.'.constants.php', null, 0);
+		if (is_file($sConstantsPath = $sAppBaseDirectory . DIRECTORY_SEPARATOR . 'constants.php')) {
+			define(AfrExecutionThread::BOOTSTRAP_BASEDIR_CONSTANTS_FOR_ALL_TENANTS, true);
+			include_once $sConstantsPath;
 		}
 
-		$sAppBaseDirectory ??= defined($c = '\AFR_BASE_DIR') ? constant($c) :
-			dirname(AfrCliHttpDetect::getEntryPoint(null, false,false));
+		$this->setAltConfig($sAppBaseDirectory, $aAltConfig);
 
-		if (empty($this->sAppBaseDirectory = $sAppBaseDirectory)) {
-			throw new AfrException('App directory not set!');
-		}
-		AfrTenant::setBaseDirPath($this->sAppBaseDirectory);
-		AfrTenant::includeCommonConstantsAllTenants(); //this is the only way to set some constants for custom containers
-		AfrEvent::dispatchEvent(AfrEvent::AFR_BOOTSTRAP, [$sAppBaseDirectory, $sContainerClass], 0);
+		//1.APP BASE DIR PATH
+		if (empty($this->sAppBaseDirectory = $sAppBaseDirectory))
+			throw new AfrException('App DIR is empty!');
 
-
-		if ($sContainerClass) {
-			AfrContainerFacade::xetContainerClass($sContainerClass);
-		} elseif (defined($c = '\AFR_CONTAINER')) {
-			AfrContainerFacade::xetContainerClass(constant($c));
-		}
-		$this->oAfrContainer = AfrContainerFacade::getContainer();
-		static::$oAfr = $this; // make Afr::app() available
-
-		AfrDefaultBindings::setAutoframeDefaultContainerBindings();
-		AfrDefaultBindings::applyDefaultTenantConfig();
-
-		$this->oAfrEnv = $this->oAfrContainer->get(AfrEnvInterface::class);
-		$this->oAfrEnv->setBaseDir($this->sAppBaseDirectory);
-		if (AfrCliHttpDetect::isUntrustedHttpRequest()) {
-			AfrEvent::dispatchEvent();
-			AfrHttpHeader::getInstance()->e500Html(
-				'Untrusted http request detected!'
-			);
-		}
-
-		//($this->oAfrEnv = AfrEnv::getInstance())->setBaseDir($this->sAppBaseDirectory);
+		AfrEvent::dispatchEvent(AfrEvent::AFR_BOOTSTRAP, static::$aAltConfig, 0);
+		AfrContainerFacade::xetContainerClass(static::$aAltConfig['AFR_CONTAINER_FQCN']);
+		AfrEnvFacade::xetEnvClass(static::$aAltConfig['AFR_ENV_FQCN']);
+		$_ENV['AFR_ENV_CACHE_SECONDS'] ??= intval( //zero: parsing every time, slowley....
+			defined($c = 'AFR_ENV_CACHE_SECONDS') ? constant($c) : static::$aAltConfig['AFR_ENV_CACHE_SECONDS']
+		);
+		$this->thread()->runBootstrap($this);
 
 	}
 
@@ -122,6 +161,7 @@ class Afr
 	 */
 	public function thread(): AfrExecutionThread
 	{
+		//TODO: public static::aStep1Bootstrap; public static::aStep2...
 		return AfrExecutionThread::getInstance();
 	}
 
@@ -130,19 +170,35 @@ class Afr
 	 */
 	public function container(): AfrContainerInterface //AfrLiteContainer
 	{
-		return $this->oAfrContainer;
+		return $this->oAfrContainer ??= AfrContainerFacade::getContainer();
+	}
+
+	/**
+	 * @return AfrModuleBoxClass|AfrModuleBoxInterface
+	 * @throws AfrException
+	 */
+	public function box(): AfrModuleBoxInterface
+	{
+		return $this->oAfrBox ??= AfrModuleBoxFacade::getBox();
 	}
 
 	/**
 	 * @return AfrEnv|AfrEnvInterface
+	 * @throws AfrContainerException
+	 * @throws \Autoframe\Core\Env\Exception\AfrEnvException
 	 */
 	public function env(): AfrEnvInterface
 	{
+		return $this->oAfrEnv ??= AfrEnvFacade::getEnvInstance()->setBaseDir($this->sAppBaseDirectory);
+		if (empty($this->oAfrEnv)) { //lazy init
+			$this->oAfrEnv = $this->container()->get(AfrEnvInterface::class);
+			$this->oAfrEnv->setBaseDir($this->sAppBaseDirectory);
+		}
 		return $this->oAfrEnv;
 	}
 
 	/**
-	 * @param AfrRequestInterface $oAfrRequest
+	 * @param AfrRequestClass|AfrRequestInterface $oAfrRequest
 	 * @return $this
 	 */
 	public function setRequest(AfrRequestInterface $oAfrRequest): self
@@ -171,9 +227,9 @@ class Afr
 	 * @throws AfrContainerException
 	 * @throws AfrEventException
 	 */
-	public function router(): AfrRouter
+	public function router(): AfrRouterInterface
 	{
-		return AfrRouter::getInstance();//todo: container
+		return AfrRouter::getInstance();//todo: container|facade
 	}
 
 	/**
@@ -181,8 +237,12 @@ class Afr
 	 */
 	public function run(...$mArgs): array
 	{
-		AfrEvent::dispatchEvent(AfrEvent::AFR_RUN, $mArgs);
-		return $this->thread()->run(...$mArgs);
+		//	AfrEvent::dispatchEvent(AfrEvent::AFR_RUN, $mArgs);
+		$this->thread()->runContext($this);
+		$this->checkUserAbort();
+		$this->thread()->runRequestRouteRender($this);
+		return $this->thread()->getReport();
+		//return $this->thread()->run(...$mArgs);
 	}
 
 	/**
@@ -192,14 +252,19 @@ class Afr
 	 */
 	public static function __callStatic($name, $arguments)
 	{
-		return AfrTenant::$name(...$arguments);
+		/** @var AfrTenant $sTenantFQCN */
+		$sTenantFQCN = static::$aAltConfig['AFR_TENANT_FQCN'];
+		return $sTenantFQCN::$name(...$arguments);
 	}
+
+	//TODO: MIXIN static+object+properties
 
 	protected function checkUserAbort(): void
 	{
+
 		$sArgs = implode(' ', $_SERVER['argv'] ?? []);
 		if (
-			static::$bIgnoreUserAbort ||
+			static::$aAltConfig['bIgnoreUserAbort'] ||
 			strpos($sArgs, '--AFR_IGNORE_USER_ABORT') !== false ||
 			strpos($sArgs, '--CRON_DAEMON') !== false
 		) {

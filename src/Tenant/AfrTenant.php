@@ -2,6 +2,9 @@
 
 namespace Autoframe\Core\Tenant;
 
+use Autoframe\Core\Afr\Afr;
+use Autoframe\Core\Afr\AfrExecutionThread;
+use Autoframe\Core\Http\Request\AfrCliConstantsInterface;
 use Autoframe\Core\CliTools\AfrCliHttpDetect;
 use Autoframe\Core\CliTools\AfrCliPromptMenu;
 use Autoframe\Core\CliTools\AfrGetOpt;
@@ -13,9 +16,9 @@ use Autoframe\Core\Event\AfrEvent;
 use Autoframe\Core\Event\Exception\AfrEventException;
 use Autoframe\Core\Exception\AfrException;
 use Autoframe\Core\FileSystem\DirPath\AfrDirPathClass;
+use Autoframe\Core\Http\Header\AfrHttpStatusCode;
 use Autoframe\Core\InterfaceToConcrete\AfrToConcreteStrategiesClass;
 use Autoframe\Core\Module\AfrModuleBox;
-use Autoframe\Core\Router\Contracts\AfrRouterConstantsInterface;
 
 /**
  * This class manages configuration settings and processes for an application that supports multiple tenants.
@@ -38,7 +41,7 @@ class AfrTenant
 		AfrEvent::class,
 		AfrDefaultBindings::class,
 		AfrToConcreteStrategiesClass::class,
-		AfrModuleBox::class,
+	//	AfrModuleBox::class,
 	];
 
 	public string $sTenantAlias;
@@ -108,7 +111,7 @@ class AfrTenant
 	public function setEnv(string $AFR_ENV = null): self
 	{
 		if ($AFR_ENV === null) {
-			$AFR_ENV = $_ENV['AFR_ENV'] ?? getenv('AFR_ENV') ?: 'dev';
+			$AFR_ENV = $_ENV['AFR_ENV'] ?? getenv('AFR_ENV') ?: 'DEV';
 		}
 		$this->sEnv = strtoupper((string)$AFR_ENV);
 		return $this;
@@ -231,9 +234,8 @@ class AfrTenant
 	 */
 	public static function getAfrDefaultTenantConfigsForFqcn($sFQCN_implementing_AfrDefaultTenantConfigsInterface): ?string
 	{
-		if (empty($sBDP = static::getBaseDirPath()) || empty($sTa = static::getTenantAlias())) {
-			return null;
-		}
+		if (empty($sBDP = static::getBaseDirPath())/* || empty($sTa = static::getTenantAlias())*/) return null;
+		$sTa = self::$sAppTenantAlias; //TODO: daca nu am tenant alias, atunci nu se aplica config?
 		return
 			$sBDP . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR .
 			$sTa . '.' .
@@ -268,18 +270,24 @@ class AfrTenant
 	public static function getCronLogsDir(): string { return self::getLogsDir() . DIRECTORY_SEPARATOR . 'Cron'; }
 
 	/**
+	 * @param string|object|null $soAliasSubDir
+	 * @return string
 	 * @throws AfrException
 	 */
-	public static function getTempDir(): string //todo: test
+	public static function getTempDir($soAliasSubDir = null): string //todo: test
 	{
+		//AfrTenant::$sTempDir = ($bSystemTemp=0 ? AfrSysTempDir::sysGetTempDir() : AfrTenant::getBaseDirPath()) .DIRECTORY_SEPARATOR . 'AfrTemp';
 		if (!isset(self::$sTempDir)) {
 			if (!empty(self::$sBaseDirPath)) {
-				self::loadConfig();
+				self::loadConfigResolveTenantAliasProcessConfigOrInitSample();
 			} else {
-				return AfrSysTempDir::sysGetTempDir();//no tenant
+				return AfrSysTempDir::sysGetTempDirAliasSubDir($soAliasSubDir);//no tenant
 			}
 		}
-		return self::$sTempDir . DIRECTORY_SEPARATOR . self::getTenantAlias();
+		return AfrSysTempDir::sysGetTempDirAliasSubDir(
+			$soAliasSubDir,
+			self::$sTempDir . (self::getTenantAlias() ? DIRECTORY_SEPARATOR . self::getTenantAlias() : '')
+		);
 	}
 
 	public static function getWebRoot(): string { return self::$sWebRoot; }
@@ -308,7 +316,7 @@ class AfrTenant
 	protected static string $sPublicAssetsDirJsWeb;
 	protected static string $sPublicAssetsDirMediaWeb;
 	protected static string $sPublicAssetsDirDataWeb;
-	protected static string $sTempDir;
+	protected static string $sTempDir; // ($bSystemTemp=0 ? AfrSysTempDir::sysGetTempDir() : AfrTenant::getBaseDirPath()) .DIRECTORY_SEPARATOR . 'AfrTemp';
 	protected static array $aInitSystemDirList = [];
 
 
@@ -317,32 +325,41 @@ class AfrTenant
 	 */
 	public static function setBaseDirPath(string $sBaseDirPath): void
 	{
-		static::isCli();
-		if (!empty(self::$sBaseDirPath) && $sBaseDirPath !== self::$sBaseDirPath) {
+		if (!empty(self::$sBaseDirPath) && $sBaseDirPath !== self::$sBaseDirPath)
 			throw new AfrException("The base dir path already defined!");
-		}
 		self::$sBaseDirPath = $sBaseDirPath;
 	}
 
-	public static function includeCommonConstantsAllTenants(): void //TODO test namespaces
+
+	public static function includeCommonTenantConstantsAllFromBaseDir(): void //TODO test namespaces
 	{
-		if (is_file($sConstantsPath = self::$sBaseDirPath . DIRECTORY_SEPARATOR . 'constants.php')) {
+		if (defined(AfrExecutionThread::BOOTSTRAP_BASEDIR_CONSTANTS_FOR_ALL_TENANTS)) return;
+		define(AfrExecutionThread::BOOTSTRAP_BASEDIR_CONSTANTS_FOR_ALL_TENANTS, true);
+
+		if (empty(self::$sBaseDirPath))
+			die(AfrHttpStatusCode::getInstanceNoContainerBindings()->hStatusHeaderAndHtml(
+				500, 'MISS CONFIGURED TENANT BASE PATH @ ' . __FUNCTION__
+			));
+
+		if (is_file($sConstantsPath = self::$sBaseDirPath . DIRECTORY_SEPARATOR . 'constants.php'))
 			include_once $sConstantsPath;
-		}
+
+
 	}
 
 	/**
 	 * @throws AfrException
 	 */
-	public static function loadConfig(string $sBasePath = null): void
+	public static function loadConfigResolveTenantAliasProcessConfigOrInitSample(string $sBasePath = null): void
 	{
-		//	static::isCli();
-		if ($sBasePath) {
-			self::setBaseDirPath($sBasePath);
-		}
+		if (!empty(static::$sAppTenantAlias)) return;
+
+		if ($sBasePath) self::setBaseDirPath($sBasePath);
+		if (empty(self::getBaseDirPath())) throw new AfrException("The base dir path is empty!");
 
 		if (!is_file($sTf = self::getBaseDirPath() . DIRECTORY_SEPARATOR . 'tenant.env.php')) {
-			AfrDirPathClass::getInstance()->dirExistAndWritable(self::getBaseDirPath());
+			if (!is_dir(self::getBaseDirPath()) || !is_writable(self::getBaseDirPath()))
+				throw new AfrException("The base dir path is not writable!");
 			copy(__DIR__ . DIRECTORY_SEPARATOR . 'tenant.env.sample.php', $sTf);
 			echo "\nInitialized sample tenant config file: $sTf\n";
 			sleep(1);
@@ -370,6 +387,7 @@ class AfrTenant
 			self::resolveTenantAlias()
 		);
 	}
+
 
 	/**
 	 * Converts a fully qualified class name (FQCN) to the base class name.
@@ -442,7 +460,7 @@ class AfrTenant
 
 		if (!is_file($sAfrBootstrapFile = static::getBaseDirPath() . $ds . self::AFR_BOOTSTRAP_PHP . '.php')) {
 			$sContents = "<?php\nrequire_once __DIR__ . DIRECTORY_SEPARATOR . ";
-			$sContents .= "'" . AfrDirPathClass::getInstance()->getRelativePath(
+			$sContents .= "'" . AfrDirPathClass::getInstanceNoContainerBindings()->getRelativePath(
 					AfrVendorDir::getVendorPath() . $ds . 'autoload.php',
 					$sAfrBootstrapFile
 				) . "';\n\n";
@@ -505,7 +523,7 @@ class AfrTenant
 	{
 		foreach ($aDirs as $sPath) {
 			if (is_string($sPath) && !is_dir($sPath)) {
-				if (!AfrDirPathClass::getInstance()->dirExistAndWritable($sPath)) {
+				if (!AfrDirPathClass::dirExistAndWritableS($sPath, true, 0775)) {
 					$aErrors[] = 'Directory initialised: ' . $sPath;
 				}
 			} elseif (is_array($sPath)) {
@@ -514,6 +532,10 @@ class AfrTenant
 		}
 	}
 
+	public static function getTenantEnvFile(): string
+	{
+		return self::getBaseDirPath() . DIRECTORY_SEPARATOR . self::getTenantAlias() . '.' . $_ENV['AFR_ENV'] . '.env';
+	}
 
 	/**
 	 * @return void
@@ -521,6 +543,8 @@ class AfrTenant
 	 */
 	protected static function resolveTenantAlias(): AfrTenant
 	{
+		if (!empty(static::$sAppTenantAlias)) return static::$aTenantCfgIns[static::$sAppTenantAlias];
+
 		if (empty(static::$sAppTenantAlias)) {
 			if (empty(static::$aTenantCfgIns)) {
 				//(new AfrTenant('dev'))->setEnv('dev')->setDebug(true)->autoSetupAndPushTenantConfig();
@@ -538,7 +562,7 @@ class AfrTenant
 				foreach (static::$aTenantCfgIns as $sAppTenantAlias => $oTenant) {
 					if (
 						in_array($sProtocolDomain, $oTenant->aProtocolDomain) ||
-						$_ENV['AFR_TENANT_CLI'] ?? '' === $oTenant->sTenantAlias
+						($_ENV['AFR_TENANT_CLI'] ?? '') === $oTenant->sTenantAlias
 					) {
 						static::$sAppTenantAlias = $sAppTenantAlias;
 						static::$sProtocolHost = $sProtocolDomain;
@@ -604,6 +628,7 @@ class AfrTenant
 		/** @var AfrTenant $oTenant */
 		$oTenant = static::$aTenantCfgIns[static::$sAppTenantAlias];
 		foreach (['AFR_ENV' => $oTenant->sEnv, 'AFR_DEBUG' => $oTenant->bDebug] as $key => $value) {
+			$value = strtoupper($value);
 			$_ENV[$key] = $value;
 			$_SERVER[$key] = $value;
 			putenv(sprintf('%s=%s', $key, $value));
@@ -615,12 +640,10 @@ class AfrTenant
 
 	public static function getAutoTenantSelectArgvFlags(): ?string
 	{
-		if (empty(static::$aTenantCfgIns)) {
-			return null;
-		}
+		if (empty(static::$aTenantCfgIns)) return null;
 
 		$aFramework = [
-			AfrRouterConstantsInterface::CRON_LIVE_LOGS_ARGV_KEY => '::first',
+			AfrCliConstantsInterface::CRON_LIVE_LOGS_ARGV_KEY => '::first',
 		];
 		if (defined('AutoTenantSelectArgvFlags') && is_array(constant('AutoTenantSelectArgvFlags'))) {
 			$aFramework = array_merge($aFramework, constant('AutoTenantSelectArgvFlags'));

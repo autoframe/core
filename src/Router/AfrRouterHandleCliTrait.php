@@ -3,6 +3,8 @@
 namespace Autoframe\Core\Router;
 
 use Autoframe\Core\Afr\Afr;
+use Autoframe\Core\AfrCoreModules\FnContracts\AfrCliRoutesContract;
+use Autoframe\Core\Http\Request\AfrCliConstantsInterface;
 use Autoframe\Core\CliTools\AfrCliTextColors;
 use Autoframe\Core\Container\Exception\AfrContainerException;
 use Autoframe\Core\Cron\AfrConJobSources;
@@ -11,8 +13,8 @@ use Autoframe\Core\Cron\Log\Channel\AfrCronLogChannelSharedLogBuffer;
 use Autoframe\Core\Event\Exception\AfrEventException;
 use Autoframe\Core\Exception\AfrException;
 use Autoframe\Core\Http\Request\AfrRequestInterface;
-use Autoframe\Core\Module\AfrModuleBox;
-use Autoframe\Core\Module\AfrModuleCLIRoutesInterface;
+
+
 use Autoframe\Core\Router\Exception\AfrRouterException;
 use Autoframe\Core\Tenant\AfrTenant;
 use Autoframe\Core\Cron\Log\AfrCronLoggerInterface;
@@ -31,36 +33,40 @@ trait AfrRouterHandleCliTrait
 	 */
 	public function handleCliRoutes(AfrRequestInterface $oRequest, Closure $oClosureAfterRoute = null): int
 	{
+		if (!$oRequest->isCli()) return $this->dispatchHttpRoute($oRequest, $oClosureAfterRoute);
 
-		list($bIsQa, $sQaIndexStack) = $oRequest->detectArgvKeyPresence(self::QA_ARGV_KEY);
+		/** @var AfrCliRoutesContract[] $aOCliRoutes */
+		$aOCliRoutes = Afr::app()->box()->resolveFunctionalityGroup(AfrCliRoutesContract::class);
+
+		list($bIsQa, $sQaIndexStack) = $oRequest->detectArgvKeyPresence(AfrCliConstantsInterface::QA_ARGV_KEY);
 		if ($bIsQa) {
-			$iTotalRegistered = Afr::app()
-				->container()
-				->get(AfrModuleBox::class)
-				->registerModulesThatImplementTheInterface(AfrModuleCLIRoutesInterface::class);
+			//	$iTotalRegistered = Afr::app()->container()->get(AfrModuleBox::class)->registerModulesThatImplementTheInterface(AfrModuleCLIRoutesInterface::class);
+			//TODO check done:
+			$iTotalRegistered = 0;
+			foreach ($aOCliRoutes as $oCliRoute)
+				$iTotalRegistered += $oCliRoute->registerCliRoutes($oRequest, [AfrCliConstantsInterface::CLI_QA_REQUEST]);
+
 			//AfrCore::getInstance()->registerCLIRoutes();
 			$iCalled = AfrCliQaRouter::run($sQaIndexStack);
 			if ($oClosureAfterRoute) {
-				$oClosureAfterRoute(self::QA_ARGV_KEY, $oRequest, $iCalled, $iTotalRegistered);
+				$oClosureAfterRoute(AfrCliConstantsInterface::QA_ARGV_KEY, $oRequest, $iCalled, $iTotalRegistered);
 			}
 			return $iCalled;
 		}
 
-		list($bIsCronLiveLogViewer, $sCronLiveLogViewer) = $oRequest->detectArgvKeyPresence(self::CRON_LIVE_LOGS_ARGV_KEY);
-		list($bIsCron, $sCronIndexStack) = $oRequest->detectArgvKeyPresence(self::CRON_DAEMON_ARGV_KEY);
-		list($bIsCronWorker, $sWorkerValue) = $oRequest->detectArgvKeyPresence(self::CRON_WORKER_ARGV_KEY);
-		if($bIsCronLiveLogViewer){
+		list($bIsCronLiveLogViewer, $sCronLiveLogViewer) = $oRequest->detectArgvKeyPresence(AfrCliConstantsInterface::CRON_LIVE_LOGS_ARGV_KEY);
+		list($bIsCron, $sCronIndexStack) = $oRequest->detectArgvKeyPresence(AfrCliConstantsInterface::CRON_DAEMON_ARGV_KEY);
+		list($bIsCronWorker, $sWorkerValue) = $oRequest->detectArgvKeyPresence(AfrCliConstantsInterface::CRON_WORKER_ARGV_KEY);
+		if ($bIsCronLiveLogViewer) {
 			AfrCronLogChannelSharedLogBuffer::getInstance()->viewLogs($sCronLiveLogViewer);
-		}
-		elseif ($bIsCron || $bIsCronWorker) {
+		} elseif ($bIsCron || $bIsCronWorker) {
 			if ($bIsCronWorker && empty($sWorkerValue)) {
 				throw new AfrRouterException('Cron Worker payload is not configured! This must be a base64 @_');
 			}
-			// TODO: !!!!!!!!!! INREGISTRARE / CITIRE DIN MODULE PENTRU SURSE DE JOBS, CARE POATE FI ASIGNAT DE MULTIPLE ORI!!
-			if(1){
-				AfrConJobSources::getInstance()->addUrlSource('demo','http://localhost:808/core/src/Cron/AfrCronJobDaemon.DemoCron.txt');
-			}
-			else{
+			//TODO: 2026: sa mut addUrlSource si citirea direct in daemon
+			if (1) {
+				AfrConJobSources::getInstance()->addUrlSource('demo', 'http://localhost:808/core/src/Cron/AfrCronJobDaemon.DemoCron.txt');
+			} else {
 				AfrConJobSources::getInstance()->getSourcesFreshFromModules();
 			}
 
@@ -71,7 +77,7 @@ trait AfrRouterHandleCliTrait
 
 			if ($oClosureAfterRoute) {
 				$oClosureAfterRoute(
-					$bIsCron ? [self::CRON_DAEMON_ARGV_KEY => $sCronIndexStack] : [self::CRON_WORKER_ARGV_KEY => $sWorkerValue],
+					$bIsCron ? [AfrCliConstantsInterface::CRON_DAEMON_ARGV_KEY => $sCronIndexStack] : [AfrCliConstantsInterface::CRON_WORKER_ARGV_KEY => $sWorkerValue],
 					$oRequest,
 					$oCronLogger
 				);

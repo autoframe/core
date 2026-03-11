@@ -42,10 +42,13 @@ interface AfrModuleConstantsInterface
 	const bMergeFunctionalityFlushOldConfig = 'bMergeFunctionalityFlushOldConfig';
 	const sBridgeFunctionalityOnCommonInstanceKey = 'sBridgeFunctionalityOnCommonInstanceKey';
 	const sFunctionalityWrapKey = 'sFunctionalityWrapKey';
-	const anFunctionalitySettings = 'anFunctionalitySettings';
+	const anFuncSettings = 'anFuncSettings';
 	const onFunctionalityApplySettingsClosure = 'onFunctionalityApplySettingsClosure';
 	//DEPRECATED: 	const aFunctionalityParentsModInterface = 'aFunctionalityParentsModInterface';
 
+	const AFR_CORE_CONFIG_FILE =
+		__DIR__ . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR .
+		'AfrCoreModules' . DIRECTORY_SEPARATOR . 'afr.core.modules.config.php';
 
 
 }

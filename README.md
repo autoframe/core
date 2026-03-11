@@ -1,10 +1,1 @@
-# Autoframe is a low level framework that must be oriented on flaxibility
-
-Includes:
-- string helpers
-- database connections
-- cache support
-- module based routing and static routing
-- others
-
-``Good luck!``
+# Autoframe is a PHP 7.4 - 8.x framework that implements the SOLID principles and much more

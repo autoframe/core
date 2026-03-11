@@ -22,6 +22,7 @@ use Autoframe\Core\Cron\Log\AfrCronLoggerInterface;
 use Autoframe\Core\Cron\Log\AfrCronLoggerClass;
 use Autoframe\Core\Http\CurlGetBodyWithTimeout\AfrGetHttpBodyWithTimeout;
 use Autoframe\Core\Error\AfrError;
+use Autoframe\Core\Http\Request\AfrCliConstantsInterface;
 
 class AfrCronJobDaemon
 {
@@ -57,7 +58,7 @@ class AfrCronJobDaemon
 
 	/**
 	 * @param AfrCronLoggerInterface|null $oAltLogger
-	 * @param string|null|false|array $saDSJW CLI worker data AfrRouterConstantsInterface::CRON_WORKER_ARGV_KEY
+	 * @param string|null|false|array $saDSJW CLI worker data AfrCliConstantsInterface::CRON_WORKER_ARGV_KEY
 	 * @return AfrCronJobDaemon
 	 * @throws AfrContainerException
 	 * @throws AfrEventException
@@ -157,7 +158,7 @@ class AfrCronJobDaemon
 	}
 
 	/**
-	 * @param string|null|false|array $saDSJW CLI worker data AfrRouterConstantsInterface::CRON_WORKER_ARGV_KEY
+	 * @param string|null|false|array $saDSJW CLI worker data AfrCliConstantsInterface::CRON_WORKER_ARGV_KEY
 	 * @return void
 	 * @throws AfrContainerException
 	 * @throws AfrEventException
@@ -354,7 +355,7 @@ class AfrCronJobDaemon
 	protected function spawnCliWorker(AfrCronJob $oJob, bool $bRespawnNew = false): void
 	{
 		$sEntryPoint = $this->getJobTenantEntryPoint();
-		$sCronWorkerArgvKey = ' --' . AfrRouterConstantsInterface::CRON_WORKER_ARGV_KEY . '=';
+		$sCronWorkerArgvKey = ' --' . AfrCliConstantsInterface::CRON_WORKER_ARGV_KEY . '=';
 		$sJobData = rtrim(strtr(base64_encode((string)$oJob), '+/', '@_'), '=');
 		if (strpos($sEntryPoint, $sCronWorkerArgvKey) !== false) {
 			$aParts = explode($sCronWorkerArgvKey, $sEntryPoint);
@@ -423,13 +424,13 @@ class AfrCronJobDaemon
 		if (is_array($saDSJW) && !empty($saDSJW[static::command])) {
 			return $saDSJW;
 		}
-		//	$d= AfrRouterConstantsInterface::CRON_DAEMON_ARGV_KEY;	$w= AfrRouterConstantsInterface::CRON_WORKER_ARGV_KEY;
+		//	$d= AfrCliConstantsInterface::CRON_DAEMON_ARGV_KEY;	$w= AfrCliConstantsInterface::CRON_WORKER_ARGV_KEY;
 		if (is_null($saDSJW)) {
 			if (AfrCliHttpDetect::isCli() && ($aArgsLst = AfrGetOpt::getInstance()->getoptDetectAllArgs($_SERVER['argv'], false))) {
-				$saDSJW = $aArgsLst[AfrRouterConstantsInterface::CRON_WORKER_ARGV_KEY] ?? null;
-			}/* elseif (!AfrCliHttpDetect::isCli() && !empty($_REQUEST[AfrRouterConstantsInterface::CRON_WORKER_ARGV_KEY])) {
+				$saDSJW = $aArgsLst[AfrCliConstantsInterface::CRON_WORKER_ARGV_KEY] ?? null;
+			}/* elseif (!AfrCliHttpDetect::isCli() && !empty($_REQUEST[AfrCliConstantsInterface::CRON_WORKER_ARGV_KEY])) {
 			// THIS IS UNSECURE, so the implementation is temporarily stopped
-			$saDSJW = $_REQUEST[AfrRouterConstantsInterface::CRON_WORKER_ARGV_KEY];
+			$saDSJW = $_REQUEST[AfrCliConstantsInterface::CRON_WORKER_ARGV_KEY];
 			}*/
 		}
 

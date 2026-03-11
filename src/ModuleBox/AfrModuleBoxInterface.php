@@ -7,11 +7,13 @@ namespace Autoframe\Core\ModuleBox;
 use Autoframe\Core\Container\Exception\AfrContainerException;
 use Autoframe\Core\Env\Exception\AfrEnvException;
 use Autoframe\Core\Event\Exception\AfrEventException;
+use Autoframe\Core\FileSystem\CacheToPhpFile\AfrCachePhpFileToArray;
 use Autoframe\Core\ModuleBox\Exception\AfrModuleException;
 use Autoframe\Core\ModuleBox\Exception\AfrModuleFunctionalityException;
+use Autoframe\Core\Tenant\AfrDefaultTenantConfigsInterface;
 use Closure;
 
-interface AfrModuleBoxInterface extends AfrModuleConstantsInterface
+interface AfrModuleBoxInterface extends AfrModuleConstantsInterface, AfrDefaultTenantConfigsInterface
 {
 	/** @throws AfrModuleException */
 	public function registerModuleFQCN(string $sFqcnModule, array $aModConfig = []): void;
@@ -20,7 +22,7 @@ interface AfrModuleBoxInterface extends AfrModuleConstantsInterface
 
 	public function registerModuleInstance(AfrModuleInterface $oModule, array $aModConfig = []): void;
 
-	public function registerModuleFqcnListFromAppConfig(array $aConfigFQCN = []): void;
+	public function registerModuleFqcnListFromAppConfig(array $aConfigFQCN, bool $bCache, bool $bLoadFrameworkConfig = true): void;
 
 	/** @throws AfrModuleException|AfrEnvException */
 	public function isResolvableModule(string $sModuleFqcn, bool $bCountReplacersAsTrue): bool;
@@ -65,6 +67,10 @@ interface AfrModuleBoxInterface extends AfrModuleConstantsInterface
 
 	/** @throws AfrModuleException|AfrEnvException */
 	public function getFunctionalitySettingsByWrapKey(string $sWrapKey): ?array;
+
+	/** @throws AfrModuleException|AfrEnvException */
+	public function getFunctionalitySettingsByFuncInstance(object $oFunctionalityInstance): ?array;
+
 
 	/** @throws AfrModuleException|AfrEnvException */
 	public function getFunctionalityApplySettingsClosure(string $sWrapKey): ?Closure;
@@ -145,5 +151,20 @@ interface AfrModuleBoxInterface extends AfrModuleConstantsInterface
 	 * @throws AfrModuleException
 	 */
 	public function getFunctionalityGroupForResolving(string $sFuncInterfaceFqcn, array $aExcludeModulesFQCNs = [], array $aAllowedModulesFQCNs = [], array $aExcludeFunctionalitiesFQCNs = [], array $aAllowedFunctionalitiesFQCNs = []): array;
+
+	/** @throws AfrEnvException */
+
+	public function xetCacheSeconds(int $iCacheSeconds = null): int;
+	/** @throws AfrEnvException */
+
+	public function xetCacheFlag(bool $bTenantCache = null): bool;
+
+	public function setCache(): bool;
+
+	public function loadFromCache(): ?bool;
+
+	public function hardFlushInstances(bool $bFlushRegistered): self;
+
+
 
 }

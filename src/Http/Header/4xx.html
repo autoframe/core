@@ -1,0 +1,18 @@
+<!doctype html>
+<meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1">
+<title>{{status}} {{title}}</title>
+<style> :root { color-scheme: dark } body { margin: 0; min-height: 100vh; display: grid; place-items: center; background: #0b1220; color: #e6edf3; font: 14px/1.4 system-ui, Segoe UI, Roboto, Arial } main { max-width: 1300px; width: min(92vw, 1300px); padding: 2em; border: 1px solid #22314d; border-radius: 1.2em; background: linear-gradient(180deg, #0f1a33, #0b1220) } h1 { margin: 0 0 1em; font-size: 2em; letter-spacing: .1em; display: flex; gap: .9em; align-items: center } .badge { font: 700 .8em/1 system-ui; padding: .45em .8em; border-radius: 999px; background: #1f2f52; border: 1px solid #31446f } pre{max-height: 65vh; overflow: auto;} pre,div { margin: 1em 0 0; padding: 1em; border-radius: 1em; background: #070d19; border: 1px solid #1b2741; overflow: auto; white-space: pre-wrap; word-break: break-word } a { color: #8ab4ff; font-size: 1.3em; } em { opacity: .8 } svg { width: 2.2em; height: 2.2em; flex: 0 0 2.2em }</style>
+<main role=main>
+    <h1>
+        <a href="/"><svg viewBox="0 0 24 24" fill="none" aria-hidden=true>
+            <path d="M12 2 1.8 20h20.4L12 2Z" stroke="#8ab4ff" stroke-width="1.6"/>
+            <path d="M12 8v6" stroke="#8ab4ff" stroke-width="1.8" stroke-linecap="round"/>
+            <circle cx="12" cy="17.2" r="1.1" fill="#8ab4ff"/>
+        </svg></a>
+        <span>{{title}} <span class=badge>{{status}}</span></span>
+    </h1>
+  <!--  <em>Go back to <a href="/">home</a></em> -->
+    <div>{{url}} {{txt}}</div>
+
+    {{pre}}
+<!--</main>-->

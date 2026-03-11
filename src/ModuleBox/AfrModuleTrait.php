@@ -55,9 +55,11 @@ trait AfrModuleTrait
 			'SomeInterfaceDDDDD::class'=>[
 				AfrModuleConstantsInterface::sFuncConcreteFQCN     => 'SomeConcreteImplementingDDDDD::class',
 				AfrModuleConstantsInterface::bSingletonFunctionalityWithMergedSettings => false,
+				AfrModuleConstantsInterface::bMergeFunctionalityIntKeys => false,
 				AfrModuleConstantsInterface::sBridgeFunctionalityOnCommonInstanceKey => 'SomeCommonInstance',
+				AfrModuleConstantsInterface::bMergeFunctionalityFlushOldConfig => false,
 				AfrModuleConstantsInterface::bExcludedFunctionality  => false,
-				AfrModuleConstantsInterface::anFunctionalitySettings  => [],
+				AfrModuleConstantsInterface::anFuncSettings  => [], //array|null
 				AfrModuleConstantsInterface::onFunctionalityApplySettingsClosure  => function ($anSettings) {},
 			]
 		];
