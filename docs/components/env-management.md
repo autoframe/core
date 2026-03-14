@@ -1,106 +1,263 @@
-*PHP Environment Tools, Autoframe Framework*
+# Environment Management (`Autoframe\\Core\\Env`)
 
-Namespace:
-- Autoframe\Core\Env
-- **AfrEnv::getInstance()->isDev() returns true if APP_ENV is null**
-- **APP_ENV is not mandatory but recommended AfrEnv::getInstance()->setEnv('APP_ENV', 'DEV');**
-
-Classes:
-- class AfrEnv extends AfrSingletonAbstractClass implements AfrEnvInterface
-  - setBaseDir(string $sDir)
-  - readEnv(int $iCacheSeconds, array $aExtraEnvDirsFiles = [])
-    * iCacheSeconds is the number of cache seconds before expire. Use zero for no cache
-    * aExtraEnvDirsFiles to add extra env directories and .env files
-  - readEnvPhpFile(string $sFilePath)
-  - setEnv(string $sKey, $mData)
-  - - populate inline keys
-  - required(array $aKeys): AfrEnvValidatorInterface
-  - ifPresent(array $aKeys): AfrEnvValidatorInterface
-  - unrequire(array $aKeys): AfrEnvValidatorInterface
-  - - unset required or ifPresent
-  - registerEnv(bool $bMutableOverwrite = false, bool $bRegisterPutEnv = false)
-  - - will populate $_ENV, $_SERVER and getenv()
-  - getEnv(string $sKey = '') single key or all registered values
-  - - storage only inside class without $_ENV, $_SERVER or getenv()
-  - flush()  reset and clear all
-  - isProduction()
-  - isStaging()
-  - isDev()
-- class AfrEnvParserClass extends AfrSingletonAbstractClass implements AfrEnvParserInterface
-    - parseStr
-    - parseFile
-- class AfrEnvValidatorClass implements AfrEnvValidatorInterface
-    - reusable validator using closures
-    - required(array $aKeys)
-    - ifPresent(array $aKeys)
-    - customClosure(callable $fX)
-    - allowedValues(array $aAllowed)
-    - validateAll(array $aDataSet): bool
-    - reset()
-    - reset(array $aKeys)
-    - unrequire(array $aKeys)
-    - isInteger()
-    - isFloat()
-    - isBoolean()
-    - isArray()
-    - isString()
-    - isDateTime()
-    - notEmpty()
+> **Purpose**: document environment loading, parsing, validation, registration, and runtime access for classes under `src/Env/`.
 
 ---
 
-# AfrEnv
+## 1) Component Snapshot
 
-    // GENERAL
-    $oEnv = AfrEnv::getInstance()->setBaseDir(__DIR__);
-    $oEnv->readEnv(0); //load env files from __DIR__ without cache
-    $oEnv->readEnv(60); //cache loaded env file for 60 seconds
-    $oEnv->setEnv('FOO', 'BAR'); //set *[FOO]=BAR
-    
-    $oEnv->getEnv('APP_ENV'); //get env key
-    $oEnv->getEnv(); //get all env keys as array
+- **Namespace**: `Autoframe\\Core\\Env`
+- **Source root**: `src/Env/`
+- **Primary class**: `AfrEnv`
+- **Facade**: `AfrEnvFacade`
+- **Parser**: `Parser\\AfrEnvParserClass`
+- **Validator**: `Validator\\AfrEnvValidatorClass`
 
-    $oEnv->registerEnv($bMutableOverwrite = true, $bRegisterPutEnv = true);
-    // populate $_SERVER, $_ENV and getenv()
-    $oEnv->flush(); //total reset for class,cache, except superglobals are stil available
+### 1.1 What this component does
 
----
-
-    // INCLUDES PHP FILE THAT CONTAINS return array(...);
-    $oEnv = AfrEnv::getInstance();
-    $oEnv->readEnvPhpFile(path);
-    $oEnv->getEnv('FROM_PHP_FILE');
+- Reads `.env` files and PHP env-array files.
+- Parses env key/value strings via parser service.
+- Validates env data using reusable validation rules.
+- Exposes runtime access helpers (`getEnv`, `isProduction`, `isStaging`, `isDev`, etc.).
+- Optionally registers values into `$_ENV`, `$_SERVER`, and `getenv()`.
+- Supports cache file generation for faster repeated loads.
 
 ---
 
-    // Validator: REQUIRED or throw error on register or access
-    $oEnv = AfrEnv::getInstance();
-    $oEnv->required(['APP_ENV','SECRET']);
-    $oEnv->required(['NUMBER_INT'])->isInteger();
-    $oEnv->ifPresent(['NUMBER_FLOAT'])->isFloat();
-    $oEnv->ifPresent(['SOMENTHING'])->notEmpty();
-    $oEnv->ifPresent(['SOME_DATE_TIME'])->isDateTime();
-    $oEnv->unrequire(['NUMBER_INT']);
-    $oEnv->getEnv('SECRET');
+## 2) AI-Friendly Index (Machine-Readable)
+
+```yaml
+doc_id: env-management
+namespace: Autoframe\\Core\\Env
+source_dir: src/Env
+classes:
+  - AfrEnv
+  - AfrEnvFacade
+  - Parser\\AfrEnvParserClass
+  - Parser\\AfrEnvParserInterface
+  - Validator\\AfrEnvValidatorClass
+  - Validator\\AfrEnvValidatorInterface
+  - Exception\\AfrEnvException
+capabilities:
+  - load_env_from_base_dir
+  - load_env_from_extra_dirs_and_files
+  - load_env_from_php_array_file
+  - parse_env_strings_and_files
+  - validate_required_and_optional_keys
+  - register_env_to_superglobals_and_putenv
+  - env_state_detection_production_staging_dev_debug
+  - cache_env_snapshot_to_php
+notes:
+  - "isDev() returns true when APP_ENV is null"
+  - "APP_ENV is recommended but not strictly mandatory"
+```
 
 ---
 
-    // CUSTOM APP_ENV
-    $oEnv = AfrEnv::getInstance();
-    $this->ifPresent(['APP_ENV'])->allowedValues([
-      'DEV',
-      'PRODUCTION',
-      'STAGING',
-    ]);
-    $oEnv->setEnv('APP_ENV', 'DEV');
-    echo $oEnv->getEnv('APP_ENV'); //prints CUSTOM
-	
+## 3) Class map and responsibilities
+
+| Class | Responsibility |
+|---|---|
+| `AfrEnv` | Main orchestrator for env read/merge/cache/register/get and validation pipeline. |
+| `AfrEnvFacade` | Static proxy/facade wrapper over the env service instance/class. |
+| `AfrEnvParserClass` | Parses env strings/files into structured arrays. |
+| `AfrEnvValidatorClass` | Rule-based validator (required/ifPresent + type/value checks). |
+| `AfrEnvException` | Domain exception for env parsing/validation/loading issues. |
+
 ---
 
-    // xet : set / get
-    $oEnv = AfrEnv::getInstance();
-    $oEnv->xetAfrEnvParser(AfrEnvParserInterface $oEnvParser = null): AfrEnvParserInterface
-    $oEnv->xetAfrEnvValidator(AfrEnvValidatorInterface $oValidator = null): AfrEnvValidatorInterface
-    $oEnv->xetFileList(AfrDirTraversingFileListInterface $oFileList = null): AfrDirTraversingFileListInterface
-    $oEnv->xetOverWrite(AfrOverWriteInterface $oOverWrite = null): AfrOverWriteInterface
-    $oEnv->xetExportArray(AfrArrExportArrayAsStringInterface $oExportArray = null): AfrArrExportArrayAsStringInterface
+## 4) Main workflow
+
+### 4.1 Typical bootstrap flow
+
+1. `AfrEnv::getInstance()->setBaseDir(<projectRoot>)`
+2. `readEnv($cacheSeconds, $extraDirsFiles, $readBaseDir)`
+3. Optional validation rules via `required(...)` / `ifPresent(...)`
+4. `registerEnv($mutableOverwrite, $registerPutEnv)` if you want globals populated
+5. Runtime access through `getEnv('KEY')`, `isProduction()`, etc.
+
+### 4.2 Data sources
+
+- `.env` files discovered from base dir and optional extra dirs/files.
+- PHP files returning arrays via `readEnvPhpFile(...)`.
+- Programmatic assignments via `setEnv(...)`.
+
+### 4.3 Caching behavior
+
+- `readEnv($iCacheSeconds > 0, ...)` can reuse a generated PHP cache snapshot.
+- `0` means no cache reuse window.
+
+---
+
+## 5) API quick reference
+
+### 5.1 `AfrEnv` core methods
+
+| Method | Purpose |
+|---|---|
+| `setBaseDir(string $sDir)` | Set project/env discovery root directory. |
+| `readEnv(int $iCacheSeconds, array $aEnvDirsFiles = [], bool $bReadEnvFromBaseDir = true)` | Read and merge env files with optional cache. |
+| `readEnvPhpFile(string $sFilePath)` | Import env values from PHP file returning array. |
+| `setEnv(string $sKey, $mData)` | Set/override a key in local env store. |
+| `getEnv(string $sKey = '', $mFallback = null)` | Get one key or full env array. |
+| `registerEnv(bool $bMutableOverwrite = false, bool $bRegisterPutEnv = false)` | Populate `$_ENV`, `$_SERVER`, and optionally `putenv`. |
+| `flush()` | Reset internal env/validation/cache state. |
+| `isProduction()` / `isStaging()` / `isDev()` / `isDebug()` / `isDevOrDebug()` | Runtime environment helpers. |
+
+### 5.2 Validation methods (`AfrEnv` -> validator)
+
+| Method | Purpose |
+|---|---|
+| `required(array $aKeys)` | Mark keys as required. |
+| `ifPresent(array $aKeys)` | Apply rules only when key exists. |
+| `unrequire(array $aKeys)` | Remove required/optional rules for keys. |
+
+### 5.3 Swappable dependencies (`xet*` methods)
+
+| Method | Purpose |
+|---|---|
+| `xetAfrEnvParser(...)` | Get/set parser implementation. |
+| `xetAfrEnvValidator(...)` | Get/set validator implementation. |
+| `xetFileList(...)` | Get/set file-list implementation for env discovery. |
+| `xetOverWrite(...)` | Get/set file writer implementation for cache generation. |
+| `xetExportArray(...)` | Get/set PHP array exporter implementation. |
+
+---
+
+## 6) Validation patterns (`AfrEnvValidatorClass`)
+
+Supported chain-style validation helpers include:
+
+- `required([...])`
+- `ifPresent([...])`
+- `allowedValues([...])`
+- `customClosure(callable $fX)`
+- type checks: `isInteger()`, `isFloat()`, `isBoolean()`, `isArray()`, `isString()`
+- format/value checks: `isDateTime()`, `notEmpty()`
+- lifecycle: `validateAll($dataset)`, `reset()`, `unrequire([...])`
+
+---
+
+## 7) Practical PHP examples
+
+### 7.1 Load env from project root with cache
+
+```php
+<?php
+
+use Autoframe\Core\Env\AfrEnv;
+
+$env = AfrEnv::getInstance()
+    ->setBaseDir(__DIR__)
+    ->readEnv(60); // reuse cache up to 60 seconds
+
+$appEnv = $env->getEnv('APP_ENV', 'DEV');
+```
+
+### 7.2 Merge extra files/dirs and register globals
+
+```php
+<?php
+
+use Autoframe\Core\Env\AfrEnv;
+
+$env = AfrEnv::getInstance()
+    ->setBaseDir(__DIR__)
+    ->readEnv(0, [
+        __DIR__ . '/.env.local',
+        __DIR__ . '/config/env',
+    ])
+    ->registerEnv(
+        bMutableOverwrite: true,
+        bRegisterPutEnv: true
+    );
+
+echo $_ENV['APP_ENV'] ?? 'unknown';
+```
+
+### 7.3 Load env values from a PHP array file
+
+```php
+<?php
+
+use Autoframe\Core\Env\AfrEnv;
+
+AfrEnv::getInstance()
+    ->readEnvPhpFile(__DIR__ . '/env.custom.php')
+    ->setEnv('FEATURE_FLAG_X', true);
+```
+
+### 7.4 Add validation rules before access
+
+```php
+<?php
+
+use Autoframe\Core\Env\AfrEnv;
+
+$env = AfrEnv::getInstance();
+
+$env->required(['APP_ENV', 'SECRET_KEY']);
+$env->required(['AFR_DEBUG'])->isInteger();
+$env->ifPresent(['RATE_LIMIT'])->isFloat();
+$env->ifPresent(['APP_ENV'])->allowedValues(['DEV', 'STAGING', 'PRODUCTION']);
+
+$secret = $env->getEnv('SECRET_KEY');
+```
+
+### 7.5 Environment-state helpers
+
+```php
+<?php
+
+use Autoframe\Core\Env\AfrEnv;
+
+$env = AfrEnv::getInstance();
+
+if ($env->isProduction()) {
+    // production-only behavior
+}
+
+if ($env->isDevOrDebug()) {
+    // verbose logging, diagnostics, etc.
+}
+```
+
+---
+
+## 8) Error and behavior notes
+
+| Scenario | Expected behavior |
+|---|---|
+| Missing base dir in `setBaseDir` | Throws `AfrEnvException`. |
+| Missing/invalid env PHP file | Throws `AfrEnvException`. |
+| `registerEnv()` with no env data loaded | Throws `AfrEnvException`. |
+| Accessing required key missing during validation | Throws validation exception (`AfrEnvException`). |
+| `getEnv('AFR_ENV')` missing | Throws `AfrEnvException` with tenant-load guidance. |
+
+---
+
+## 9) `AfrEnvFacade` usage
+
+Use `AfrEnvFacade` when static proxy style is preferred:
+
+```php
+<?php
+
+use Autoframe\Core\Env\AfrEnvFacade;
+
+AfrEnvFacade::setBaseDir(__DIR__);
+AfrEnvFacade::readEnv(30);
+
+$all = AfrEnvFacade::getEnv();
+```
+
+---
+
+## 10) Contribution checklist
+
+Before changing `src/Env/*`:
+
+- [ ] Update this doc if env load order/caching behavior changes.
+- [ ] Keep method tables synchronized with `AfrEnvInterface`.
+- [ ] Add/update validation examples when new rule helpers are introduced.
+- [ ] Document any changes to global registration behavior (`$_ENV`, `$_SERVER`, `putenv`).

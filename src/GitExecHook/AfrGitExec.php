@@ -1,9 +1,9 @@
 <?php
+declare(strict_types=1);
 
 namespace Autoframe\Core\GitExecHook;
 
 use Exception;
-
 
 /*
 /// Manual Push:
@@ -18,10 +18,19 @@ print_r(
 echo '</pre>';
 */
 
+/**
+ * Lightweight wrapper around common Git CLI automation flows.
+ *
+ * Features:
+ * - executes git commands against a target repository,
+ * - offers convenience methods for fetch/pull/add/commit/push,
+ * - supports branch-oriented automation for webhook-driven deployments.
+ */
 class AfrGitExec
 {
     public static array $defaultMasterBranchNames = ['main', 'master'];
     public static int $iSleepMsBetweenExecs = 35;
+
     protected string $gitRepoDir;
     protected string $gitExePath = 'git';
     protected string $gitOrigin = 'origin';
@@ -30,10 +39,7 @@ class AfrGitExec
 
     /**
      * Create a new instance.
-     * @param string $gitRepoDir
-     * @param string $gitExePath
-     * @param string $gitOrigin
-     * @param bool $bUsePathNotCArg
+     *
      * @throws Exception
      */
     public function __construct(
@@ -41,11 +47,10 @@ class AfrGitExec
         string $gitExePath = 'git',
         string $gitOrigin = 'origin',
         bool   $bUsePathNotCArg = false
-    )
-    {
+    ) {
         if (!$gitRepoDir) {
             $sEnvConstant = 'X_PATH_TO_GIT_REPO_DIR';
-            $gitRepoDir = defined($sEnvConstant) ? constant($sEnvConstant) : ($_ENV[$sEnvConstant] ?? null);
+            $gitRepoDir = defined($sEnvConstant) ? (string)constant($sEnvConstant) : (string)($_ENV[$sEnvConstant] ?? '');
         }
 
         $this->gitRepoDir($gitRepoDir);
@@ -54,19 +59,14 @@ class AfrGitExec
 
         $aVersionInfo = $this->execCmd('--version', false);
         if (empty($aVersionInfo['gitExitSuccess'])) {
-            throw new Exception('Git is not installed on current system or miss configured or PHP exec() is not permitted!');
+            throw new Exception('Git is not installed on current system or misconfigured or PHP exec() is not permitted!');
         }
 
-        if (
-            !empty($aVersionInfo['execReturn']) &&
-            strpos($aVersionInfo['execReturn'], 'git version') !== false
-        ) {
-            $vA = explode('.', trim(trim($aVersionInfo['execReturn']), 'git verson'));
-            $version = $vA[0];
-            unset($vA[0]);
-            if (strlen($version) && (int)$version !== 0) {
-                $this->fV = (int)$version + floatval('0.' . implode('', $vA));
-            }
+        if (!empty($aVersionInfo['execReturn']) && preg_match('/(\d+)\.(\d+)(?:\.(\d+))?/', (string)$aVersionInfo['execReturn'], $m)) {
+            $major = (int)($m[1] ?? 0);
+            $minor = (int)($m[2] ?? 0);
+            $patch = (int)($m[3] ?? 0);
+            $this->fV = (float)($major . '.' . $minor . $patch);
         }
 
         if ($this->fV < 2) {
@@ -74,7 +74,6 @@ class AfrGitExec
         }
         $this->bOldGitPathVersion = $bUsePathNotCArg;
     }
-
 
     /**
      * Git repo dir.
@@ -120,8 +119,7 @@ class AfrGitExec
         string $sGitArgs,
         bool   $withGitRepoDir = true,
         bool   $b21 = true
-    ): array
-    {
+    ): array {
         $sCmd = $this->gitExePath();
         if ($withGitRepoDir) {
             if ($this->bOldGitPathVersion) {
@@ -132,16 +130,15 @@ class AfrGitExec
         }
         $sCmd .= ' ' . $sGitArgs . ($b21 ? ' 2>&1' : '');
 
-        $execReturn = exec(
-            $sCmd,
-            $gitOutputLines,
-            $gitExitCode
-        );
-        if (static::$iSleepMsBetweenExecs) {
-            usleep(static::$iSleepMsBetweenExecs * 1000); //35 ms
+        $gitOutputLines = [];
+        $gitExitCode = 1;
+        $execReturn = exec($sCmd, $gitOutputLines, $gitExitCode);
+
+        if (static::$iSleepMsBetweenExecs > 0) {
+            usleep(static::$iSleepMsBetweenExecs * 1000);
         }
         return [
-            'gitExitSuccess' => $gitExitCode == 0,
+            'gitExitSuccess' => $gitExitCode === 0,
             'gitExitCode' => $gitExitCode,
             'gitOutputLines' => $gitOutputLines,
             'execReturn' => $execReturn,
@@ -162,8 +159,7 @@ class AfrGitExec
         string $bare = 'false',
         string $ignorecase = 'true',
         string $eol = 'lf'
-    ): array
-    {
+    ): array {
         $aReturn = [];
         $sAction = 'config ' . ($bGlobal ? '--global ' : '');
         foreach ([
@@ -183,19 +179,13 @@ class AfrGitExec
 
     /**
      * Command: git clone https://user:TOKEN@github.com/autoframe/repo/
-     * @param string $sRepoUrl
-     * @param string $sUsername
-     * @param string $sClassicToken
-     * @param string $sMoreArgs
-     * @return array
      */
     public function gitCloneWithUserToken(
         string $sRepoUrl,
         string $sUsername = '',
-        string $sClassicToken = '', // https://github.com/settings/tokens
+        string $sClassicToken = '',
         string $sMoreArgs = ''
-    ): array
-    {
+    ): array {
         if (strpos($sRepoUrl, '@') === false && $sUsername && $sClassicToken) {
             $aUrl = explode('//', $sRepoUrl);
             $aUrl[1] = urlencode($sUsername) . ':' . urlencode($sClassicToken) . '@' . $aUrl[1];
@@ -205,43 +195,29 @@ class AfrGitExec
         return $this->execCmd('clone ' . $sMoreArgs . $sRepoUrl . ' ' . $this->gitRepoDir, false);
     }
 
-
-    /**
-     * Git revert changes from working copy.
-     */
     public function gitRevertChangesFromWorkingCopy(): array
     {
         return $this->execCmd('checkout .');
     }
 
-    /**
-     * Git reset changes to index and unpushed commits.
-     */
     public function gitResetChangesToIndexAndUnpushedCommits(bool $hard = false): array
     {
         return $this->execCmd('reset' . ($hard ? ' --hard' : ''));
     }
 
-    /**
-     * Git reset hard cached indexes.
-     */
     public function gitResetHardCachedIndexes(): array
     {
         return [
-            $this->execCmd('rm --cached -r .'), //Remove every file from git's index.
-            $this->gitResetChangesToIndexAndUnpushedCommits(true),   //Rewrite git's index to pick up all the new line endings.
+            $this->execCmd('rm --cached -r .'),
+            $this->gitResetChangesToIndexAndUnpushedCommits(true),
         ];
     }
 
-    /**
-     * Git clean untracked files directories.
-     */
     public function gitCleanUntrackedFilesDirectories(
         bool $files = true,
         bool $directories = true,
         bool $quiet = false
-    ): array
-    {
+    ): array {
         $sFlags = $files ? 'f' : '';
         $sFlags .= $directories ? 'd' : '';
         $sFlags .= $quiet ? 'q' : '';
@@ -251,17 +227,11 @@ class AfrGitExec
         return $this->execCmd('clean' . $sFlags);
     }
 
-    /**
-     * Git revert commit12.
-     */
     public function gitRevertCommit12(string $sCommit1, string $sCommit2): array
     {
         return $this->execCmd('revert ' . $sCommit1 . ' ' . $sCommit2);
     }
 
-    /**
-     * Git pull.
-     */
     public function gitPull(string $remote = '', string $branch = ''): array
     {
         if (!$remote) {
@@ -273,9 +243,6 @@ class AfrGitExec
         return $this->execCmd(trim("pull $remote $branch"));
     }
 
-    /**
-     * Git pull force.
-     */
     public function gitPullForce(string $remote = ''): array
     {
         if (!$remote) {
@@ -284,10 +251,7 @@ class AfrGitExec
         return $this->execCmd('pull -f ' . $remote);
     }
 
-    /**
-     * Git fetch.
-     */
-    public function gitFetch(string $remote = '-all'): array
+    public function gitFetch(string $remote = '--all'): array
     {
         if (!$remote) {
             $remote = $this->gitOrigin();
@@ -295,25 +259,16 @@ class AfrGitExec
         return $this->execCmd('fetch ' . $remote);
     }
 
-    /**
-     * Git diff.
-     */
     public function gitDiff(string $args = ''): array
     {
         return $this->execCmd(trim('diff ' . $args));
     }
 
-    /**
-     * Git status.
-     */
     public function gitStatus(string $args = ''): array
     {
         return $this->execCmd(trim('status ' . $args));
     }
 
-    /**
-     * Git add commit and push.
-     */
     public function gitAddCommitAndPush(string $sCommitMessage, string $sBranch, string $remote = ''): array
     {
         if (!$remote) {
@@ -328,9 +283,6 @@ class AfrGitExec
         return $aOut;
     }
 
-    /**
-     * Git push.
-     */
     public function gitPush(string $sBranch, string $remote = '', string $gitArgs = '-u'): array
     {
         if (!$remote) {
@@ -339,9 +291,6 @@ class AfrGitExec
         return $this->execCmd('push ' . ($gitArgs ? trim($gitArgs) . ' ' : '') . $remote . ' ' . $sBranch);
     }
 
-    /**
-     * Git add and commit.
-     */
     public function gitAddAndCommit(string $sCommitMessage): array
     {
         return [
@@ -350,9 +299,6 @@ class AfrGitExec
         ];
     }
 
-    /**
-     * Git hook fetch.
-     */
     public function gitHookFetch(string $remote = ''): array
     {
         if (!$remote) {
@@ -365,37 +311,30 @@ class AfrGitExec
         ];
     }
 
-    /**
-     * Git checkout new branch.
-     */
     public function gitCheckoutNewBranch(string $sBranch): array
     {
         return $this->execCmd('checkout -b ' . $sBranch);
     }
 
-    /**
-     * Git checkout branch.
-     */
     public function gitCheckoutBranch(string $sBranch): array
     {
         return $this->execCmd('checkout ' . $sBranch);
     }
 
-    /**
-     * Get current branch name.
-     */
     public function getCurrentBranchName(): string
     {
         if ($this->fV < 2) {
-            return $this->getBranchList()[0];
+            $aBranches = $this->getBranchList();
+            return (string)($aBranches[0] ?? '');
         }
-        return trim($this->execCmd('branch --show-current')['execReturn']);
-
+        $sCurrent = trim((string)$this->execCmd('branch --show-current')['execReturn']);
+        if ($sCurrent !== '') {
+            return $sCurrent;
+        }
+        $aBranches = $this->getBranchList();
+        return (string)($aBranches[0] ?? '');
     }
 
-    /**
-     * Get branch list.
-     */
     public function getBranchList(): array
     {
         $aBranches = [];
@@ -406,7 +345,10 @@ class AfrGitExec
             $aLines = [$aLines];
         }
         foreach ($aLines as $aLine) {
-            $aLine = trim($aLine);
+            $aLine = trim((string)$aLine);
+            if ($aLine === '') {
+                continue;
+            }
             if (!$sSelected && substr($aLine, 0, 1) === '*') {
                 $sSelected = trim($aLine, '* ');
             } else {
@@ -419,9 +361,6 @@ class AfrGitExec
         return $aBranches;
     }
 
-    /**
-     * Get master branch name.
-     */
     public function getMasterBranchName(): ?string
     {
         if (count(self::$defaultMasterBranchNames) === 1) {
@@ -429,46 +368,44 @@ class AfrGitExec
         }
 
         foreach ($this->getBranchList() as $sBranch) {
-            if (in_array($sBranch, self::$defaultMasterBranchNames)) {
+            if (in_array($sBranch, self::$defaultMasterBranchNames, true)) {
                 return $sBranch;
             }
         }
         return null;
     }
 
-    /**
-     * Is on master branch.
-     */
     public function isOnMasterBranch(): bool
     {
-        return in_array($this->getCurrentBranchName(), self::$defaultMasterBranchNames);
+        return in_array($this->getCurrentBranchName(), self::$defaultMasterBranchNames, true);
     }
 
-    /**
-     * Checkout master branch.
-     */
     public function checkoutMasterBranch(): array
     {
-        return $this->gitCheckoutBranch($this->getMasterBranchName());
+        $sMaster = $this->getMasterBranchName();
+        if ($sMaster === null || $sMaster === '') {
+            return [
+                'gitExitSuccess' => false,
+                'gitExitCode' => 1,
+                'gitOutputLines' => ['Unable to detect master branch name.'],
+                'execReturn' => '',
+                'call' => 'checkout <master>',
+            ];
+        }
+        return $this->gitCheckoutBranch($sMaster);
     }
 
-    /**
-     * Git reset hard origin master.
-     */
     public function gitResetHardOriginMaster(): array
     {
         $sMaster = $this->getMasterBranchName();
         $sOrigin = $this->gitOrigin();
         return [
-            $this->gitFetch('all'),
+            $this->gitFetch('--all'),
             $this->execCmd('reset --hard ' . $sOrigin . '/' . $sMaster),
-            $this->gitPull($sOrigin, $sMaster)
+            $this->gitPull($sOrigin, (string)$sMaster)
         ];
     }
 
-    /**
-     * All in one push current then switch to master pull add commit and push.
-     */
     public function allInOnePushCurrentThenSwitchToMasterPullAddCommitAndPush(string $sCommitText = ''): array
     {
         if (!$sCommitText) {
@@ -492,9 +429,6 @@ class AfrGitExec
         ));
     }
 
-    /**
-     * Hook master checkout.
-     */
     public function hookMasterCheckout(bool $bSaveCurrentChanges, string $sCommitText = '', bool $bPushToMaster = false): array
     {
         if (!$sCommitText) {
@@ -535,5 +469,4 @@ class AfrGitExec
         $aLog[] = $this->gitPull();
         return $aLog;
     }
-
 }
