@@ -19,6 +19,9 @@ class AfrCliHttpDetect
 {
 	protected static bool $bIsCliCache; //because http_response_code can involuntarily change
 
+	/**
+	 * Is cli.
+	 */
 	public static function isCli(AfrRequestClass $rq = null): bool
 	{
 		if ($rq) return $rq->isCli();
@@ -30,12 +33,18 @@ class AfrCliHttpDetect
 		//php_sapi_name ~ ['cli', 'phpdbg', 'embed', 'apache', 'apache2handler', 'cgi-fcgi', 'cli-server', 'fpm-fcgi', 'litespeed'])]
 	}
 
+	/**
+	 * Is http or https protocol request.
+	 */
 	public static function isHttpOrHttpsProtocolRequest(AfrRequestClass $rq = null): bool
 	{
 		$sProtocol = $rq ? $rq->getServerParam('SERVER_PROTOCOL') : ($_SERVER['SERVER_PROTOCOL'] ?? '');
 		return substr(strtoupper((string)$sProtocol), 0, 4) === 'HTTP';
 	}
 
+	/**
+	 * Is http.
+	 */
 	public static function isHttp(AfrRequestClass $rq = null): bool //todo test in load balancers and cloudflare, etc
 	{
 		$sRqm = $rq ? $rq->getServerParam('REQUEST_METHOD') : ($_SERVER['REQUEST_METHOD'] ?? '');
@@ -54,6 +63,9 @@ class AfrCliHttpDetect
 		return static::isHttpOrHttpsProtocolRequest($rq) && !static::isHttpsNative($rq) && !static::isHttpsForwarded($rq);
 	}
 
+	/**
+	 * Is https native or forwarded.
+	 */
 	public static function isHttpsNativeOrForwarded(AfrRequestClass $rq = null): bool
 	{
 		return static::isHttpsNative($rq) || static::isHttpsForwarded($rq);
@@ -92,6 +104,9 @@ class AfrCliHttpDetect
 			);
 	}
 
+	/**
+	 * Is behind load balancer or reverse proxy.
+	 */
 	public static function isBehindLoadBalancerOrReverseProxy(): bool
 	{
 		$bBehindLb = false;
@@ -105,6 +120,7 @@ class AfrCliHttpDetect
 	}
 
 	/**
+	 * Is untrusted http request.
 	 * @param AfrRequestClass|null $rq
 	 * @param bool $bE500IfUntrusted
 	 * @return bool
@@ -128,6 +144,7 @@ class AfrCliHttpDetect
 
 
 	/**
+	 * Get debug requested full data.
 	 * @param AfrRequestClass|null $rq
 	 * @param bool $bBody
 	 * @param bool $bHeaders
@@ -183,6 +200,9 @@ class AfrCliHttpDetect
 	}
 
 
+	/**
+	 * Get server request headers.
+	 */
 	public static function getServerRequestHeaders(AfrRequestClass $rq = null): array
 	{
 		if ($rq === null && function_exists('apache_request_headers')) {
@@ -211,6 +231,9 @@ class AfrCliHttpDetect
 	}
 
 
+	/**
+	 * Get request scheme host port.
+	 */
 	public static function getRequestSchemeHostPort(AfrRequestClass $rq = null): string
 	{
 		if (!static::isHttpOrHttpsProtocolRequest($rq)) {
@@ -239,6 +262,9 @@ class AfrCliHttpDetect
 		), 'HTP/ '));
 	}
 
+	/**
+	 * Get entry point.
+	 */
 	public static function getEntryPoint(
 		AfrRequestClass $rq = null,
 		bool            $bIncludeArgs = true,

@@ -16,6 +16,7 @@ class AfrHttpStatusCode extends AfrSingletonAbstractClass implements AfrHttpStat
 	public static string $sTemplateAfr = __DIR__ . DIRECTORY_SEPARATOR . 'afr.html';
 
 	/**
+	 * H status html.
 	 * @throws AfrEnvException
 	 */
 	public function hStatusHtml(
@@ -43,6 +44,9 @@ class AfrHttpStatusCode extends AfrSingletonAbstractClass implements AfrHttpStat
 		);
 	}
 
+	/**
+	 * H500 config.
+	 */
 	public static function h500Config(string $sInfo = null, string $sH2 = null): void
 	{
 		AfrEvent::dispatchEvent();
@@ -55,6 +59,7 @@ class AfrHttpStatusCode extends AfrSingletonAbstractClass implements AfrHttpStat
 	}
 
 	/**
+	 * H status header and html.
 	 * @throws AfrHttpHeaderException
 	 * @throws AfrEventException
 	 * @throws AfrEnvException

@@ -18,6 +18,9 @@ class AfrRepositoryAutoSelector
 
     public static array $aLoadTypes;
 
+    /**
+     * Set to use repositories.
+     */
     public static function setToUseRepositories(
         string $sType,
         array  $aDesiredRepositoryNames
@@ -49,6 +52,7 @@ class AfrRepositoryAutoSelector
     }
 
     /**
+     * Select repo by key ns.
      * @param string $sKey H1\2\key or H1\key or default repository
      * @param int $iPriority second ns level or 1
      * @return Repository
@@ -73,6 +77,7 @@ class AfrRepositoryAutoSelector
 
 
     /**
+     * Prefix key for repo.
      * @param string $sKey
      * @param string $sType constant values H1, H2, F1, etc
      * @param int $iPriority [0-9]
@@ -86,6 +91,9 @@ class AfrRepositoryAutoSelector
         return $sKey;
     }
 
+    /**
+     * Get repository by priority.
+     */
     public static function getRepositoryByPriority(string $sType = '', int $iPriority = 1): Repository
     {
         if (!empty($sType)) {
@@ -103,31 +111,49 @@ class AfrRepositoryAutoSelector
         return AfrCache::getManager()->store();
     }
 
+    /**
+     * Get repository high.
+     */
     public static function getRepositoryHigh(int $iPriority = 1): Repository
     {
         return static::getRepositoryByPriority(static::HIGH_LOAD, $iPriority);
     }
 
+    /**
+     * Get repository secondary.
+     */
     public static function getRepositorySecondary(int $iPriority = 1): Repository
     {
         return static::getRepositoryByPriority(static::SECONDARY_LOAD, $iPriority);
     }
 
+    /**
+     * Get repository fs.
+     */
     public static function getRepositoryFS(int $iPriority = 1): Repository
     {
         return static::getRepositoryByPriority(static::FILESYSTEM, $iPriority);
     }
 
+    /**
+     * Get repository fs2.
+     */
     public static function getRepositoryFS2(int $iPriority = 1): Repository
     {
         return static::getRepositoryByPriority(static::FILESYSTEM2, $iPriority);
     }
 
+    /**
+     * Get repository ram.
+     */
     public static function getRepositoryRam(int $iPriority = 1): Repository
     {
         return static::getRepositoryByPriority(static::RAM, $iPriority);
     }
 
+    /**
+     * Get repository null.
+     */
     public static function getRepositoryNull(int $iPriority = 1): Repository
     {
         return static::getRepositoryByPriority(static::NONE, $iPriority);

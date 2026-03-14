@@ -9,6 +9,7 @@ trait AfrSplitMergeTrait
 {
 
     /**
+     * Split.
      * @param string $sSourceFullFilePath
      * @param int $iPartSize
      * @param bool $bOverwrite
@@ -131,6 +132,7 @@ trait AfrSplitMergeTrait
     }
 
     /**
+     * Merge.
      * @param string $sFirstPartPath
      * @param string $sOtherDestinationDirectoryPath
      * @param bool $bOverWriteDestination
@@ -234,6 +236,7 @@ trait AfrSplitMergeTrait
     }
 
     /**
+     * Is file first of merge shards.
      * @param string $sFullFilePath
      * @return bool
      */
@@ -342,6 +345,7 @@ trait AfrSplitMergeTrait
     }
 
     /**
+     * Blind merge.
      * @param string $sDestinationFilePath
      * @param array $aParts
      * @return void

@@ -4,6 +4,9 @@ namespace Autoframe\Core\Validate;
 
 class AfrValidateCNP {
 	//TODO: TEST
+	/**
+	 * Validate.
+	 */
 	public static function validate(string $sCnp): bool
 	{
 		if(

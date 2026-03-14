@@ -7,6 +7,9 @@ use Autoframe\Core\Event\AfrEvent;
 
 trait AfrHttpRoutesHelper {
 	/** @inheritDoc */
+	/**
+	 * Register http routes.
+	 */
 	public function registerHttpRoutes(): int
 	{
 		return Afr::app()->router()->registerHTTPRoutesFromModule(
@@ -21,6 +24,9 @@ trait AfrHttpRoutesHelper {
 	}
 
 
+	/**
+	 * Get http routes.
+	 */
 	public function getHttpRoutes(): ?array
 	{
 		// define const SELF_DIR in the implementing class or replace with concrete method + __DIR__
@@ -29,6 +35,9 @@ trait AfrHttpRoutesHelper {
 
 	/** @inheritDoc */
 
+	/**
+	 * Invoke the instance as a callable.
+	 */
 	public function __invoke(): int
 	{
 		return $this->registerHttpRoutes();
@@ -39,6 +48,9 @@ trait AfrHttpRoutesHelper {
 
 	/** @inheritDoc */
 
+	/**
+	 * Xet httpsub routing path.
+	 */
 	public function xetHTTPSubRoutingPath(string $sSubRoutingPath = null): string
 	{
 		if ($sSubRoutingPath !== null) {

@@ -41,6 +41,7 @@ class AfrInterfaceToConcreteClass implements AfrInterfaceToConcreteInterface
 	protected ?AfrToConcreteStrategiesInterface $oAfrToConcreteStrategies;
 
 	/**
+	 * Create a new instance.
 	 * @param array $aSettings
 	 * @param array $aExtraPaths
 	 * @throws AfrInterfaceToConcreteException|AfrEnvException
@@ -76,6 +77,7 @@ class AfrInterfaceToConcreteClass implements AfrInterfaceToConcreteInterface
 	}
 
 	/**
+	 * Get class interface to concrete.
 	 * @param string|null $sFilterFQCN
 	 * @return array
 	 * @throws AfrClassDependencyException
@@ -117,6 +119,7 @@ class AfrInterfaceToConcreteClass implements AfrInterfaceToConcreteInterface
 	}
 
 	/**
+	 * Get latest instance.
 	 * @return AfrInterfaceToConcreteInterface|null
 	 */
 	public static function getLatestInstance(): ?AfrInterfaceToConcreteInterface
@@ -275,6 +278,7 @@ class AfrInterfaceToConcreteClass implements AfrInterfaceToConcreteInterface
 	}
 
 	/**
+	 * Get settings.
 	 * @param string|null $sType
 	 * @return array|mixed
 	 */
@@ -288,6 +292,7 @@ class AfrInterfaceToConcreteClass implements AfrInterfaceToConcreteInterface
 
 
 	/**
+	 * Hash v.
 	 * @param string $s
 	 * @return string
 	 */
@@ -297,6 +302,7 @@ class AfrInterfaceToConcreteClass implements AfrInterfaceToConcreteInterface
 	}
 
 	/**
+	 * Get paths.
 	 * @return array
 	 */
 	public function getPaths(): array
@@ -364,6 +370,7 @@ class AfrInterfaceToConcreteClass implements AfrInterfaceToConcreteInterface
 	}
 
 	/**
+	 * Get afr to concrete strategies.
 	 * @return AfrToConcreteStrategiesInterface
 	 */
 	public function getAfrToConcreteStrategies(): AfrToConcreteStrategiesInterface
@@ -376,6 +383,7 @@ class AfrInterfaceToConcreteClass implements AfrInterfaceToConcreteInterface
 	}
 
 	/**
+	 * Set afr to concrete strategies.
 	 * @param AfrToConcreteStrategiesInterface $oAfrToConcreteStrategies
 	 * @return AfrToConcreteStrategiesInterface
 	 */

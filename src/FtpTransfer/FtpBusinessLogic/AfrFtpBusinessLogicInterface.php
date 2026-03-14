@@ -6,6 +6,7 @@ namespace Autoframe\Core\FtpTransfer\FtpBusinessLogic;
 interface AfrFtpBusinessLogicInterface
 {
     /**
+     * Make backup.
      * @return void
      */
     public function makeBackup(): void;

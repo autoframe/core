@@ -36,6 +36,9 @@ class AfrCronLoggerClass extends AfrSingletonAbstractClass implements AfrCronLog
 	protected ?int $exitCode;
 	protected int $iLogTs;
 
+	/**
+	 * Set command alias tenant worker.
+	 */
 	public function setCommandAliasTenantWorker(
 		string $sFullCommand,
 		string $sFlags,
@@ -53,11 +56,17 @@ class AfrCronLoggerClass extends AfrSingletonAbstractClass implements AfrCronLog
 		$this->sHash = $sHash;
 	}
 
+	/**
+	 * Push channel.
+	 */
 	public function pushChannel(AfrCronLogChannelInterface $oChannel): void
 	{
 		$this->aChannels[get_class($oChannel)] ??= $oChannel; //avoid duplication of logs
 	}
 
+	/**
+	 * Reset channels.
+	 */
 	public function resetChannels(): self
 	{
 		$this->aChannels = [];
@@ -77,6 +86,9 @@ class AfrCronLoggerClass extends AfrSingletonAbstractClass implements AfrCronLog
 		}
 	}
 
+	/**
+	 * Log.
+	 */
 	public function log(string $sMessage, bool $bError = false, int $exitCode = null): void
 	{
 		$this->detectError($sMessage, $bError, $exitCode);
@@ -99,57 +111,90 @@ class AfrCronLoggerClass extends AfrSingletonAbstractClass implements AfrCronLog
 			$this->log(...$aExtraLog);
 		}
 	}
+	/**
+	 * Log queue.
+	 */
 	public function logQueue(string $sMessage, bool $bError = false, int $exitCode = null): void
 	{
 		$this->aLogQueue[] = [$sMessage, $bError, $exitCode];
 	}
 
 
+	/**
+	 * Get full command.
+	 */
 	public function getFullCommand(): ?string
 	{
 		return $this->sFullCommand;
 	}
 
+	/**
+	 * Get flags.
+	 */
 	public function getFlags(): ?string
 	{
 		return $this->sFlags;
 	}
 
+	/**
+	 * Get alias.
+	 */
 	public function getAlias(): ?string
 	{
 		return $this->sAlias;
 	}
 
+	/**
+	 * Get tenant.
+	 */
 	public function getTenant(): ?string
 	{
 		return $this->sTenant;
 	}
 
+	/**
+	 * Is worker.
+	 */
 	public function isWorker(): ?bool
 	{
 		return $this->bWorker;
 	}
 
+	/**
+	 * Get message.
+	 */
 	public function getMessage(): string
 	{
 		return $this->sMessage;
 	}
 
+	/**
+	 * Is error.
+	 */
 	public function isError(): bool
 	{
 		return $this->bError;
 	}
 
+	/**
+	 * Get exit code.
+	 */
 	public function getExitCode(): ?int
 	{
 		return $this->exitCode;
 	}
 
+	/**
+	 * Get log ts.
+	 */
 	public function getLogTs(): int
 	{
 		return $this->iLogTs;
 	}
 
+	/**
+	 * Get hash.
+	 */
 	public function getHash(): ?string
 	{
 		return $this->sHash;

@@ -11,6 +11,7 @@ class AfrHttpHeaderFormatters extends AfrSingletonAbstractClass
 {
 
     /**
+     * Format http raw headers to arr.
      * @param string $sHeaders raw headers
      * @return array
      */
@@ -20,6 +21,7 @@ class AfrHttpHeaderFormatters extends AfrSingletonAbstractClass
     }
 
     /**
+     * Format mixed headers input to key array.
      * @param string|array|null $mHeaders
      * @return array
      * @throws AfrHttpHeaderFormattersException
@@ -54,6 +56,7 @@ class AfrHttpHeaderFormatters extends AfrSingletonAbstractClass
     }
 
     /**
+     * Format for curl opt http header.
      * @param $mHeaders
      * @return array format for CURLOPT_HTTPHEADER
      * @throws AfrHttpHeaderFormattersException
@@ -85,6 +88,7 @@ class AfrHttpHeaderFormatters extends AfrSingletonAbstractClass
     }
 
     /**
+     * Format flatten header array.
      * @param array $aHeaders
      * @param string $sGlue
      * @return string
@@ -114,6 +118,7 @@ class AfrHttpHeaderFormatters extends AfrSingletonAbstractClass
     }
 
     /**
+     * Format split header line in key val.
      * @param string $sHeaderLine
      * @return array
      * @throws AfrHttpHeaderFormattersException

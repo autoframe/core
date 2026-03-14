@@ -37,6 +37,7 @@ final class AfrCronLogSharedLogBuffer
 	private string $linePattern;
 
 	/**
+	 * Create a new instance.
 	 * @throws AfrEventException
 	 * @throws AfrContainerException
 	 */

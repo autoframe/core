@@ -28,6 +28,9 @@ class AfrSysTempDir
 	protected static array $aTempDirs = [];
 	protected static array $aVars = [];
 
+	/**
+	 * Sys get temp dir.
+	 */
 	public static function sysGetTempDir(): string
 	{
 		//use in project Afr::getTempDir(); returns  => AfrSysTempDir::sysGetTempDir() . DIRECTORY_SEPARATOR . self::getTenantAlias();
@@ -46,6 +49,7 @@ class AfrSysTempDir
 	}
 
 	/**
+	 * Sys get temp dir alias sub dir.
 	 * @param string|object $soAliasSubDir
 	 * @param string|null $sSysTmpDir
 	 * @return string

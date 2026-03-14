@@ -5,12 +5,18 @@ namespace Autoframe\Core\Database\Orm\Action\Mysql;
 
 trait EscapeTrait
 {
+	/**
+	 * Encapsulate db tbl col name.
+	 */
 	public static function encapsulateDbTblColName(string $sDatabaseOrTableName): string
 	{
 		return '`' . str_replace(['`', '\\'], ['``', '\\\\'], $sDatabaseOrTableName) . '`';
 	}
 
 
+	/**
+	 * Encapsulate cell value.
+	 */
 	public static function encapsulateCellValue($mData, bool $bForceEncapsulateAsString = false)
 	{
 		//todo ints, floats, NULL as null, etc
@@ -29,33 +35,51 @@ trait EscapeTrait
 		return "'" . str_replace(["'", '\\'], ["''", '\\\\'], (string)$mData) . "'";
 	}
 
+	/**
+	 * Q.
+	 */
 	public static function q($mData, bool $bForceEncapsulateAsString = false)
 	{
 		return static::encapsulateCellValue($mData, $bForceEncapsulateAsString);
 	}
 
 
+	/**
+	 * Escape db name.
+	 */
 	public function escapeDbName(string $sDatabaseName): string
 	{
 		return static::encapsulateDbTblColName($sDatabaseName);
 	}
 
+	/**
+	 * Escape table name.
+	 */
 	public function escapeTableName($sTableName): string
 	{
 		return static::encapsulateDbTblColName($sTableName);
 	}
 
+	/**
+	 * Escape column name.
+	 */
 	public function escapeColumnName($sColumnName): string
 	{
 		return static::encapsulateDbTblColName($sColumnName);
 	}
 
 
+	/**
+	 * Escape value as mixed.
+	 */
 	public function escapeValueAsMixed($mValue)
 	{
 		return static::encapsulateCellValue($mValue, false);
 	}
 
+	/**
+	 * Escape value as string.
+	 */
 	public function escapeValueAsString($mValue): string
 	{
 		return static::encapsulateCellValue($mValue, true);

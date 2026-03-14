@@ -8,15 +8,23 @@ use Autoframe\Core\Database\Orm\Exception\AfrOrmException;
 interface ConvertInterface extends AfrOrmBlueprintInterface #, CnxActionSingletonInterface
 {
 	/**
+	 * Blueprint to table sql.
 	 * @throws AfrOrmException
 	 */
 	public static function blueprintToTableSql(array $aBlueprint): string;
 
+	/**
+	 * Encapsulate db tbl col name.
+	 */
 	public static function encapsulateDbTblColName(string $sDatabaseOrTableName): string;
 
+	/**
+	 * Encapsulate cell value.
+	 */
 	public static function encapsulateCellValue($mData);
 
 	/**
+	 * Parse extract quoted value.
 	 * @param string $sText
 	 * @param string $sQuot
 	 * @param int $iStartOffset
@@ -29,6 +37,9 @@ interface ConvertInterface extends AfrOrmBlueprintInterface #, CnxActionSingleto
 		int    $iStartOffset = 0
 	): array;
 
+	/**
+	 * Parse create table blueprint.
+	 */
 	public static function parseCreateTableBlueprint(string $sTableSql): array;
 
 }

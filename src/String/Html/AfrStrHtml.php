@@ -25,6 +25,9 @@ use function explode;
 
 class AfrStrHtml
 {
+    /**
+     * Test.
+     */
     public static function test()
     {
         AfrStr::prea( self::addClass('class="deja"','noua'));
@@ -37,6 +40,7 @@ class AfrStrHtml
     public static string $sAutoQuot = '"';
 
     /**
+     * Add class.
      * @param $HtmlClass 1 str: 'class="deja"' arr: ['deja']
      * @param string $sNewClassName
      * @param string $sQuot
@@ -72,6 +76,7 @@ class AfrStrHtml
     }
 
     /**
+     * Remove class.
      * @param $HtmlClass  1 str: 'class="deja"' arr: ['deja']
      * @param string $sNewClassName
      * @param string $sQuot
@@ -141,6 +146,7 @@ class AfrStrHtml
     }
 
     /**
+     * Validate class name.
      * @param string $sNewClassName
      * @return string
      * @throws AfrException

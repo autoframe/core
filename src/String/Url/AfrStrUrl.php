@@ -35,6 +35,7 @@ class AfrStrUrl
     }
 
     /**
+     * Base64url encode.
      * @param $data
      * @return string
      */
@@ -44,6 +45,7 @@ class AfrStrUrl
     }
 
     /**
+     * Base64url decode.
      * @param string $data
      * @return false|string
      */

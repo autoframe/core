@@ -15,6 +15,7 @@ interface AfrDirPathInterface
     public function isDir(string $sDirPath): bool;
 
     /**
+     * Open dir.
      * @param string $sDirPath
      * @param $context
      * @return false|resource
@@ -77,14 +78,21 @@ interface AfrDirPathInterface
     public function fixDs(string $sPath): string;
 
 	/**
+	 * Realpath.
 	 * @param string $path
 	 * @param bool $bCheckExistence
 	 * @return false|string
 	 */
 	public function realpath(string $path, bool $bCheckExistence);
 
+	/**
+	 * Dir exist and writable.
+	 */
 	public function dirExistAndWritable(string $dir, bool $bCreate = true, ?int $expectedPermissions = null, bool $bClearStatCache = false): bool;
 
+	/**
+	 * Get expected dir permissions.
+	 */
 	public static function getExpectedDirPermissions(): int;
 
 	/**

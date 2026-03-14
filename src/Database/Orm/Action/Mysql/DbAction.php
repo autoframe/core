@@ -17,22 +17,32 @@ class DbAction implements DbActionInterface, PdoInteractInterface
 	use DbActionSingletonTrait;
 
 
+	/**
+	 * Get connexion instance.
+	 */
 	public function getConnexionInstance(): CnxActionInterface
 	{
 		return $this->oCnxAction;
 	}
 
+	/**
+	 * Db get charset and collation.
+	 */
 	public function dbGetCharsetAndCollation(): array
 	{
 		return $this->oCnxAction->cnxGetDatabaseCharsetAndCollation($this->getNameDatabase());
 	}
 
+	/**
+	 * Db set charset and collation.
+	 */
 	public function dbSetCharsetAndCollation(string $sCharset, string $sCollation = ''): bool
 	{
 		return $this->oCnxAction->cnxSetDatabaseCharsetAndCollation($this->getNameDatabase(), $sCharset, $sCollation);
 	}
 
 	/**
+	 * Db get tbl list.
 	 * @throws AfrDatabaseConnectionException
 	 */
 	public function dbGetTblList(string $sLike = ''): array
@@ -47,6 +57,9 @@ class DbAction implements DbActionInterface, PdoInteractInterface
 		return $this->getAllCells($query);
 	}
 
+	/**
+	 * Db get tbl list with charset.
+	 */
 	public function dbGetTblListWithCharset(string $sLike = ''): array
 	{
 		$this->trimTblName($sLike, false);
@@ -84,6 +97,7 @@ class DbAction implements DbActionInterface, PdoInteractInterface
 	}
 
 	/**
+	 * Db show create table.
 	 * @throws AfrDatabaseConnectionException
 	 */
 	public function dbShowCreateTable(string $sTblName): string
@@ -99,6 +113,7 @@ class DbAction implements DbActionInterface, PdoInteractInterface
 	}
 
 	/**
+	 * Db tbl exists.
 	 * @param string $sTblName
 	 * @return bool
 	 * @throws AfrDatabaseConnectionException
@@ -117,6 +132,7 @@ class DbAction implements DbActionInterface, PdoInteractInterface
 	}
 
 	/**
+	 * Db get tbl charset and collation.
 	 * @param string $sTblName
 	 * @return array
 	 * @throws AfrDatabaseConnectionException
@@ -137,6 +153,7 @@ class DbAction implements DbActionInterface, PdoInteractInterface
 	}
 
 	/**
+	 * Db set tbl charset and collation.
 	 * @param string $sTblName
 	 * @param string $sCharset
 	 * @param string $sCollation
@@ -172,12 +189,16 @@ class DbAction implements DbActionInterface, PdoInteractInterface
 		return (bool)$this->execPdoStatement($query);
 	}
 
+	/**
+	 * Db create tbl.
+	 */
 	public function dbCreateTbl(string $sTblName, string $sCharset = 'utf8mb4', string $sCollate = 'utf8mb4_general_ci', array $aOptions = []): bool
 	{
 		// TODO: Implement dbCreateTbl() method.
 	}
 
 	/**
+	 * Db rename tbl.
 	 * @param string $sTblFrom
 	 * @param string $sTblTo
 	 * @return bool
@@ -204,6 +225,7 @@ class DbAction implements DbActionInterface, PdoInteractInterface
 
 
 	/**
+	 * Db copy table.
 	 * @param string $sTableNameFrom
 	 * @param string $sTableNameTo
 	 * @param $mOtherDatabase
@@ -251,6 +273,7 @@ class DbAction implements DbActionInterface, PdoInteractInterface
 	}
 
 	/**
+	 * Db move table to other database.
 	 * @param string $sTableName
 	 * @param $mOtherDatabase
 	 * @return bool
@@ -290,6 +313,7 @@ class DbAction implements DbActionInterface, PdoInteractInterface
 	}
 
 	/**
+	 * Db empty table.
 	 * @param string $sTableName
 	 * @return bool
 	 * @throws AfrDatabaseConnectionException
@@ -322,12 +346,16 @@ class DbAction implements DbActionInterface, PdoInteractInterface
 		);
 	}
 
+	/**
+	 * Pdo interact.
+	 */
 	public function pdoInteract(): PdoInteractInterface
 	{
 		return $this;
 	}
 
 	/**
+	 * Convert tables to storage engine.
 	 * @param string $from
 	 * @param string $to
 	 * @param bool $bExecute
@@ -364,6 +392,7 @@ class DbAction implements DbActionInterface, PdoInteractInterface
 	}
 
 	/**
+	 * Db describe table.
 	 * @param string|null $sTableName
 	 * @return array
 	 * @throws AfrDatabaseConnectionException
@@ -377,6 +406,7 @@ class DbAction implements DbActionInterface, PdoInteractInterface
 	}
 
 	/**
+	 * Db show index from table.
 	 * @param string $sTableName
 	 * @return array
 	 * @throws AfrDatabaseConnectionException

@@ -20,6 +20,7 @@ final class AfrContainerFacade
 	protected static string $sContainerFQCN = AfrLiteContainer::class;
 
 	/**
+	 * Xet container class.
 	 * @param string|null $sContainerFQCN
 	 * @return string FQCN implementing AfrContainerInterface
 	 * @throws AfrException
@@ -39,6 +40,7 @@ final class AfrContainerFacade
 	}
 
 	/**
+	 * Get container.
 	 * @return AfrLiteContainer|AfrContainerInterface
 	 */
 	public static function getContainer(): AfrContainerInterface
@@ -47,6 +49,7 @@ final class AfrContainerFacade
 	}
 
 	/**
+	 * Handle calls to inaccessible static methods.
 	 * @param $method
 	 * @param $args
 	 * @return mixed

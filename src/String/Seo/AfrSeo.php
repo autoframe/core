@@ -9,6 +9,7 @@ class AfrSeo
 {
 
     /**
+     * Title.
      * @param string $str
      * @param int $max
      * @return string
@@ -21,6 +22,9 @@ class AfrSeo
 
     //$breadcrumb[]=array('/','OnBreak.ro','alt title'); // link nume link descriere
 
+    /**
+     * Breadcrumb.
+     */
     public static function breadcrumb($array, $last_element_is_link = 1)
     {
         echo 'https://developers.google.com/search/docs/advanced/structured-data/breadcrumb#json-ld_1';die;

@@ -31,6 +31,9 @@ class AfrCacheApp extends AfrSingletonArrAbstractClass // extends Autoframe\Core
     ];
 
 	//TODO finish & test
+    /**
+     * Extend app config.
+     */
     public function extendAppConfig(array $aData = [], bool $bMerge = true): self
     {
         if ($bMerge) {
@@ -45,6 +48,7 @@ class AfrCacheApp extends AfrSingletonArrAbstractClass // extends Autoframe\Core
     }
 
     /**
+     * Get supported repository types.
      * @return array
      */
     public function getSupportedRepositoryTypes(): array
@@ -117,6 +121,9 @@ class AfrCacheApp extends AfrSingletonArrAbstractClass // extends Autoframe\Core
     }
 
 
+    /**
+     * Test sock.
+     */
     public function testSock(): bool
     {
         return function_exists('socket_create');
@@ -182,12 +189,16 @@ class AfrCacheApp extends AfrSingletonArrAbstractClass // extends Autoframe\Core
         return $this->setStoreConfig($aData['driver'], $aData, $bDefault);
     }
 
+    /**
+     * Test apc.
+     */
     public function testApc(): bool
     {
         return function_exists('apcu_fetch') || function_exists('apc_fetch');
     }
 
     /**
+     * Set apc config.
      * @param bool $bDefault
      * @return $this
      * @throws AfrException
@@ -202,6 +213,7 @@ class AfrCacheApp extends AfrSingletonArrAbstractClass // extends Autoframe\Core
     }
 
     /**
+     * Set null config.
      * @param bool $bDefault
      * @return $this
      */
@@ -242,6 +254,9 @@ class AfrCacheApp extends AfrSingletonArrAbstractClass // extends Autoframe\Core
         return $this->setStoreConfig($aData['driver'], $aData, $bDefault);
     }
 
+    /**
+     * Test memcached.
+     */
     public function testMemcached(): bool
     {
         return class_exists('\Memcached');
@@ -333,6 +348,9 @@ class AfrCacheApp extends AfrSingletonArrAbstractClass // extends Autoframe\Core
         return $this->setStoreConfig($aData['driver'], $aData, $bDefault);
     }
 
+    /**
+     * Parse memcached servers.
+     */
     public function parseMemcachedServers(string $sServerList = 'localhost:11211:100'): array
     {
         return array_map(function ($s) {
@@ -409,6 +427,9 @@ class AfrCacheApp extends AfrSingletonArrAbstractClass // extends Autoframe\Core
         }
     }
 
+    /**
+     * Test redis.
+     */
     public function testRedis(): bool
     {
         return class_exists('\Redis') || class_exists('\Predis\Client'); //TODO relly test :)
@@ -483,6 +504,9 @@ class AfrCacheApp extends AfrSingletonArrAbstractClass // extends Autoframe\Core
     }
 
 
+    /**
+     * Bound.
+     */
     public function bound($mData): bool
     {
         if ($mData === 'events') {
@@ -491,12 +515,16 @@ class AfrCacheApp extends AfrSingletonArrAbstractClass // extends Autoframe\Core
         return isset($this->aArrayAccessData[(string)$mData]);
     }
 
+    /**
+     * Make.
+     */
     public function make($mData) //TODO  REDIS
     {
         return;
     }
 
     /**
+     * Env.
      * @param string $key
      * @param $default
      * @return mixed|null
@@ -516,6 +544,9 @@ class AfrCacheApp extends AfrSingletonArrAbstractClass // extends Autoframe\Core
     }
 
 
+    /**
+     * Set env getter closure.
+     */
     public function setEnvGetterClosure(\Closure $fn): void
     {
         $this->oEnvGetterClosure = $fn;

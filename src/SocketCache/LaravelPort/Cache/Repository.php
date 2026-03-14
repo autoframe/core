@@ -641,6 +641,9 @@ class Repository implements ArrayAccess, CacheContract
      * @return bool
      */
     #[\ReturnTypeWillChange]
+    /**
+     * Offset exists.
+     */
     public function offsetExists($key)
     {
         return $this->has($key);
@@ -653,6 +656,9 @@ class Repository implements ArrayAccess, CacheContract
      * @return mixed
      */
     #[\ReturnTypeWillChange]
+    /**
+     * Offset get.
+     */
     public function offsetGet($key)
     {
         return $this->get($key);
@@ -666,6 +672,9 @@ class Repository implements ArrayAccess, CacheContract
      * @return void
      */
     #[\ReturnTypeWillChange]
+    /**
+     * Offset set.
+     */
     public function offsetSet($key, $value)
     {
         $this->put($key, $value, $this->default);
@@ -678,6 +687,9 @@ class Repository implements ArrayAccess, CacheContract
      * @return void
      */
     #[\ReturnTypeWillChange]
+    /**
+     * Offset unset.
+     */
     public function offsetUnset($key)
     {
         $this->forget($key);

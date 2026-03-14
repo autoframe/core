@@ -10,6 +10,7 @@ use Autoframe\Core\Database\Orm\Exception\AfrOrmException;
 class ConvertFacade implements AfrOrmBlueprintInterface
 {
 	/**
+	 * With conn alias.
 	 * @param string $sAlias
 	 * @return ConvertInterface
 	 * @throws AfrDatabaseConnectionException|AfrOrmException

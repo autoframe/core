@@ -16,6 +16,9 @@ class AfrCaptchaClassicImgV3 extends AfrCaptchaClassicImg
     }
 
 
+    /**
+     * Create image.
+     */
     public function createImage(string $sCode)
     {
 

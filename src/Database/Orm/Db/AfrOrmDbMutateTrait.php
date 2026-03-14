@@ -11,6 +11,7 @@ trait AfrOrmDbMutateTrait
     use AfrOrmDbTrait, AfrOrmCnxTrait;
 
     /**
+     * Orm db create.
      * @param $sCollation
      * @return bool
      * @throws AfrDatabaseConnectionException

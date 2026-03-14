@@ -9,6 +9,7 @@ use Autoframe\Core\FileSystem\Versioning\Exception\AfrFileSystemVersioningExcept
 interface AfrDirMaxFileMtimeInterface
 {
     /**
+     * Get dir max file mtime.
      * @param string|array $pathStringOrPathsArray
      * @param int $iMaxSubDirs
      * @param bool $bFollowSymlinks

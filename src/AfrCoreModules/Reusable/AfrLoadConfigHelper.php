@@ -2,6 +2,9 @@
 namespace Autoframe\Core\AfrCoreModules\Reusable;
 
 class AfrLoadConfigHelper{
+	/**
+	 * Load config file.
+	 */
 	public static function loadConfigFile(string $sDir, string $sFile, bool $bCheckForExistence = null): ?array
 	{
 		$sPath = rtrim($sDir, '\/') . DIRECTORY_SEPARATOR . $sFile;

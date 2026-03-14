@@ -10,12 +10,16 @@ trait CnxActionSingletonTrait
 	protected static array $instances = [];
 	protected string $sConnAlias;
 
+	/**
+	 * Get name conn alias.
+	 */
 	public function getNameConnAlias(): string
 	{
 		return $this->sConnAlias;
 	}
 
 	/**
+	 * Get name driver.
 	 * @return string
 	 * @throws AfrDatabaseConnectionException
 	 */

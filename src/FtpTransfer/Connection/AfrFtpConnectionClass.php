@@ -16,6 +16,9 @@ class AfrFtpConnectionClass implements AfrFtpConnectionInterface
     protected $mConn = null;
     protected $mLogin = null;
 
+    /**
+     * Create a new instance.
+     */
     public function __construct(
         string $sServer,
         string $sUserName,
@@ -37,6 +40,7 @@ class AfrFtpConnectionClass implements AfrFtpConnectionInterface
     }
 
     /**
+     * Connect.
      * @return false|mixed|null
      */
     public function connect()
@@ -58,6 +62,7 @@ class AfrFtpConnectionClass implements AfrFtpConnectionInterface
     }
 
     /**
+     * Disconnect.
      * @return void
      */
     public function disconnect(): void
@@ -70,6 +75,7 @@ class AfrFtpConnectionClass implements AfrFtpConnectionInterface
     }
 
     /**
+     * Reconnect.
      * @param int $iTimeoutMs
      * @return false|mixed|null
      */
@@ -86,6 +92,7 @@ class AfrFtpConnectionClass implements AfrFtpConnectionInterface
     }
 
     /**
+     * Get connection.
      * @return false|resource
      */
     public function getConnection()
@@ -113,6 +120,7 @@ class AfrFtpConnectionClass implements AfrFtpConnectionInterface
 
 
     /**
+     * Get login result.
      * @return bool
      */
     public function getLoginResult(): bool
@@ -129,6 +137,7 @@ class AfrFtpConnectionClass implements AfrFtpConnectionInterface
     }
 
     /**
+     * Get error.
      * @return string
      */
     public function getError(): string
@@ -137,11 +146,17 @@ class AfrFtpConnectionClass implements AfrFtpConnectionInterface
     }
 
 
+    /**
+     * Clean up resources before the instance is destroyed.
+     */
     public function __destruct()
     {
         $this->disconnect();
     }
 
+    /**
+     * Get dir perms.
+     */
     public function getDirPerms(): int
     {
         return $this->iDirPermissions;

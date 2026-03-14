@@ -44,12 +44,18 @@ class AfrVideoRecompress
 	// Debug
 	private bool    $debug = false;
 
+	/**
+	 * Create a new instance.
+	 */
 	public function __construct(string $inputDir, string $outputDir)
 	{
 		$this->setInputDir($inputDir);
 		$this->setOutputDir($outputDir);
 	}
 
+	/**
+	 * Set input dir.
+	 */
 	public function setInputDir(string $dir): self
 	{
 		$dir = rtrim($dir, "\\/");
@@ -59,6 +65,9 @@ class AfrVideoRecompress
 		return $this;
 	}
 
+	/**
+	 * Set output dir.
+	 */
 	public function setOutputDir(string $dir): self
 	{
 		$dir = rtrim($dir, "\\/");
@@ -70,21 +79,51 @@ class AfrVideoRecompress
 		return $this;
 	}
 
+	/**
+	 * Keep input files.
+	 */
 	public function keepInputFiles(bool $keep): self
 	{
 		$this->deleteInputAfter = !$keep;
 		return $this;
 	}
 
+	/**
+	 * Set ffmpeg binary.
+	 */
 	public function setFfmpegBinary(string $path): self { $this->ffmpegBin  = $path; return $this; }
+	/**
+	 * Set ffprobe binary.
+	 */
 	public function setFfprobeBinary(string $path): self { $this->ffprobeBin = $path; return $this; }
 
+	/**
+	 * Set preset.
+	 */
 	public function setPreset(string $preset): self { $this->preset = $preset; return $this; }
+	/**
+	 * Set scale.
+	 */
 	public function setScale(?string $scale): self { $this->scale = $scale; return $this; }
+	/**
+	 * Set min audio kbps.
+	 */
 	public function setMinAudioKbps(int $kbps): self { $this->minAudioKbps = max(64, $kbps); return $this; }
+	/**
+	 * Set min video kbps.
+	 */
 	public function setMinVideoKbps(int $kbps): self { $this->minVideoKbps = max(200, $kbps); return $this; }
+	/**
+	 * Set use hevc.
+	 */
 	public function setUseHevc(bool $on): self { $this->useHevc = $on; return $this; }
+	/**
+	 * Set prefer audio copy.
+	 */
 	public function setPreferAudioCopy(bool $on): self { $this->preferAudioCopy = $on; return $this; }
+	/**
+	 * Set debug.
+	 */
 	public function setDebug(bool $on): self { $this->debug = $on; return $this; }
 
 	/**

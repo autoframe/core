@@ -166,6 +166,7 @@ trait PdoInteractTrait
 
 
 	/**
+	 * Exec pdo statement.
 	 * @param string $sQuery
 	 * @return false|int
 	 * @throws AfrDatabaseConnectionException
@@ -177,6 +178,7 @@ trait PdoInteractTrait
 
 
 	/**
+	 * Set default database.
 	 * @param string|null $sDatabaseName
 	 * @throws AfrDatabaseConnectionException
 	 */
@@ -190,6 +192,7 @@ trait PdoInteractTrait
 	}
 
 	/**
+	 * Get default database name.
 	 * @return string|null
 	 */
 	public function getDefaultDatabaseName(): ?string
@@ -204,6 +207,7 @@ trait PdoInteractTrait
 
 
 	/**
+	 * Count query.
 	 * @param string $sQuery
 	 * @return int
 	 * @throws AfrDatabaseConnectionException
@@ -215,6 +219,7 @@ trait PdoInteractTrait
 	}
 
 	/**
+	 * Res count rows.
 	 * @param $aWhere
 	 * @param string|null $sTable
 	 * @param string|null $sDb
@@ -235,16 +240,25 @@ trait PdoInteractTrait
 
 	}
 
+	/**
+	 * Many qa.
+	 */
 	public function many_qa(string $tablename, array $where, $return_query = false)
 	{
 		// TODO: Implement many_qa() method.
 	}
 
+	/**
+	 * Insert query.
+	 */
 	public function insertQuery(string $sQuery, bool $bReturnTableAutoIncrement = false): ?int
 	{
 		// TODO: Implement insertQuery() method.
 	}
 
+	/**
+	 * Insert qa.
+	 */
 	public function insertQa(string $tablename, $a, $keys_to_exclude = array('id'), $setify_only_keys = array(), $return_query = false): ?int
 	{
 		// TODO: Implement insertQa() method.
@@ -255,11 +269,17 @@ trait PdoInteractTrait
 		// TODO: Implement insert_update() method.
 	}
 
+	/**
+	 * Update query.
+	 */
 	public function update_query($sQuery)
 	{
 		// TODO: Implement update_query() method.
 	}
 
+	/**
+	 * Update qa.
+	 */
 	public function update_qa($tablename, $a, $where, $limit = 'LIMIT 1', $return_query = false)
 	{
 		// TODO: Implement update_qa() method.
@@ -293,6 +313,7 @@ trait PdoInteractTrait
 
 
 	/**
+	 * Context table.
 	 * @param string|null $sTable
 	 * @param bool $bThrowErrorOnEmpty
 	 * @return string
@@ -317,6 +338,7 @@ trait PdoInteractTrait
 
 
 	/**
+	 * Context db.
 	 * @param string|null $sDb
 	 * @param bool $bThrowErrorOnEmpty
 	 * @return string|null
@@ -348,6 +370,7 @@ trait PdoInteractTrait
 	}
 
 	/**
+	 * Context alias.
 	 * @param string|null $sAlias
 	 * @param bool $bThrowErrorOnEmpty
 	 * @return string|null
@@ -376,6 +399,9 @@ trait PdoInteractTrait
 	//////////////////////
 
 
+	/**
+	 * Cnx flush orm cache.
+	 */
 	public function cnxFlushOrmCache(): bool
 	{
 		return $this->getOrmTypeDescriptor()->flushAlias(
@@ -384,6 +410,9 @@ trait PdoInteractTrait
 		);
 	}
 
+	/**
+	 * Get orm type descriptor.
+	 */
 	public function getOrmTypeDescriptor(): OrmTypeDescriptor
 	{
 		return OrmTypeDescriptor::getInstance();

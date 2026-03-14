@@ -50,6 +50,7 @@ class AfrSessionPhp implements AfrSessionInterface
 	protected static $mHandlerClosureOrFQCNResolvableByContainer = null;
 
 	/**
+	 * Get.
 	 * @param string $sKey
 	 * @param string $sNameSpace
 	 * @return mixed|null
@@ -67,6 +68,7 @@ class AfrSessionPhp implements AfrSessionInterface
 	}
 
 	/**
+	 * Set.
 	 * @param string $sKey
 	 * @param mixed $value
 	 * @param string $sNameSpace
@@ -84,6 +86,9 @@ class AfrSessionPhp implements AfrSessionInterface
 		return $_SESSION[Afr::getTenantAlias() ?? 'Afr'][$sNameSpace][$sKey] = $value;
 	}
 
+	/**
+	 * Session config afr.
+	 */
 	public function sessionConfigAfr(array $options = []): array
 	{
 		if (empty($this->aConfig)) {
@@ -177,6 +182,9 @@ class AfrSessionPhp implements AfrSessionInterface
 		return $this->aConfig = $aProfile;
 	}
 
+	/**
+	 * Session started.
+	 */
 	public function session_started(): bool
 	{
 		return $this->session_status() === PHP_SESSION_ACTIVE;

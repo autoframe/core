@@ -112,6 +112,7 @@ class AfrEnv extends AfrSingletonAbstractClass implements AfrEnvInterface
 	}
 
 	/**
+	 * Get env.
 	 * @param string $sKey
 	 * @param $mFallback
 	 * @return array|mixed|null
@@ -139,6 +140,7 @@ class AfrEnv extends AfrSingletonAbstractClass implements AfrEnvInterface
 	}
 
 	/**
+	 * Set env.
 	 * @param string $sKey
 	 * @param $mData
 	 * @return self
@@ -151,6 +153,7 @@ class AfrEnv extends AfrSingletonAbstractClass implements AfrEnvInterface
 	}
 
 	/**
+	 * Read env php file.
 	 * @param string $sFilePath
 	 * @return self
 	 * @throws AfrEnvException
@@ -216,6 +219,7 @@ class AfrEnv extends AfrSingletonAbstractClass implements AfrEnvInterface
 	}
 
 	/**
+	 * Flush.
 	 * @return $this
 	 */
 	public function flush(): self
@@ -235,6 +239,7 @@ class AfrEnv extends AfrSingletonAbstractClass implements AfrEnvInterface
 	}
 
 	/**
+	 * Is production.
 	 * @return bool
 	 * @throws AfrEnvException
 	 */
@@ -244,6 +249,7 @@ class AfrEnv extends AfrSingletonAbstractClass implements AfrEnvInterface
 	}
 
 	/**
+	 * Is staging.
 	 * @return bool
 	 * @throws AfrEnvException
 	 */
@@ -259,6 +265,7 @@ class AfrEnv extends AfrSingletonAbstractClass implements AfrEnvInterface
 
 
 	/**
+	 * Is dev.
 	 * @return bool
 	 * @throws AfrEnvException
 	 */
@@ -274,6 +281,7 @@ class AfrEnv extends AfrSingletonAbstractClass implements AfrEnvInterface
 	}
 
 	/**
+	 * Is debug.
 	 * @return int
 	 * @throws AfrEnvException
 	 */
@@ -283,6 +291,7 @@ class AfrEnv extends AfrSingletonAbstractClass implements AfrEnvInterface
 	}
 
 	/**
+	 * Is dev or debug.
 	 * @return bool
 	 * @throws AfrEnvException
 	 */
@@ -311,6 +320,7 @@ class AfrEnv extends AfrSingletonAbstractClass implements AfrEnvInterface
 	}
 
 	/**
+	 * Get cache file name.
 	 * @return string
 	 */
 	public function getCacheFileName(): string
@@ -362,6 +372,7 @@ class AfrEnv extends AfrSingletonAbstractClass implements AfrEnvInterface
 	}
 
 	/**
+	 * Required.
 	 * @param array $aKeys
 	 * @return AfrEnvValidatorInterface
 	 */
@@ -371,6 +382,9 @@ class AfrEnv extends AfrSingletonAbstractClass implements AfrEnvInterface
 		return $this->xetAfrEnvValidator()->required($aKeys);
 	}
 
+	/**
+	 * If present.
+	 */
 	public function ifPresent(array $aKeys): AfrEnvValidatorInterface
 	{
 		$this->bValidated = false;
@@ -378,6 +392,7 @@ class AfrEnv extends AfrSingletonAbstractClass implements AfrEnvInterface
 	}
 
 	/**
+	 * Unrequire.
 	 * @param array $aKeys
 	 * @return AfrEnvValidatorInterface
 	 */
@@ -402,6 +417,7 @@ class AfrEnv extends AfrSingletonAbstractClass implements AfrEnvInterface
 	}
 
 	/**
+	 * Xet afr env parser.
 	 * @param AfrEnvParserInterface|null $oEnvParser
 	 * @return AfrEnvParserInterface
 	 * @throws \Autoframe\Core\Container\Exception\AfrContainerException
@@ -418,6 +434,7 @@ class AfrEnv extends AfrSingletonAbstractClass implements AfrEnvInterface
 	}
 
 	/**
+	 * Xet afr env validator.
 	 * @param AfrEnvValidatorInterface|null $oValidator
 	 * @return AfrEnvValidatorClass|AfrEnvValidatorInterface
 	 */
@@ -445,6 +462,7 @@ class AfrEnv extends AfrSingletonAbstractClass implements AfrEnvInterface
 	}
 
 	/**
+	 * Xet file list.
 	 * @param AfrDirTraversingFileListInterface|null $oFileList
 	 * @return AfrDirTraversingFileListInterface
 	 */
@@ -459,6 +477,7 @@ class AfrEnv extends AfrSingletonAbstractClass implements AfrEnvInterface
 	}
 
 	/**
+	 * Xet over write.
 	 * @param AfrOverWriteInterface|null $oOverWrite
 	 * @return AfrOverWriteInterface
 	 */
@@ -473,6 +492,7 @@ class AfrEnv extends AfrSingletonAbstractClass implements AfrEnvInterface
 	}
 
 	/**
+	 * Xet export array.
 	 * @param AfrArrExportArrayAsStringInterface|null $oExportArray
 	 * @return AfrArrExportArrayAsStringInterface
 	 */

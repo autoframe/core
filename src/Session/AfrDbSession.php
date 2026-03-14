@@ -45,12 +45,18 @@ class AfrDbSession implements SessionHandlerInterface
 	private $_db_db;
 	private $_life_time;
 
+	/**
+	 * Is session started.
+	 */
 	public function isSessionStarted():bool
 	{
 		return in_array(session_status(), [PHP_SESSION_DISABLED, PHP_SESSION_ACTIVE]);
 	}
 
 
+	/**
+	 * Create a new instance.
+	 */
 	public function __construct($dbHost, $dbUser, $dbPassword, $dbDatabase, $db_table, $life_time=null)
 	{
 		$this->_db_host = $dbHost;
@@ -61,6 +67,9 @@ class AfrDbSession implements SessionHandlerInterface
 		$this->_life_time = $life_time ? : ini_get('session.gc_maxlifetime');
 	}
 
+	/**
+	 * Open.
+	 */
 	public function open($save_path, $session_name)
 	{
 		$this->dbConnection = new mysqli($this->_db_host, $this->_db_user, $this->_db_password, $this->_db_db);

@@ -11,6 +11,9 @@ use Autoframe\Core\Tenant\AfrTenant;
 class AfrError
 {
 
+	/**
+	 * Get last error readable.
+	 */
 	public static function getLastErrorReadable(array $aIgnoreTypes = []): ?string
 	{
 		if (empty($error = error_get_last())) return null;
@@ -45,6 +48,9 @@ class AfrError
 		);
 	}
 
+	/**
+	 * Init error handler.
+	 */
 	public function initErrorHandler()
 	{
 		// This storage is freed on error (case of allowed memory exhausted)
@@ -65,12 +71,18 @@ class AfrError
 	const message_type_appended_to_destination_file = 3;
 	const message_type_SAPI_logging_handler = 4;
 
+	/**
+	 * Error handler.
+	 */
 	public static function errorHandler(int $errno, string $errstr, string $errfile, int $errline): bool
 	{
 		//TODO
 		return false;
 	}
 
+	/**
+	 * Error log.
+	 */
 	public static function error_log(string  $message,
 	                                 int     $message_type = 0,
 	                                 ?string $destination = null,
@@ -83,6 +95,9 @@ class AfrError
 	}
 
 
+	/**
+	 * Get context.
+	 */
 	public static function getContext(): string
 	{
 		$sOut = '[' . (AfrTenant::getTenantAlias() ?? 'Any.Tenant') . '] ';
@@ -107,6 +122,7 @@ class AfrError
 	}
 
 	/**
+	 * Get minified backtrace.
 	 * @param int $iRemoveLastNLevels
 	 * @param int $options 0 exlude ["object"] | 1  show all ["object"] AND ["args"] | 2 - exlude ["object"] AND ["args"]
 	 * @param int $limit
@@ -144,6 +160,7 @@ class AfrError
 
 
 	/**
+	 * Log http requested to file.
 	 * @param string $dir
 	 * @param string $sExtension
 	 * @param bool $bSerialize

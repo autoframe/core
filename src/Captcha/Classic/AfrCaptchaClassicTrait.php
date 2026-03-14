@@ -60,6 +60,7 @@ trait AfrCaptchaClassicTrait
     }
 
     /**
+     * Hex color to dec.
      * @param string $color
      * @return array
      */

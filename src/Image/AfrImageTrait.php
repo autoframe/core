@@ -13,6 +13,7 @@ trait AfrImageTrait
     protected string $sFontFile = '';
 
     /**
+     * Img height.
      * @param int $iImgHeight
      * @return int
      */
@@ -29,6 +30,7 @@ trait AfrImageTrait
     }
 
     /**
+     * Img width.
      * @param int $iImgWidth
      * @return int
      */
@@ -60,6 +62,7 @@ trait AfrImageTrait
     }
 
     /**
+     * Generate rand rgb.
      * @param float $min
      * @param float $max
      * @param bool $signed
@@ -85,6 +88,7 @@ trait AfrImageTrait
     }
 
     /**
+     * Sum rgbarrays.
      * @param array $aRGB
      * @param array $aMergeWith
      * @param bool $sum
@@ -104,6 +108,7 @@ trait AfrImageTrait
     }
 
     /**
+     * Normalize rgbarray.
      * @param array $aRGB
      * @return array
      * @throws AfrImageException

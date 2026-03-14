@@ -10,6 +10,7 @@ namespace Autoframe\Core\FileSystem\OverWrite;
 interface AfrOverWriteInterface
 {
     /**
+     * Over write file.
      * @param string $sFilePath
      * @param string $sData
      * @param int $iMaxRetryMs

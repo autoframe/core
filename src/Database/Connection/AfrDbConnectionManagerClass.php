@@ -20,6 +20,7 @@ class AfrDbConnectionManagerClass extends AfrSingletonAbstractClass implements A
 	protected string $sDataLayerPath = '';
 
 	/**
+	 * Data layer namespace.
 	 * @param string|null $sDataLayerNamespace
 	 * @return string or default namespace: Autoframe\DataLayer\
 	 * @throws AfrEnvException
@@ -37,6 +38,7 @@ class AfrDbConnectionManagerClass extends AfrSingletonAbstractClass implements A
 	}
 
 	/**
+	 * Data layer path.
 	 * @param string|null $sDataLayerPath
 	 * @return string
 	 * @throws AfrEnvException
@@ -118,6 +120,7 @@ class AfrDbConnectionManagerClass extends AfrSingletonAbstractClass implements A
 	}
 
 	/**
+	 * Define connection alias.
 	 * @param string $sAlias
 	 * @param string $sDSN
 	 * @param string|null $username
@@ -178,6 +181,7 @@ class AfrDbConnectionManagerClass extends AfrSingletonAbstractClass implements A
 	}
 
 	/**
+	 * Define connection alias using pdoinstance.
 	 * @param string $sAlias
 	 * @param PDO $pdo
 	 * @param string $sDriver Types: mysql, sqlite, pgsql, mssql, cubrid, sybase, dblib, firebird, ibm, informix, oci, odbc
@@ -216,6 +220,7 @@ class AfrDbConnectionManagerClass extends AfrSingletonAbstractClass implements A
 	}
 
 	/**
+	 * Pdo to hash.
 	 * @param object $obj
 	 * @return string
 	 */
@@ -225,6 +230,7 @@ class AfrDbConnectionManagerClass extends AfrSingletonAbstractClass implements A
 	}
 
 	/**
+	 * Define alias closure.
 	 * @param string $sAlias
 	 * @param Closure $oClosure
 	 * @return AfrDbConnectionManagerInterface
@@ -244,6 +250,7 @@ class AfrDbConnectionManagerClass extends AfrSingletonAbstractClass implements A
 	}
 
 	/**
+	 * Define custom dialect cnx ns.
 	 * @param string $sAlias
 	 * @param string $sDialectOrmActionNamespace
 	 * @return AfrDbConnectionManagerInterface
@@ -264,6 +271,7 @@ class AfrDbConnectionManagerClass extends AfrSingletonAbstractClass implements A
 	}
 
 	/**
+	 * Get connection by alias.
 	 * @param $sAlias
 	 * @return PDO
 	 * @throws AfrDatabaseConnectionException
@@ -302,6 +310,7 @@ class AfrDbConnectionManagerClass extends AfrSingletonAbstractClass implements A
 	}
 
 	/**
+	 * Is connected.
 	 * @param string $sAlias
 	 * @return bool
 	 */
@@ -312,6 +321,7 @@ class AfrDbConnectionManagerClass extends AfrSingletonAbstractClass implements A
 
 
 	/**
+	 * Get driver type.
 	 * @param string $sAlias
 	 * @return string Types: mysql, sqlite, pgsql, mssql, cubrid, sybase, dblib, firebird, ibm, informix, oci, odbc
 	 * @throws AfrDatabaseConnectionException
@@ -327,6 +337,7 @@ class AfrDbConnectionManagerClass extends AfrSingletonAbstractClass implements A
 	}
 
 	/**
+	 * Get custom dialect cnx ns.
 	 * @param string $sAlias
 	 * @return string
 	 * @throws AfrDatabaseConnectionException
@@ -343,6 +354,7 @@ class AfrDbConnectionManagerClass extends AfrSingletonAbstractClass implements A
 
 
 	/**
+	 * Connect to all.
 	 * @return void
 	 * @throws AfrDatabaseConnectionException
 	 */
@@ -354,6 +366,9 @@ class AfrDbConnectionManagerClass extends AfrSingletonAbstractClass implements A
 	}
 
 	/** Sets connection index to null */
+	/**
+	 * Flush connection.
+	 */
 	public function flushConnection(string $sAlias): void
 	{
 		if ($this->isConnected($sAlias)) {
@@ -530,6 +545,7 @@ class AfrDbConnectionManagerClass extends AfrSingletonAbstractClass implements A
 
 
 	/**
+	 * Resolve facade using alias.
 	 * @param string $sStaticClass
 	 * @param string $sAlias
 	 * @return string

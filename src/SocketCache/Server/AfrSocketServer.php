@@ -20,6 +20,7 @@ class AfrSocketServer
     //https://www.techinpost.com/only-one-usage-of-each-socket-address-is-normally-permitted/
 
     /**
+     * Create a new instance.
      * @param AfrCacheSocketConfig $oConfig
      * @throws AfrCacheSocketException
      */

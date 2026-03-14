@@ -8,6 +8,7 @@ use Autoframe\Core\Http\Gzip\Exception\AfrHttpGzipException;
 class AfrHttpGzip
 {
 	/**
+	 * Output print as gzip.
 	 * @param string $sData
 	 * @param int $iLevel
 	 * @param int $iEncoding

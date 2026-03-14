@@ -19,17 +19,26 @@ abstract class AfrCaptcha
         $this->mergeParams($aParams);
     }
 
+    /**
+     * Merge params.
+     */
     public function mergeParams(array $aParams): object
     {
         $this->aParams = AfrArrMergeProfileClass::getInstance()->arrayMergeProfile($this->aParams, $aParams);
         return $this;
     }
 
+    /**
+     * Get params.
+     */
     public function getParams(): array
     {
         return $this->aParams;
     }
 
+    /**
+     * Set params.
+     */
     public function setParams(array $aParams): object
     {
         $this->aParams = $aParams;
@@ -62,6 +71,9 @@ abstract class AfrCaptcha
             0 =>'/path/to/style.css'
         ],
     ];
+    /**
+     * Get head resources.
+     */
     public function getHeadResources(): array
     {
         return $this->aHeadResources;

@@ -81,6 +81,9 @@ class OrmTypeDescriptor implements AfrOrmBlueprintInterface
 		}
 	}
 
+	/**
+	 * Clean up resources before the instance is destroyed.
+	 */
 	public function __destruct()
 	{
 		self::destructor();
@@ -342,6 +345,7 @@ class OrmTypeDescriptor implements AfrOrmBlueprintInterface
 	}
 
 	/**
+	 * Make cnx.
 	 * @param CnxActionInterface $oCnx
 	 * @param bool $bFullTables
 	 * @param bool $bFlush
@@ -368,6 +372,7 @@ class OrmTypeDescriptor implements AfrOrmBlueprintInterface
 	}
 
 	/**
+	 * Make db.
 	 * @param CnxActionInterface $oCnx
 	 * @param string $sDbName
 	 * @param bool $bFullTables
@@ -392,6 +397,9 @@ class OrmTypeDescriptor implements AfrOrmBlueprintInterface
 	}
 
 
+	/**
+	 * Make tbl.
+	 */
 	public function makeTbl(DbActionInterface $oDba, string $sTblName, bool $bFlush = false): array
 	{
 		$sAlias = $oDba->getNameConnAlias();
@@ -405,6 +413,7 @@ class OrmTypeDescriptor implements AfrOrmBlueprintInterface
 
 
 	/**
+	 * Set specs cnx.
 	 * @param CnxActionInterface $oCnx
 	 * @param string $sKey
 	 * @param $mValue
@@ -426,6 +435,7 @@ class OrmTypeDescriptor implements AfrOrmBlueprintInterface
 	}
 
 	/**
+	 * Set specs db.
 	 * @param CnxActionInterface $oCnx
 	 * @param string $sDbName
 	 * @param string $sKey
@@ -455,6 +465,7 @@ class OrmTypeDescriptor implements AfrOrmBlueprintInterface
 	}
 
 	/**
+	 * Set specs tbl.
 	 * @param DbActionInterface $oDb
 	 * @param string $sTblName
 	 * @param string $sKey
@@ -482,6 +493,7 @@ class OrmTypeDescriptor implements AfrOrmBlueprintInterface
 	}
 
 	/**
+	 * Get specs alias.
 	 * @param string $sCnxA
 	 * @param string $sKey
 	 * @param Closure|null $mCallback
@@ -500,6 +512,7 @@ class OrmTypeDescriptor implements AfrOrmBlueprintInterface
 	}
 
 	/**
+	 * Get specs db.
 	 * @param CnxActionInterface $oCnx
 	 * @param string $sDbName
 	 * @param string $sKey
@@ -515,6 +528,9 @@ class OrmTypeDescriptor implements AfrOrmBlueprintInterface
 		return static::$aData[$sCnxA][self::DB_LIST][$sDbName][self::SPECS][$sKey] ?? null;
 	}
 
+	/**
+	 * Get specs tbl.
+	 */
 	public function getSpecsTbl(DbActionInterface $oDb,
 	                            string            $sTblName,
 	                            string            $sKey
@@ -526,31 +542,49 @@ class OrmTypeDescriptor implements AfrOrmBlueprintInterface
 		return static::$aData[$sCnxA][self::DB_LIST][$sDbName][self::DB_TABLES][$sTblName][self::SPECS][$sKey] ?? null;
 	}
 
+	/**
+	 * Get data alias.
+	 */
 	public function getDataAlias(string $sCnxA): ?array
 	{
 		return self::$aData[$sCnxA] ?? null;
 	}
 
+	/**
+	 * Get data db.
+	 */
 	public function getDataDb(string $sCnxA, string $sDb): ?array
 	{
 		return self::$aData[$sCnxA][self::DB_LIST][$sDb] ?? null;
 	}
 
+	/**
+	 * Get data tbl.
+	 */
 	public function getDataTbl(string $sCnxA, string $sDb, string $sTbl): ?array
 	{
 		return self::$aData[$sCnxA][self::DB_LIST][$sDb][self::DB_TABLES][$sTbl] ?? null;
 	}
 
+	/**
+	 * Get data cols.
+	 */
 	public function getDataCols(string $sCnxA, string $sDb, string $sTbl): ?array
 	{
 		return self::$aData[$sCnxA][self::DB_LIST][$sDb][self::DB_TABLES][$sTbl][self::COLUMNS] ?? null;
 	}
 
+	/**
+	 * Flush all.
+	 */
 	public function flushAll()
 	{
 		static::$aData = [];
 	}
 
+	/**
+	 * Flush alias.
+	 */
 	public function flushAlias(string $sCnxA, bool $bKeepDatabases = false): bool
 	{
 		if (isset(static::$aData[$sCnxA])) {
@@ -570,6 +604,9 @@ class OrmTypeDescriptor implements AfrOrmBlueprintInterface
 		return false;
 	}
 
+	/**
+	 * Flush db.
+	 */
 	public function flushDb(string $sCnxA, string $sDbName, bool $bKeepTables = false): bool
 	{
 		if (isset(static::$aData[$sCnxA][self::DB_LIST][$sDbName])) {
@@ -589,6 +626,9 @@ class OrmTypeDescriptor implements AfrOrmBlueprintInterface
 		return false;
 	}
 
+	/**
+	 * Flush tbl.
+	 */
 	public function flushTbl(string $sCnxA, string $sDbName, string $sTbl): bool
 	{
 		if (isset(static::$aData[$sCnxA][self::DB_LIST][$sDbName][self::DB_TABLES][$sTbl])) {

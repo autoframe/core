@@ -6,6 +6,7 @@ namespace Autoframe\Core\Date\Day\Language;
 class AfrDateDayLanguageRo implements AfrDateDayLanguageInterface
 {
     /**
+     * Get day names.
      * @return string[]
      */
     public function getDayNames(): array
@@ -14,6 +15,7 @@ class AfrDateDayLanguageRo implements AfrDateDayLanguageInterface
     }
 
     /**
+     * Get day names short.
      * @return string[]
      */
     public function getDayNamesShort(): array

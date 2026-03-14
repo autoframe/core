@@ -42,12 +42,14 @@ interface AfrDbConnectionManagerInterface
 
 
 	/**
+	 * Data layer namespace.
 	 * @param string|null $sDataLayerNamespace
 	 * @return string or default namespace: Autoframe\DataLayer\
 	 */
 	public function dataLayerNamespace(string $sDataLayerNamespace = null): string;
 
 	/**
+	 * Data layer path.
 	 * @param string|null $sDataLayerPath
 	 * @return string
 	 * @throws AfrDatabaseConnectionException
@@ -56,6 +58,7 @@ interface AfrDbConnectionManagerInterface
 
 
 	/**
+	 * Define connection alias.
 	 * @param string $sAlias
 	 * @param string $sDSN
 	 * @param string|null $username
@@ -68,6 +71,7 @@ interface AfrDbConnectionManagerInterface
 
 
 	/**
+	 * Define connection alias using pdoinstance.
 	 * @param string $sAlias
 	 * @param PDO $pdo
 	 * @param string $sDriver Types: mysql, sqlite, pgsql, mssql, cubrid, sybase, dblib, firebird, ibm, informix, oci, odbc
@@ -79,12 +83,14 @@ interface AfrDbConnectionManagerInterface
 
 
 	/**
+	 * Pdo to hash.
 	 * @param object $obj
 	 * @return string
 	 */
 	public function pdoToHash(object $obj): string;
 
 	/**
+	 * Define alias closure.
 	 * @param string $sAlias
 	 * @param Closure $oClosure
 	 * @return $this
@@ -94,6 +100,7 @@ interface AfrDbConnectionManagerInterface
 
 
 	/**
+	 * Define custom dialect cnx ns.
 	 * @param string $sAlias
 	 * @param string $sDialectOrmActionNamespace
 	 * @return $this
@@ -105,6 +112,7 @@ interface AfrDbConnectionManagerInterface
 	): AfrDbConnectionManagerInterface;
 
 	/**
+	 * Get connection by alias.
 	 * @param $sAlias
 	 * @return PDO
 	 * @throws AfrDatabaseConnectionException
@@ -112,12 +120,14 @@ interface AfrDbConnectionManagerInterface
 	public function getConnectionByAlias($sAlias): PDO;
 
 	/**
+	 * Get alias info.
 	 * @param $sAlias
 	 * @return array|null
 	 */
 	public function getAliasInfo($sAlias): ?array;
 
 	/**
+	 * Is connected.
 	 * @param string $sAlias
 	 * @return bool
 	 */
@@ -125,6 +135,7 @@ interface AfrDbConnectionManagerInterface
 
 
 	/**
+	 * Get driver type.
 	 * @param string $sAlias
 	 * @return string Types: mysql, sqlite, pgsql, mssql, cubrid, sybase, dblib, firebird, ibm, informix, oci, odbc
 	 * @throws AfrDatabaseConnectionException
@@ -133,6 +144,7 @@ interface AfrDbConnectionManagerInterface
 
 
 	/**
+	 * Get custom dialect cnx ns.
 	 * @param string $sAlias
 	 * @return string
 	 * @throws AfrDatabaseConnectionException
@@ -140,6 +152,7 @@ interface AfrDbConnectionManagerInterface
 	public function getCustomDialectCnxNs(string $sAlias): string;
 
 	/**
+	 * Connect to all.
 	 * @return void
 	 * @throws AfrDatabaseConnectionException
 	 */
@@ -147,6 +160,9 @@ interface AfrDbConnectionManagerInterface
 
 
 	/** Sets connection index to null */
+	/**
+	 * Flush connection.
+	 */
 	public function flushConnection(string $sAlias): void;
 
 	/**

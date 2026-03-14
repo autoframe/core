@@ -16,6 +16,7 @@ class AfrFtpNbrCopiesDms implements AfrFtpBusinessLogicInterface
     protected int $iDirPermissions = 0775;
 
     /**
+     * Create a new instance.
      * @param AfrFtpBackupConfig $oFtpConfig
      * @param AfrFtpLogInterface $oLog
      */
@@ -29,6 +30,7 @@ class AfrFtpNbrCopiesDms implements AfrFtpBusinessLogicInterface
     }
 
     /**
+     * Make backup.
      * @return void
      */
     public function makeBackup(): void

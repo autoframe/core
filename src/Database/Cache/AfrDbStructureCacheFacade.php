@@ -12,6 +12,9 @@ class AfrDbStructureCacheFacade
 	protected static ?string $sFQCN_Implementation = null;
 	protected static ?string $sFQCN_That_Extends_AfrDbCacheKey = null;
 
+	/**
+	 * Get instance.
+	 */
 	public static function getInstance(): AfrDbStructureCacheInterface
 	{
 		if (!empty(static::$sFQCN_Implementation)) {
@@ -33,12 +36,18 @@ class AfrDbStructureCacheFacade
 		return AfrDbStructureCacheRam::getInstance();
 	}
 
+	/**
+	 * Set instance.
+	 */
 	public static function setInstance(AfrDbStructureCacheInterface $oInstance): AfrDbStructureCacheInterface
 	{
 		static::$sFQCN_Implementation = null;
 		return self::$oInstance = $oInstance;
 	}
 
+	/**
+	 * Set fqcn.
+	 */
 	public static function setFQCN(string $sFQCN_Implementation): void
 	{
 		static::$sFQCN_Implementation = $sFQCN_Implementation;
@@ -46,6 +55,7 @@ class AfrDbStructureCacheFacade
 	}
 
 	/**
+	 * Set afr db cache key fqcn.
 	 * @param string $sFQCN_That_Extends_AfrDbCacheKey
 	 * @return void
 	 */
@@ -54,6 +64,9 @@ class AfrDbStructureCacheFacade
 		static::$sFQCN_That_Extends_AfrDbCacheKey = $sFQCN_That_Extends_AfrDbCacheKey;
 	}
 
+	/**
+	 * Get afr db cache key fqcn.
+	 */
 	public static function getAfrDbCacheKey_FQCN(): string
 	{
 		return static::$sFQCN_That_Extends_AfrDbCacheKey ?? AfrDbCacheKey::class;

@@ -31,6 +31,7 @@ trait AfrRouterHandleTrait
 	];
 
 	/**
+	 * Invoke the instance as a callable.
 	 * @param AfrRequestInterface $oRequest
 	 * @param Closure|null $oClosureAfterRoute
 	 * @return int
@@ -195,6 +196,9 @@ trait AfrRouterHandleTrait
 	}
 
 
+	/**
+	 * Pattern march.
+	 */
 	public function patternMarch(string $pattern, string $sRequestUri): array
 	{
 		$matches = [];
@@ -390,6 +394,7 @@ trait AfrRouterHandleTrait
 	}
 
 	/**
+	 * Set max handled routes of type.
 	 * @param string $sRouteType
 	 * @param int $iMaxLoops
 	 * @return $this

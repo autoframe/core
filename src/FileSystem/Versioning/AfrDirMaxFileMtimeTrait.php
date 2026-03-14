@@ -23,6 +23,7 @@ trait AfrDirMaxFileMtimeTrait
     use AfrDirTraversingDependency;
 
     /**
+     * Get dir max file mtime.
      * @param string|array $pathStringOrPathsArray
      * @param int $iMaxSubDirs
      * @param bool $bFollowSymlinks

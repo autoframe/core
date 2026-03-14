@@ -16,6 +16,7 @@ class AfrDbMysql extends AfrSingletonAbstractClass
 	protected PDO $pdoConn;
 
 	/**
+	 * Set connection alias.
 	 * @param string|PDO $sAlias_or_oPDO
 	 * @param array $aAttributes
 	 * @return $this
@@ -38,6 +39,7 @@ class AfrDbMysql extends AfrSingletonAbstractClass
 	}
 
 	/**
+	 * Get pdo conn.
 	 * @param string $sAlias
 	 * @return PDO|null
 	 */
@@ -47,6 +49,7 @@ class AfrDbMysql extends AfrSingletonAbstractClass
 	}
 
 	/**
+	 * Exec.
 	 * @param string $statement
 	 * @return false|int
 	 */
@@ -59,6 +62,7 @@ class AfrDbMysql extends AfrSingletonAbstractClass
 	//  https://www.php.net/manual/en/pdo.query.php
 
 	/**
+	 * Query.
 	 * @param string $query
 	 * @param int|null $fetchMode
 	 * @param string $classname

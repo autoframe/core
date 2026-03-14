@@ -57,6 +57,7 @@ class AfrCronJobDaemon
 	public static float $fiDaemonSleepSeconds = 2;
 
 	/**
+	 * Make.
 	 * @param AfrCronLoggerInterface|null $oAltLogger
 	 * @param string|null|false|array $saDSJW CLI worker data AfrCliConstantsInterface::CRON_WORKER_ARGV_KEY
 	 * @return AfrCronJobDaemon
@@ -75,6 +76,7 @@ class AfrCronJobDaemon
 	}
 
 	/**
+	 * Run.
 	 * @return void
 	 * @throws AfrContainerException
 	 * @throws AfrEventException
@@ -100,6 +102,9 @@ class AfrCronJobDaemon
 
 	}
 
+	/**
+	 * Log run time.
+	 */
 	public function logRunTime(bool $bInlineString = false): string
 	{
 		$sOut = '';
@@ -499,6 +504,9 @@ class AfrCronJobDaemon
 			static::computeHash('Daemon@' . $this->getTenantName());
 	}
 
+	/**
+	 * Compute hash.
+	 */
 	public static function computeHash(string $sCommand): string //ok
 	{
 		if (!empty(self::$aHashCache[$sCommand])) return self::$aHashCache[$sCommand];
@@ -545,6 +553,9 @@ class AfrCronJobDaemon
 		$this->spinnerIndex = ($this->spinnerIndex + 1) % count($this->spinnerShapes);
 	}
 
+	/**
+	 * Kill all phpprocesses.
+	 */
 	public static function killAllPHPProcesses(): string //ok
 	{
 		// Windows OR Unix/Linux/macOS: Kill all php processes
@@ -555,6 +566,7 @@ class AfrCronJobDaemon
 	}
 
 	/**
+	 * Get job tenant entry point.
 	 * @return string
 	 * @throws AfrContainerException
 	 * @throws AfrEventException
@@ -585,6 +597,7 @@ class AfrCronJobDaemon
 	}
 
 	/**
+	 * Get logger.
 	 * @return AfrCronLoggerClass|AfrCronLoggerInterface
 	 */
 	public function getLogger(): AfrCronLoggerInterface
@@ -592,6 +605,9 @@ class AfrCronJobDaemon
 		return $this->oCronLogger;
 	}
 
+	/**
+	 * Log.
+	 */
 	public function log(string $message, bool $bError = false, int $exitCode = null): self
 	{
 		$this->getLogger()->log($message, $bError, $exitCode);
@@ -880,6 +896,7 @@ class AfrCronJobDaemon
 	}
 
 	/**
+	 * Run worker exec fallback.
 	 * @param string $sCommand
 	 * @return void
 	 * @throws AfrException

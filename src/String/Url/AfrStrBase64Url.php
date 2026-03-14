@@ -14,6 +14,7 @@ use function str_repeat;
 trait AfrStrBase64Url
 {
     /**
+     * Base64url encode.
      * @param string $string
      * @return string
      */
@@ -23,6 +24,7 @@ trait AfrStrBase64Url
     }
 
     /**
+     * Base64url decode.
      * @param string $string
      * @return false|string
      */

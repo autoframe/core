@@ -29,6 +29,7 @@ class AfrGitExec
     protected float $fV = 2.0;
 
     /**
+     * Create a new instance.
      * @param string $gitRepoDir
      * @param string $gitExePath
      * @param string $gitOrigin
@@ -75,6 +76,9 @@ class AfrGitExec
     }
 
 
+    /**
+     * Git repo dir.
+     */
     public function gitRepoDir(string $gitRepoDir = null): string
     {
         if ($gitRepoDir !== null) {
@@ -87,6 +91,9 @@ class AfrGitExec
         return $this->gitRepoDir;
     }
 
+    /**
+     * Git origin.
+     */
     public function gitOrigin(string $gitOrigin = null): string
     {
         if ($gitOrigin !== null) {
@@ -95,6 +102,9 @@ class AfrGitExec
         return $this->gitOrigin;
     }
 
+    /**
+     * Git exe path.
+     */
     public function gitExePath(string $gitExePath = null): string
     {
         if ($gitExePath !== null) {
@@ -103,6 +113,9 @@ class AfrGitExec
         return $this->gitExePath;
     }
 
+    /**
+     * Exec cmd.
+     */
     public function execCmd(
         string $sGitArgs,
         bool   $withGitRepoDir = true,
@@ -136,6 +149,9 @@ class AfrGitExec
         ];
     }
 
+    /**
+     * Set git config default.
+     */
     public function setGitConfigDefault(
         string $sUsername,
         string $sEmail,
@@ -190,16 +206,25 @@ class AfrGitExec
     }
 
 
+    /**
+     * Git revert changes from working copy.
+     */
     public function gitRevertChangesFromWorkingCopy(): array
     {
         return $this->execCmd('checkout .');
     }
 
+    /**
+     * Git reset changes to index and unpushed commits.
+     */
     public function gitResetChangesToIndexAndUnpushedCommits(bool $hard = false): array
     {
         return $this->execCmd('reset' . ($hard ? ' --hard' : ''));
     }
 
+    /**
+     * Git reset hard cached indexes.
+     */
     public function gitResetHardCachedIndexes(): array
     {
         return [
@@ -208,6 +233,9 @@ class AfrGitExec
         ];
     }
 
+    /**
+     * Git clean untracked files directories.
+     */
     public function gitCleanUntrackedFilesDirectories(
         bool $files = true,
         bool $directories = true,
@@ -223,11 +251,17 @@ class AfrGitExec
         return $this->execCmd('clean' . $sFlags);
     }
 
+    /**
+     * Git revert commit12.
+     */
     public function gitRevertCommit12(string $sCommit1, string $sCommit2): array
     {
         return $this->execCmd('revert ' . $sCommit1 . ' ' . $sCommit2);
     }
 
+    /**
+     * Git pull.
+     */
     public function gitPull(string $remote = '', string $branch = ''): array
     {
         if (!$remote) {
@@ -239,6 +273,9 @@ class AfrGitExec
         return $this->execCmd(trim("pull $remote $branch"));
     }
 
+    /**
+     * Git pull force.
+     */
     public function gitPullForce(string $remote = ''): array
     {
         if (!$remote) {
@@ -247,6 +284,9 @@ class AfrGitExec
         return $this->execCmd('pull -f ' . $remote);
     }
 
+    /**
+     * Git fetch.
+     */
     public function gitFetch(string $remote = '-all'): array
     {
         if (!$remote) {
@@ -255,16 +295,25 @@ class AfrGitExec
         return $this->execCmd('fetch ' . $remote);
     }
 
+    /**
+     * Git diff.
+     */
     public function gitDiff(string $args = ''): array
     {
         return $this->execCmd(trim('diff ' . $args));
     }
 
+    /**
+     * Git status.
+     */
     public function gitStatus(string $args = ''): array
     {
         return $this->execCmd(trim('status ' . $args));
     }
 
+    /**
+     * Git add commit and push.
+     */
     public function gitAddCommitAndPush(string $sCommitMessage, string $sBranch, string $remote = ''): array
     {
         if (!$remote) {
@@ -279,6 +328,9 @@ class AfrGitExec
         return $aOut;
     }
 
+    /**
+     * Git push.
+     */
     public function gitPush(string $sBranch, string $remote = '', string $gitArgs = '-u'): array
     {
         if (!$remote) {
@@ -287,6 +339,9 @@ class AfrGitExec
         return $this->execCmd('push ' . ($gitArgs ? trim($gitArgs) . ' ' : '') . $remote . ' ' . $sBranch);
     }
 
+    /**
+     * Git add and commit.
+     */
     public function gitAddAndCommit(string $sCommitMessage): array
     {
         return [
@@ -295,6 +350,9 @@ class AfrGitExec
         ];
     }
 
+    /**
+     * Git hook fetch.
+     */
     public function gitHookFetch(string $remote = ''): array
     {
         if (!$remote) {
@@ -307,16 +365,25 @@ class AfrGitExec
         ];
     }
 
+    /**
+     * Git checkout new branch.
+     */
     public function gitCheckoutNewBranch(string $sBranch): array
     {
         return $this->execCmd('checkout -b ' . $sBranch);
     }
 
+    /**
+     * Git checkout branch.
+     */
     public function gitCheckoutBranch(string $sBranch): array
     {
         return $this->execCmd('checkout ' . $sBranch);
     }
 
+    /**
+     * Get current branch name.
+     */
     public function getCurrentBranchName(): string
     {
         if ($this->fV < 2) {
@@ -326,6 +393,9 @@ class AfrGitExec
 
     }
 
+    /**
+     * Get branch list.
+     */
     public function getBranchList(): array
     {
         $aBranches = [];
@@ -349,6 +419,9 @@ class AfrGitExec
         return $aBranches;
     }
 
+    /**
+     * Get master branch name.
+     */
     public function getMasterBranchName(): ?string
     {
         if (count(self::$defaultMasterBranchNames) === 1) {
@@ -363,16 +436,25 @@ class AfrGitExec
         return null;
     }
 
+    /**
+     * Is on master branch.
+     */
     public function isOnMasterBranch(): bool
     {
         return in_array($this->getCurrentBranchName(), self::$defaultMasterBranchNames);
     }
 
+    /**
+     * Checkout master branch.
+     */
     public function checkoutMasterBranch(): array
     {
         return $this->gitCheckoutBranch($this->getMasterBranchName());
     }
 
+    /**
+     * Git reset hard origin master.
+     */
     public function gitResetHardOriginMaster(): array
     {
         $sMaster = $this->getMasterBranchName();
@@ -384,6 +466,9 @@ class AfrGitExec
         ];
     }
 
+    /**
+     * All in one push current then switch to master pull add commit and push.
+     */
     public function allInOnePushCurrentThenSwitchToMasterPullAddCommitAndPush(string $sCommitText = ''): array
     {
         if (!$sCommitText) {
@@ -407,6 +492,9 @@ class AfrGitExec
         ));
     }
 
+    /**
+     * Hook master checkout.
+     */
     public function hookMasterCheckout(bool $bSaveCurrentChanges, string $sCommitText = '', bool $bPushToMaster = false): array
     {
         if (!$sCommitText) {

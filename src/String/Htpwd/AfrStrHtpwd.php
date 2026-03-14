@@ -6,6 +6,9 @@ namespace Autoframe\Core\String\Htpwd;
 
 class AfrStrHtpwd
 {
+    /**
+     * Crypt apr1 md5.
+     */
     public static function crypt_apr1_md5($plainpasswd)
     {
         /* .htaccess
@@ -64,6 +67,9 @@ class AfrStrHtpwd
     }
 
 
+    /**
+     * Write htpasswd file.
+     */
     public static function write_htpasswd_file($user_pass=array()){
         $pw='';
         foreach($user_pass as $user=>$pass){

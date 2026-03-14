@@ -79,6 +79,7 @@ final class AfrConfig
     }
 
     /**
+     * Assign data.
      * @param array $aData
      * @return $this
      */
@@ -105,6 +106,7 @@ final class AfrConfig
     }
 
     /**
+     * Define constants.
      * @return AfrConfig
      */
     public function defineConstants(): AfrConfig
@@ -122,6 +124,7 @@ final class AfrConfig
     }
 
     /**
+     * Get constants.
      * @return array
      */
     public function getConstants(): array
@@ -141,6 +144,7 @@ final class AfrConfig
 
 
     /**
+     * Assign constructor args.
      * @param array $aArgs
      * @return $this
      */
@@ -152,6 +156,7 @@ final class AfrConfig
     }
 
     /**
+     * Assign properties.
      * @param array $aProperties
      * @return $this
      */
@@ -163,6 +168,7 @@ final class AfrConfig
     }
 
     /**
+     * Assign static properties.
      * @param array $aProperties
      * @return $this
      */
@@ -175,6 +181,7 @@ final class AfrConfig
 
 
     /**
+     * Assign method.
      * @param string $sMethodName
      * @param array $aArgs
      * @return $this
@@ -187,6 +194,7 @@ final class AfrConfig
     }
 
     /**
+     * Assign static method.
      * @param string $sMethodName
      * @param array $aArgs
      * @return $this
@@ -199,6 +207,7 @@ final class AfrConfig
     }
 
     /**
+     * Assign prevent existence errors.
      * @param bool $bPreventExistenceErrors
      * @return $this
      */
@@ -210,6 +219,7 @@ final class AfrConfig
     }
 
     /**
+     * Get namespace and class or trait or interface or key.
      * @return string
      */
     public function getNamespaceAndClassOrTraitOrInterfaceOrKey(): string
@@ -218,6 +228,7 @@ final class AfrConfig
     }
 
     /**
+     * Get constructor args.
      * @return array
      */
     public function getConstructorArgs(): array
@@ -226,6 +237,7 @@ final class AfrConfig
     }
 
     /**
+     * Get methods.
      * @return array
      */
     public function getMethods(): array
@@ -234,6 +246,7 @@ final class AfrConfig
     }
 
     /**
+     * Get static methods.
      * @return array
      */
     public function getStaticMethods(): array
@@ -242,6 +255,7 @@ final class AfrConfig
     }
 
     /**
+     * Get properties.
      * @return array
      */
     public function getProperties(): array
@@ -250,6 +264,7 @@ final class AfrConfig
     }
 
     /**
+     * Get static properties.
      * @return array
      */
     public function getStaticProperties(): array
@@ -258,6 +273,7 @@ final class AfrConfig
     }
 
     /**
+     * Get data.
      * @return array
      */
     public function getData(): array
@@ -266,6 +282,7 @@ final class AfrConfig
     }
 
     /**
+     * Get prevent existence errors.
      * @return bool
      */
     public function getPreventExistenceErrors(): bool

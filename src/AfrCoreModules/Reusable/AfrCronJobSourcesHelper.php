@@ -8,12 +8,18 @@ use Autoframe\Core\Cron\AfrConJobSources;
 trait AfrCronJobSourcesHelper
 {
 	/** @inheritDoc */
+	/**
+	 * Invoke the instance as a callable.
+	 */
 	public function __invoke(): int
 	{
 		return $this->registerCronJobSources();
 	}
 
 	/** @inheritDoc */
+	/**
+	 * Register cron job sources.
+	 */
 	public function registerCronJobSources(): int
 	{
 		if (empty($aSources = $this->getCronJobSources())) return 0;
@@ -46,6 +52,9 @@ trait AfrCronJobSourcesHelper
 	}
 
 	/** @inheritDoc */
+	/**
+	 * Get cron job sources.
+	 */
 	public function getCronJobSources(): ?array
 	{
 		return AfrLoadConfigHelper::loadConfigFile(self::SELF_DIR, self::CLI_CRON_JOB_SOURCES_FILENAME, false);

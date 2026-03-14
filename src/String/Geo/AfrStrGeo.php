@@ -16,6 +16,7 @@ class AfrStrGeo
     private static $cacheGetCoordonatesByAddress = [];
 
     /**
+     * Get coordonates by address.
      * @param string $address
      * @return array
      */
@@ -35,6 +36,7 @@ class AfrStrGeo
     }
 
     /**
+     * Get lang long by address.
      * @param string $address
      * @return array
      */
@@ -50,6 +52,7 @@ class AfrStrGeo
     }
 
     /**
+     * Embed google map by address.
      * @param string $address
      * @param string $api_key
      * @param string $fullscreen
@@ -66,6 +69,7 @@ class AfrStrGeo
 
 
     /**
+     * Embed street view by address.
      * @param string $address
      * @param string $api_key
      * @param string $fullscreen
@@ -91,6 +95,7 @@ class AfrStrGeo
     }
 
     /**
+     * Distance.
      * @param float $lat1
      * @param float $lng1
      * @param float $lat2

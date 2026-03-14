@@ -10,17 +10,24 @@ trait DbActionSingletonTrait
 	protected CnxActionInterface $oCnxAction;
 	protected string $sDatabaseName;
 
+	/**
+	 * Get name conn alias.
+	 */
 	public function getNameConnAlias(): string
 	{
 		return $this->oCnxAction->getNameConnAlias();
 	}
 
+	/**
+	 * Get name database.
+	 */
 	public function getNameDatabase(): string
 	{
 		return $this->sDatabaseName;
 	}
 
 	/**
+	 * Get name driver.
 	 * @return string
 	 * @throws AfrDatabaseConnectionException
 	 */

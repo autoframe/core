@@ -5,6 +5,7 @@ namespace Autoframe\Core\String\Json;
 class AfrJson
 {
     /**
+     * Encode.
      * @param $value
      * @param int $options
      * @param int $depth
@@ -21,6 +22,7 @@ class AfrJson
 
 
     /**
+     * Json encode custom.
      * @param $data
      * @return float|int|string
      */
@@ -68,6 +70,7 @@ class AfrJson
 
 
     /**
+     * Decode.
      * @param string $json
      * @param bool|null $assoc
      * @param int $depth

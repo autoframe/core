@@ -6,6 +6,7 @@ namespace Autoframe\Core\Arr\Export;
 interface AfrArrExportArrayAsStringInterface
 {
 	/**
+     * Export php array as string.
 	 * @param array $aData
 	 * @param string $sQuot
 	 * @param string $sEndOfLine

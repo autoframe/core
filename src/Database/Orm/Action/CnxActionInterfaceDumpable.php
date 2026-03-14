@@ -15,12 +15,18 @@ interface CnxActionInterfaceDumpable extends CnxActionInterface
 	//COMMIT;
 
 
+	/**
+	 * Cnx dump all databases to local dir.
+	 */
 	public function cnxDumpAllDatabasesToLocalDir(
 		string $dirPath,
 		bool   $individualTableStructures = true,
 		bool   $bZipped = true
 	): array;
 
+	/**
+	 * Cnx copy all databases to cnx alias.
+	 */
 	public function cnxCopyAllDatabasesToCnxAlias(string $sAlias): array;
 
 

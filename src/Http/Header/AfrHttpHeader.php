@@ -38,6 +38,7 @@ class AfrHttpHeader extends AfrSingletonAbstractClass
 
 
 	/**
+	 * To json.
 	 * @param $mData
 	 * @param bool $bExit
 	 * @return void
@@ -113,6 +114,7 @@ class AfrHttpHeader extends AfrSingletonAbstractClass
 	}
 
 	/**
+	 * Get http response code.
 	 * @return bool|int
 	 */
 	public function getHttpResponseCode()
@@ -120,6 +122,9 @@ class AfrHttpHeader extends AfrSingletonAbstractClass
 		return http_response_code();
 	}
 
+	/**
+	 * Get headers.
+	 */
 	public function getHeaders(AfrRequestClass $rq = null): array
 	{
 		return AfrCliHttpDetect::getServerRequestHeaders($rq);
@@ -211,6 +216,7 @@ class AfrHttpHeader extends AfrSingletonAbstractClass
 	}
 
 	/** Permanent redirect
+	 * H301 permanent.
 	 * @param string $sLoc
 	 * @param bool $bExit
 	 * @return void
@@ -222,6 +228,7 @@ class AfrHttpHeader extends AfrSingletonAbstractClass
 	}
 
 	/**
+	 * H302 found same method.
 	 * @param string $sLoc
 	 * @param bool $bExit
 	 * @return void
@@ -234,6 +241,7 @@ class AfrHttpHeader extends AfrSingletonAbstractClass
 	}
 
 	/** Use this with forms when making browser POST requests.
+	 * H303 form post.
 	 * @param string $sLoc
 	 * @param bool $bExit
 	 * @return void
@@ -246,6 +254,7 @@ class AfrHttpHeader extends AfrSingletonAbstractClass
 	}
 
 	/**
+	 * H304 not modified.
 	 * @return void
 	 * @throws AfrEnvException
 	 * @throws AfrEventException
@@ -257,6 +266,7 @@ class AfrHttpHeader extends AfrSingletonAbstractClass
 	}
 
 	/**
+	 * Can serve304.
 	 * @param string $sEtag
 	 * @param string $sGmtLastModify
 	 * @return bool
@@ -287,6 +297,7 @@ class AfrHttpHeader extends AfrSingletonAbstractClass
 	}
 
 	/**
+	 * H404.
 	 * @param string $sMsg
 	 * @param bool $bExit
 	 * @return void
@@ -304,6 +315,7 @@ class AfrHttpHeader extends AfrSingletonAbstractClass
 	}
 
 	/**
+	 * H405 method not allowed.
 	 * @param string $msg
 	 * @param bool $bExit
 	 * @return void
@@ -321,6 +333,7 @@ class AfrHttpHeader extends AfrSingletonAbstractClass
 	}
 
 	/**
+	 * H410 page gone.
 	 * @param string $msg
 	 * @param bool $bExit
 	 * @return void
@@ -338,6 +351,9 @@ class AfrHttpHeader extends AfrSingletonAbstractClass
 		}
 	}
 
+	/**
+	 * Header retry after.
+	 */
 	public function headerRetryAfter(int $iRetryAfter = 120): string
 	{
 		if ($iRetryAfter === 0) {
@@ -348,6 +364,9 @@ class AfrHttpHeader extends AfrSingletonAbstractClass
 		return strpos($sRetryAfter, 'GMT') ? $sRetryAfter : $sRetryAfter . ' seconds';
 	}
 
+	/**
+	 * H500.
+	 */
 	public function h500(bool $bExit = true, int $iRetryAfter = 120)
 	{
 		@header('Status: 500 Internal Server Error');
@@ -360,6 +379,7 @@ class AfrHttpHeader extends AfrSingletonAbstractClass
 	}
 
 	/**
+	 * E500 html.
 	 * @param string $str
 	 * @param bool $bExit
 	 * @param bool $bDevTrace
@@ -408,6 +428,7 @@ class AfrHttpHeader extends AfrSingletonAbstractClass
 
 
 	/**
+	 * E503 service temporary unavailable.
 	 * @param string $str
 	 * @param bool $bExit
 	 * @param int $iRetryAfter
@@ -432,6 +453,7 @@ class AfrHttpHeader extends AfrSingletonAbstractClass
 	}
 
 	/**
+	 * Png404.
 	 * @param bool $bDie
 	 * @return void
 	 * @throws AfrContainerException
@@ -460,6 +482,7 @@ class AfrHttpHeader extends AfrSingletonAbstractClass
 
 
 	/**
+	 * Header content length.
 	 * @param string $sFullFilePath
 	 * @param int $iKnown
 	 * @return void
@@ -473,6 +496,7 @@ class AfrHttpHeader extends AfrSingletonAbstractClass
 	}
 
 	/**
+	 * Get header gmt date from ts.
 	 * @param int $iTs
 	 * @return string
 	 */
@@ -482,6 +506,7 @@ class AfrHttpHeader extends AfrSingletonAbstractClass
 	}
 
 	/**
+	 * Header last modified.
 	 * @param string $sFullFilePath
 	 * @param int $iKnown
 	 * @param string $sGmtDate
@@ -496,6 +521,7 @@ class AfrHttpHeader extends AfrSingletonAbstractClass
 	}
 
 	/**
+	 * Header expires.
 	 * @param int $iTimestamp
 	 * @return void
 	 */
@@ -540,6 +566,7 @@ class AfrHttpHeader extends AfrSingletonAbstractClass
 	}
 
 	/**
+	 * Header content type mime.
 	 * @param string $sFileNameOrPath
 	 * @param string $sCharset
 	 * @param bool $bAutodetectEncoding
@@ -590,6 +617,7 @@ class AfrHttpHeader extends AfrSingletonAbstractClass
 	}
 
 	/**
+	 * Header etag.
 	 * @param string $sFullFilePath
 	 * @param int $iFileSize
 	 * @param int $iFileMtime
@@ -620,6 +648,7 @@ class AfrHttpHeader extends AfrSingletonAbstractClass
 	}
 
 	/**
+	 * Is http response code.
 	 * @param int $iExpected
 	 * @return bool
 	 */
@@ -629,6 +658,7 @@ class AfrHttpHeader extends AfrSingletonAbstractClass
 	}
 
 	/**
+	 * Header no cache.
 	 * @return void
 	 */
 	public function headerNoCache(): void
@@ -639,6 +669,7 @@ class AfrHttpHeader extends AfrSingletonAbstractClass
 	}
 
 	/**
+	 * Header do cache.
 	 * @param int $iSecondsToCache
 	 * @return void
 	 */
@@ -661,6 +692,9 @@ class AfrHttpHeader extends AfrSingletonAbstractClass
 	}
 
 
+	/**
+	 * Http header cache control and expire.
+	 */
 	public function httpHeaderCacheControlAndExpire(
 		int  &$iCacheExpire = 2678400,
 		bool $bImmutable = true,

@@ -7,6 +7,7 @@ namespace Autoframe\Core\Html\BreadcrumbList;
 class AfrBreadcrumbLdJson
 {
 	/**
+	 * Get breadcrumb json ld from array.
 	 * @param array $aNavInfo [ ['name'=>'Home','url'=>'/'], ['name'=>'Products','url'=>'...'], ]
 	 * @param string $sSiteUrl https://example.com/
 	 * @return string

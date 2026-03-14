@@ -26,6 +26,7 @@ class AfrFtpPutBigData implements AfrFtpBusinessLogicInterface
     protected ?AfrLockInterface $oLock = null;
 
     /**
+     * Create a new instance.
      * @param AfrFtpBackupConfig $oFtpConfig
      * @param AfrFtpLogInterface $oLog
      * @param AfrLockInterface $oLock
@@ -91,6 +92,7 @@ class AfrFtpPutBigData implements AfrFtpBusinessLogicInterface
     }
 
     /**
+     * Restore the instance after unserialization.
      * @return void
      * @throws AfrException
      */
@@ -145,6 +147,7 @@ class AfrFtpPutBigData implements AfrFtpBusinessLogicInterface
     }
 
     /**
+     * Make backup.
      * @return void
      * @throws AfrException
      */
@@ -236,6 +239,7 @@ class AfrFtpPutBigData implements AfrFtpBusinessLogicInterface
     }
 
     /**
+     * Add to queue.
      * @param string $sDestinationFullPath
      * @param string $sMethod
      * @param array $aArgs
@@ -256,6 +260,7 @@ class AfrFtpPutBigData implements AfrFtpBusinessLogicInterface
     }
 
     /**
+     * Populate to queue.
      * @return void
      */
     public function populateToQueue(): void

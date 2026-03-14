@@ -21,6 +21,9 @@ class AfrCronLogChannelSharedLogBuffer extends AfrSingletonAbstractClass impleme
 		return $this->oAfrCronLogSharedLogBuffer;
 	}
 
+	/**
+	 * Log.
+	 */
 	public function log(AfrCronLoggerInterface $oData): void
 	{
 		$sText = implode(' ', [
@@ -33,11 +36,17 @@ class AfrCronLogChannelSharedLogBuffer extends AfrSingletonAbstractClass impleme
 		$this->getAfrCronLogSharedLogBuffer()->writeLog($sText, $oData->isError());
 	}
 
+	/**
+	 * Cleanup gc older than n months.
+	 */
 	public function cleanupGcOlderThan_N_Months(float $fMonths = null, bool $bForce = false): ?bool
 	{
 		return true;
 	}
 
+	/**
+	 * View logs.
+	 */
 	public function viewLogs($iReadTimeout = null, bool $bFlushAfterRead = true): void
 	{
 		//null timeout is the default

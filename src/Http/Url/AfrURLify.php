@@ -242,6 +242,9 @@ class AfrURLify extends AfrSingletonAbstractClass
 		$this->sChars = '';
 	}
 
+	/**
+	 * Get maps.
+	 */
 	public function getMaps(): array
 	{
 		return $this->maps;
@@ -324,6 +327,9 @@ class AfrURLify extends AfrSingletonAbstractClass
 		return trim(substr($text, 0, $maxLength), '-');     // trim to first $length chars
 	}
 
+	/**
+	 * Sanitize filename.
+	 */
 	public function sanitizeFilename(
 		string $text,
 		int    $maxLength = 60,

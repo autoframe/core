@@ -32,11 +32,17 @@ class AfrYoutubeDownloader
 	private string $ytDlpBin = 'yt-dlp';
 	private int $maxRetries = 2;
 
+	/**
+	 * Create a new instance.
+	 */
 	public function __construct(string $outputDir)
 	{
 		$this->setOutputDir($outputDir);
 	}
 
+	/**
+	 * Set output dir.
+	 */
 	public function setOutputDir(string $dir): self
 	{
 		$dir = rtrim($dir, "\\/");
@@ -52,12 +58,18 @@ class AfrYoutubeDownloader
 		return $this;
 	}
 
+	/**
+	 * Set yt dlp binary.
+	 */
 	public function setYtDlpBinary(string $path): self
 	{
 		$this->ytDlpBin = $path;
 		return $this;
 	}
 
+	/**
+	 * Set max retries.
+	 */
 	public function setMaxRetries(int $retries): self
 	{
 		$this->maxRetries = max(0, min(5, $retries));
@@ -65,6 +77,7 @@ class AfrYoutubeDownloader
 	}
 
 	/**
+	 * Download mp4 convert mp3.
 	 * @return array{success: bool, command: string, output: string[], error?: string, info: string}
 	 */
 	public function downloadMp4ConvertMp3(string $url): array
@@ -147,6 +160,7 @@ class AfrYoutubeDownloader
 	}
 
 	/**
+	 * Detect ffmpeg directory.
 	 * @return string
 	 */
 	public function detectFfmpegDirectory(): string

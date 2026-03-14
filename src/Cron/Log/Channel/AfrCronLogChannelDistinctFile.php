@@ -24,6 +24,7 @@ class AfrCronLogChannelDistinctFile extends AfrSingletonAbstractClass implements
 	protected array $aCheckedDirs = [];
 
 	/**
+	 * Log.
 	 * @param AfrCronLoggerClass|AfrCronLoggerInterface $oData
 	 * @return void
 	 * @throws AfrContainerException
@@ -83,6 +84,9 @@ class AfrCronLogChannelDistinctFile extends AfrSingletonAbstractClass implements
 		}
 	}
 
+	/**
+	 * Cleanup gc older than n months.
+	 */
 	public function cleanupGcOlderThan_N_Months(float $fMonths = null, bool $bForce = false): ?bool
 	{
 		if ($bForce || rand(1, static::GC_ONE_IN_N) == 2) {

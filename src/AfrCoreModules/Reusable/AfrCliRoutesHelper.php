@@ -7,6 +7,9 @@ use Autoframe\Core\Router\AfrCliQaRouter;
 
 trait AfrCliRoutesHelper {
 
+	/**
+	 * Register cli routes.
+	 */
 	public function registerCliRoutes(AfrRequestInterface $oRequest = null, array $aFilterOnly = []): int
 	{
 		$aConfig = array_merge([
@@ -37,6 +40,9 @@ trait AfrCliRoutesHelper {
 	}
 
 
+	/**
+	 * Get cli routes.
+	 */
 	public function getCliRoutes(): ?array
 	{
 		// define const SELF_DIR in the implementing class or replace with concrete method + __DIR__

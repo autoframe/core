@@ -11,6 +11,7 @@ class AfrDbStructureCacheRam extends AfrSingletonAbstractClass implements AfrDbS
 	public array $aCache = [];
 
 	/**
+	 * Cache structure get.
 	 * @inheritDoc
 	 */
 	public function cacheStructureGet(AfrDbCacheKey $oKey, ?Closure $closureSet = null)
@@ -27,6 +28,7 @@ class AfrDbStructureCacheRam extends AfrSingletonAbstractClass implements AfrDbS
 	}
 
 	/**
+	 * Cache structure set.
 	 * @inheritDoc
 	 */
 	public function cacheStructureSet(AfrDbCacheKey $oKey, $mValue)
@@ -40,6 +42,7 @@ class AfrDbStructureCacheRam extends AfrSingletonAbstractClass implements AfrDbS
 	}
 
 	/**
+	 * Cache key.
 	 * @inheritDoc
 	 */
 	public function cacheKey(
@@ -60,6 +63,7 @@ class AfrDbStructureCacheRam extends AfrSingletonAbstractClass implements AfrDbS
 	}
 
 	/**
+	 * Cache flush all.
 	 * @inheritDoc
 	 */
 	public function cacheFlushAll(): void
@@ -68,6 +72,7 @@ class AfrDbStructureCacheRam extends AfrSingletonAbstractClass implements AfrDbS
 	}
 
 	/**
+	 * Cache flush alias.
 	 * @inheritDoc
 	 */
 	public function cacheFlushAlias(string $sAlias): void
@@ -75,11 +80,17 @@ class AfrDbStructureCacheRam extends AfrSingletonAbstractClass implements AfrDbS
 		$this->aCache[$sAlias] = null;
 	}
 
+	/**
+	 * Cache flush alias db.
+	 */
 	public function cacheFlushAliasDb(string $sAlias, string $sDatabaseName): void
 	{
 		$this->aCache[$sAlias][$sDatabaseName] = null;
 	}
 
+	/**
+	 * Cache flush alias db table.
+	 */
 	public function cacheFlushAliasDbTable(string $sAlias, string $sDatabaseName, string $sTableName): void
 	{
 		$this->aCache[$sAlias][$sDatabaseName][$sTableName] = null;

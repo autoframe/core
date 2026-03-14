@@ -6,6 +6,7 @@ namespace Autoframe\Core\Config;
 interface AfrConfigurableStaticInterface
 {
     /**
+     * Apply afr static config.
      * @param bool $bForce
      * @return int
      */

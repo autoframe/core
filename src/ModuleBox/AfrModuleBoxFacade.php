@@ -20,6 +20,7 @@ final class AfrModuleBoxFacade implements AfrDefaultTenantConfigsInterface
 	protected static string $sBoxFQCN;// = AfrModuleBoxClass::class;
 
 	/**
+	 * Xet box class.
 	 * @param string|null $sBoxFQCN
 	 * @return AfrModuleBoxInterface|string FQCN implementing AfrModuleBoxInterface
 	 * @throws AfrException
@@ -40,6 +41,7 @@ final class AfrModuleBoxFacade implements AfrDefaultTenantConfigsInterface
 	}
 
 	/**
+	 * Get box.
 	 * @return AfrModuleBoxClass|AfrModuleBoxInterface
 	 * @throws AfrContainerException|AfrEventException|AfrException
 	 */
@@ -50,6 +52,7 @@ final class AfrModuleBoxFacade implements AfrDefaultTenantConfigsInterface
 	}
 
 	/**
+	 * Handle calls to inaccessible static methods.
 	 * @param $method
 	 * @param $args
 	 * @return mixed
@@ -63,6 +66,7 @@ final class AfrModuleBoxFacade implements AfrDefaultTenantConfigsInterface
 	}
 
 	/**
+	 * Handle calls to inaccessible instance methods.
 	 * @param $method
 	 * @param $args
 	 * @return mixed
@@ -73,6 +77,9 @@ final class AfrModuleBoxFacade implements AfrDefaultTenantConfigsInterface
 		return self::getBox()->$method(...$args);
 	}
 
+	/**
+	 * Sample tenant default config.
+	 */
 	public static function sampleTenantDefaultConfig(): ?string
 	{
 		return file_get_contents(__DIR__ . DIRECTORY_SEPARATOR . 'config.sample.AfrModuleBox.php');

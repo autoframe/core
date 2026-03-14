@@ -24,6 +24,7 @@ use Closure;
 trait AfrRouterHandleCliTrait
 {
 	/**
+	 * Handle cli routes.
 	 * @param AfrRequestInterface $oRequest
 	 * @param Closure|null $oClosureAfterRoute
 	 * @return int

@@ -125,11 +125,17 @@ class AfrEvent implements AfrDefaultTenantConfigsInterface
 	protected static bool $bDefaultTenantConfigWasApplied = false;
 
 
+	/**
+	 * Sample tenant default config.
+	 */
 	public static function sampleTenantDefaultConfig(): ?string
 	{
 		return file_get_contents(__DIR__ . DIRECTORY_SEPARATOR . 'config.sample.AfrEvent.php');
 	}
 
+	/**
+	 * Apply default tenant config.
+	 */
 	public static function applyDefaultTenantConfig(): void
 	{
 		if (!empty(static::$bDefaultTenantConfigWasApplied)) return;
@@ -143,6 +149,7 @@ class AfrEvent implements AfrDefaultTenantConfigsInterface
 	}
 
 	/**
+	 * Dispatch event.
 	 * @param string $sEvent
 	 * @param array|null $aArgs
 	 * @param int|null $iTraceDepth
@@ -328,6 +335,7 @@ class AfrEvent implements AfrDefaultTenantConfigsInterface
 
 
 	/**
+	 * Get config flag.
 	 * @param string $sEvent
 	 * @param string $sFlag
 	 * @return int|bool|null|mixed
@@ -373,6 +381,9 @@ class AfrEvent implements AfrDefaultTenantConfigsInterface
 		// return self::$aDataCollectFlags[$sEvent][$sFlag] ?? self::$aDataCollectFlags[self::WILDCARD_STAR][$sFlag] ?? null;
 	}
 
+	/**
+	 * Set config flag.
+	 */
 	public static function setConfigFlag(string $sEvent, string $sFlag, $bOnOrInt): void
 	{
 		if ($bOnOrInt) {
@@ -385,6 +396,9 @@ class AfrEvent implements AfrDefaultTenantConfigsInterface
 		}
 	}
 
+	/**
+	 * Extend config flags from array.
+	 */
 	public static function extendConfigFlagsFromArray(array $aFlags): void
 	{
 		foreach ($aFlags as $sEvent => $aFlagVal) {
@@ -396,6 +410,7 @@ class AfrEvent implements AfrDefaultTenantConfigsInterface
 
 
 	/**
+	 * Add event closure.
 	 * @param string $sEvent Event name: db.query.start or wildcard: db.* | *.start | db.*.start | *.*.*.rt
 	 * @param Closure $closure What to do, and receive ($aData)
 	 * @param bool $bPrependQueue the closure should be placed at the stack beginning or appended at the end?
@@ -425,16 +440,25 @@ class AfrEvent implements AfrDefaultTenantConfigsInterface
 
 	}
 
+	/**
+	 * Get triggered events log.
+	 */
 	public static function getTriggeredEventsLog(): array
 	{
 		return self::$aTriggeredEventsStats;
 	}
 
+	/**
+	 * Get event closures.
+	 */
 	public static function getEventClosures(): array
 	{
 		return self::$aOnEventClosures;
 	}
 
+	/**
+	 * Get wildcard config.
+	 */
 	public static function getWildcardConfig(): array
 	{
 		return self::$aWildcardClosure;

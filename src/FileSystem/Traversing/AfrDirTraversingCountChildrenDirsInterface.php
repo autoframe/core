@@ -8,6 +8,7 @@ use Autoframe\Core\FileSystem\DirPath\Exception\AfrFileSystemDirPathException;
 interface AfrDirTraversingCountChildrenDirsInterface
 {
     /**
+     * Count all children dirs.
      * @param string $sDirPath
      * @return int
      * @throws AfrFileSystemDirPathException

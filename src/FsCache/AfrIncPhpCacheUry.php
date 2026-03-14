@@ -6,6 +6,7 @@ class AfrIncPhpCacheUry
 	protected static string $sCacheDir = __DIR__ . DIRECTORY_SEPARATOR . 'cache';
 
 	/**
+	 * Set cache dir.
 	 * @param string $sCacheDir
 	 * @return void
 	 * @throws \Exception
@@ -54,6 +55,9 @@ class AfrIncPhpCacheUry
 
 
 	//  	$key = implode('_',	array_merge([basename(__FILE__, '.php'), __FUNCTION__,],	func_get_args()	));
+	/**
+	 * Set if null.
+	 */
 	public function setIfNull(string $key, int $expire, \Closure $oSetter)
 	{
 		if (($value = $this->get($key)) !== null) {

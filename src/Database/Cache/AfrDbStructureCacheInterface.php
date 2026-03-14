@@ -25,6 +25,7 @@ interface AfrDbStructureCacheInterface // extends AfrSingletonInterface
 	public function cacheStructureGet(AfrDbCacheKey $oKey, ?Closure $closureSet = null);
 
 	/**
+	 * Cache structure set.
 	 * @param AfrDbCacheKey $oKey
 	 * @param $mValue
 	 * @throws AfrDatabaseConnectionException
@@ -33,6 +34,7 @@ interface AfrDbStructureCacheInterface // extends AfrSingletonInterface
 
 
 	/**
+	 * Cache key.
 	 * @param string $sFunction
 	 * @param array $aParams
 	 * @param string|null $sCnxAlias
@@ -62,8 +64,14 @@ interface AfrDbStructureCacheInterface // extends AfrSingletonInterface
 	 */
 	public function cacheFlushAlias(string $sAlias): void;
 
+	/**
+	 * Cache flush alias db.
+	 */
 	public function cacheFlushAliasDb(string $sAlias, string $sDatabaseName): void;
 
+	/**
+	 * Cache flush alias db table.
+	 */
 	public function cacheFlushAliasDbTable(string $sAlias, string $sDatabaseName, string $sTableName): void;
 
 

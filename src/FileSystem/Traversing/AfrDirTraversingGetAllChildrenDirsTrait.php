@@ -18,6 +18,7 @@ trait AfrDirTraversingGetAllChildrenDirsTrait
     use AfrDirTraversingDependency;
 
     /**
+     * Get all children dirs.
      * @param string $sDirPath
      * @param int $iMaxLevels
      * @param bool $bFollowSymlinks

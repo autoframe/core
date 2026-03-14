@@ -8,6 +8,7 @@ use Autoframe\Core\Database\Orm\Exception\AfrOrmException;
 trait AfrOrmTblTrait
 {
     /**
+     * Orm tbl name.
      * @return string Table name
      * @throws AfrOrmException
      */

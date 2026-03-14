@@ -17,6 +17,9 @@ class AfrCaptchaClassicImgV2 extends AfrCaptchaClassicImg
     }
 
 
+    /**
+     * Create image.
+     */
     public function createImage(string $sCode)
     {
         $iNbBgColors = 5;

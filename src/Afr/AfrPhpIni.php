@@ -12,6 +12,7 @@ use Autoframe\Core\Event\Exception\AfrEventException;
 class AfrPhpIni
 {
 	/**
+	 * Apply php ini env config.
 	 * @return void
 	 * @throws AfrContainerException
 	 * @throws AfrEnvException

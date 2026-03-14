@@ -13,6 +13,7 @@ class AfrClientStore extends AfrCacheSocketStore
     protected array $aSockResponse = [];
 
     /**
+     * Create a new instance.
      * @throws AfrCacheSocketException
      */
     public function __construct(AfrCacheSocketConfig $oSocketConfig)
@@ -22,6 +23,7 @@ class AfrClientStore extends AfrCacheSocketStore
     }
 
     /**
+     * Get socket client.
      * @return AfrSocketClient
      */
     public function _getSocketClient(): AfrSocketClient
@@ -30,6 +32,7 @@ class AfrClientStore extends AfrCacheSocketStore
     }
 
     /**
+     * Get cache socket config.
      * @return AfrCacheSocketConfig
      */
     public function _getCacheSocketConfig(): AfrCacheSocketConfig
@@ -38,6 +41,7 @@ class AfrClientStore extends AfrCacheSocketStore
     }
 
     /**
+     * Shutdown server.
      * @return array
      */
     public function shutdownServer(): array
@@ -52,6 +56,7 @@ class AfrClientStore extends AfrCacheSocketStore
     }
 
     /**
+     * Get server stats.
      * @return array
      */
     public function getServerStats(): array
@@ -234,6 +239,7 @@ class AfrClientStore extends AfrCacheSocketStore
 
 
     /**
+     * Delete.
      * @param string $sKey
      * @param int $iDelay
      * @return bool
@@ -244,6 +250,7 @@ class AfrClientStore extends AfrCacheSocketStore
     }
 
     /**
+     * Get all keys.
      * @return array
      */
     public function getAllKeys(): array
@@ -252,6 +259,7 @@ class AfrClientStore extends AfrCacheSocketStore
     }
 
     /**
+     * Get memory usage info.
      * @return array
      */
     public function getMemoryUsageInfo(): array

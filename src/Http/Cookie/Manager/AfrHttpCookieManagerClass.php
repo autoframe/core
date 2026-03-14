@@ -9,6 +9,7 @@ class AfrHttpCookieManagerClass extends AfrObjectSingletonAbstractClass  impleme
 {
     use AfrHttpCookieManagerTrait;
     /**
+     * Get instance.
      * @return AfrHttpCookieManagerClass
      */
     public static function getInstance(): AfrHttpCookieManagerClass

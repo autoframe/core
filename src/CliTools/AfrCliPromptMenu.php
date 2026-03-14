@@ -5,6 +5,7 @@ namespace Autoframe\Core\CliTools;
 class AfrCliPromptMenu
 {
     /**
+     * Prompt menu.
      * @param string $prompt
      * @param array $options
      * @param string $default
@@ -111,6 +112,9 @@ class AfrCliPromptMenu
         return $default;
     }
 
+    /**
+     * Demo.
+     */
     public static function demo(): void
     {
         if (!AfrCliHttpDetect::isCli()) {

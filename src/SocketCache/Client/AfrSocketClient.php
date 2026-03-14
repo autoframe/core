@@ -42,6 +42,7 @@ class AfrSocketClient
 
 
     /**
+     * Send request.
      * @param string $sData
      * @return array
      */

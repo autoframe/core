@@ -8,6 +8,7 @@ class AfrFtpLogInline implements AfrFtpLogInterface
     public array $aMessages = [];
 
     /**
+     * New log.
      * @inheritDoc
      */
     public function newLog(): AfrFtpLogInterface
@@ -21,6 +22,7 @@ class AfrFtpLogInline implements AfrFtpLogInterface
     }
 
     /**
+     * Log message.
      * @inheritDoc
      */
     public function logMessage(string $sMessage, int $iType): AfrFtpLogInterface
@@ -49,6 +51,7 @@ class AfrFtpLogInline implements AfrFtpLogInterface
     }
 
     /**
+     * Close log.
      * @inheritDoc
      */
     public function closeLog(): AfrFtpLogInterface
@@ -62,6 +65,9 @@ class AfrFtpLogInline implements AfrFtpLogInterface
         return $this;
     }
 
+    /**
+     * Clean up resources before the instance is destroyed.
+     */
     public function __destruct()
     {
         $this->closeLog();
@@ -81,6 +87,7 @@ class AfrFtpLogInline implements AfrFtpLogInterface
     }
 
     /**
+     * Return the string representation of the instance.
      * @return string
      */
     public function __toString(): string

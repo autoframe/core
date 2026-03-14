@@ -45,6 +45,7 @@ class AfrRequestClass extends AfrSingletonAbstractClass implements AfrRequestInt
 	protected static AfrRequestInterface $oDefaultInstanceRequest;
 
 	/**
+	 * Get instance.
 	 * @return AfrRequestInterface
 	 * @throws AfrContainerException
 	 * @throws AfrEnvException
@@ -65,6 +66,7 @@ class AfrRequestClass extends AfrSingletonAbstractClass implements AfrRequestInt
 	}
 
 	/**
+	 * Make new cli request instance.
 	 * @throws AfrContainerException
 	 * @throws AfrEnvException
 	 * @throws AfrEventException
@@ -88,6 +90,7 @@ class AfrRequestClass extends AfrSingletonAbstractClass implements AfrRequestInt
 
 
 	/**
+	 * Make new cli request instance from command line.
 	 * @param string $sCommandScriptLine /path/someScript.php -a="X" --argY
 	 * @param array|null $server
 	 * @param string|null $php_sapi_name
@@ -112,6 +115,7 @@ class AfrRequestClass extends AfrSingletonAbstractClass implements AfrRequestInt
 	}
 
 	/**
+	 * Make new http request instance.
 	 * @throws AfrContainerException
 	 * @throws AfrEnvException
 	 * @throws AfrEventException
@@ -160,6 +164,7 @@ class AfrRequestClass extends AfrSingletonAbstractClass implements AfrRequestInt
 
 
 	/**
+	 * Set this request as app request instance.
 	 * @return AfrRequestClass|AfrRequestInterface
 	 */
 	public function setThisRequestAsAppRequestInstance(): AfrRequestInterface
@@ -169,6 +174,7 @@ class AfrRequestClass extends AfrSingletonAbstractClass implements AfrRequestInt
 	}
 
 	/**
+	 * Restore original app request instance.
 	 * @return AfrRequestClass|AfrRequestInterface
 	 * @throws AfrContainerException
 	 */
@@ -439,6 +445,7 @@ class AfrRequestClass extends AfrSingletonAbstractClass implements AfrRequestInt
 	}
 
 	/**
+	 * Convert to https.
 	 * @param bool $bHttps
 	 * @return AfrRequestClass|AfrRequestInterface
 	 * @throws AfrHttpRequestException
@@ -502,6 +509,7 @@ class AfrRequestClass extends AfrSingletonAbstractClass implements AfrRequestInt
 
 
 	/**
+	 * Handle calls to inaccessible instance methods.
 	 * @param string $method
 	 * @param array $parameters
 	 * @return mixed
@@ -528,63 +536,99 @@ class AfrRequestClass extends AfrSingletonAbstractClass implements AfrRequestInt
 		throw new AfrException("Method '$method' not found in class " . get_class($this));
 	}
 
+	/**
+	 * Is cli.
+	 */
 	public function isCli(): bool
 	{
 		return $this->bIsCli;
 	}
 
+	/**
+	 * Is http post request.
+	 */
 	public function isHttpPostRequest(): bool
 	{
 		return !$this->isCli() && $this->server['REQUEST_METHOD'] == 'POST';
 	}
 
+	/**
+	 * Is http get request.
+	 */
 	public function isHttpGetRequest(): bool
 	{
 		return !$this->isCli() && $this->server['REQUEST_METHOD'] == 'GET';
 	}
 
+	/**
+	 * Is http head request.
+	 */
 	public function isHttpHeadRequest(): bool
 	{
 		return !$this->isCli() && $this->server['REQUEST_METHOD'] == 'HEAD';
 	}
 
+	/**
+	 * Is http put request.
+	 */
 	public function isHttpPutRequest(): bool
 	{
 		return !$this->isCli() && $this->server['REQUEST_METHOD'] == 'PUT';
 	}
 
+	/**
+	 * Is http options request.
+	 */
 	public function isHttpOptionsRequest(): bool
 	{
 		return !$this->isCli() && $this->server['REQUEST_METHOD'] == 'OPTIONS';
 	}
 
+	/**
+	 * Is http patch request.
+	 */
 	public function isHttpPatchRequest(): bool
 	{
 		return !$this->isCli() && $this->server['REQUEST_METHOD'] == 'PATCH';
 	}
 
+	/**
+	 * Is http delete request.
+	 */
 	public function isHttpDeleteRequest(): bool
 	{
 		return !$this->isCli() && $this->server['REQUEST_METHOD'] == 'DELETE';
 	}
 
 
+	/**
+	 * Get http request method.
+	 */
 	public function getHttpRequestMethod(): ?string
 	{
 		return $this->isCli() ? null : $this->server['REQUEST_METHOD'];
 	}
 
+	/**
+	 * Get http request method original.
+	 */
 	public function getHttpRequestMethodOriginal(): ?string
 	{
 		return $this->isCli() ? null : $this->server['REQUEST_METHOD_ORIGINAL'];
 	}
 
+	/**
+	 * Get http request uri.
+	 */
 	public function getHttpRequestUri(): ?string
 	{
 		return $this->isCli() ? null : $this->server['REQUEST_URI'];
 	}
 
 
+	/**
+	 * Get cli args.
+	 */
 	public function getCliArgs(): ?array
 	{
 		return !$this->isCli() ? null : $this->server['argv'];
@@ -601,12 +645,16 @@ class AfrRequestClass extends AfrSingletonAbstractClass implements AfrRequestInt
 	protected bool $bIsCli;
 
 	// Get the 'argv' parameter from SERVER
+	/**
+	 * Get argv param.
+	 */
 	public function getArgvParam(): array
 	{
 		return $this->server['argv'] ?? [];
 	}
 
 	/**
+	 * Set argv param.
 	 * @param array $argv
 	 * @return AfrRequestClass|AfrRequestInterface
 	 */
@@ -617,12 +665,16 @@ class AfrRequestClass extends AfrSingletonAbstractClass implements AfrRequestInt
 	}
 
 	// Get a GET parameter
+	/**
+	 * Get query param.
+	 */
 	public function getQueryParam(string $key, $default = null)
 	{
 		return $this->get[$key] ?? $default;
 	}
 
 	/**
+	 * Set query param.
 	 * @param string $key
 	 * @param $value
 	 * @return AfrRequestClass|AfrRequestInterface
@@ -634,6 +686,7 @@ class AfrRequestClass extends AfrSingletonAbstractClass implements AfrRequestInt
 	}
 
 	/**
+	 * Unset query param.
 	 * @param string $key
 	 * @return AfrRequestClass|AfrRequestInterface
 	 */
@@ -644,18 +697,25 @@ class AfrRequestClass extends AfrSingletonAbstractClass implements AfrRequestInt
 	}
 
 	// Check if a GET parameter exists
+	/**
+	 * Has query param.
+	 */
 	public function hasQueryParam(string $key): bool
 	{
 		return isset($this->get[$key]);
 	}
 
 	// Get a POST parameter
+	/**
+	 * Get post param.
+	 */
 	public function getPostParam(string $key, $default = null)
 	{
 		return $this->post[$key] ?? $default;
 	}
 
 	/**
+	 * Set post param.
 	 * @param string $key
 	 * @param $value
 	 * @return AfrRequestClass|AfrRequestInterface
@@ -667,6 +727,7 @@ class AfrRequestClass extends AfrSingletonAbstractClass implements AfrRequestInt
 	}
 
 	/**
+	 * Unset post param.
 	 * @param string $key
 	 * @return AfrRequestClass|AfrRequestInterface
 	 */
@@ -677,18 +738,25 @@ class AfrRequestClass extends AfrSingletonAbstractClass implements AfrRequestInt
 	}
 
 	// Check if a POST parameter exists
+	/**
+	 * Has post param.
+	 */
 	public function hasPostParam(string $key): bool
 	{
 		return isset($this->post[$key]);
 	}
 
 	// Get a FILES parameter
+	/**
+	 * Get file param.
+	 */
 	public function getFileParam(string $key, $default = null)
 	{
 		return $this->files[$key] ?? $default;
 	}
 
 	/**
+	 * Set file param.
 	 * @param string $key
 	 * @param $value
 	 * @return AfrRequestClass|AfrRequestInterface
@@ -700,6 +768,7 @@ class AfrRequestClass extends AfrSingletonAbstractClass implements AfrRequestInt
 	}
 
 	/**
+	 * Unset file param.
 	 * @param string $key
 	 * @return AfrRequestClass|AfrRequestInterface
 	 */
@@ -710,18 +779,25 @@ class AfrRequestClass extends AfrSingletonAbstractClass implements AfrRequestInt
 	}
 
 	// Check if a FILES parameter exists
+	/**
+	 * Has file param.
+	 */
 	public function hasFileParam(string $key): bool
 	{
 		return isset($this->files[$key]);
 	}
 
 	// Get a SERVER parameter
+	/**
+	 * Get server param.
+	 */
 	public function getServerParam(string $key, $default = null)
 	{
 		return $this->server[$key] ?? $default;
 	}
 
 	/**
+	 * Set server param.
 	 * @param string $key
 	 * @param $value
 	 * @return AfrRequestClass|AfrRequestInterface
@@ -733,6 +809,7 @@ class AfrRequestClass extends AfrSingletonAbstractClass implements AfrRequestInt
 	}
 
 	/**
+	 * Unset server param.
 	 * @param string $key
 	 * @return AfrRequestClass|AfrRequestInterface
 	 */
@@ -743,18 +820,25 @@ class AfrRequestClass extends AfrSingletonAbstractClass implements AfrRequestInt
 	}
 
 	// Check if a SERVER parameter exists
+	/**
+	 * Has server param.
+	 */
 	public function hasServerParam(string $key): bool
 	{
 		return isset($this->server[$key]);
 	}
 
 	// Get a COOKIE parameter
+	/**
+	 * Get cookie param.
+	 */
 	public function getCookieParam(string $key, $default = null)
 	{
 		return $this->cookie[$key] ?? $default;
 	}
 
 	/**
+	 * Set cookie param.
 	 * @param string $key
 	 * @param $value
 	 * @return AfrRequestClass|AfrRequestInterface
@@ -766,6 +850,7 @@ class AfrRequestClass extends AfrSingletonAbstractClass implements AfrRequestInt
 	}
 
 	/**
+	 * Unset cookie param.
 	 * @param string $key
 	 * @return AfrRequestClass|AfrRequestInterface
 	 */
@@ -776,42 +861,61 @@ class AfrRequestClass extends AfrSingletonAbstractClass implements AfrRequestInt
 	}
 
 	// Check if a COOKIE parameter exists
+	/**
+	 * Has cookie param.
+	 */
 	public function hasCookieParam(string $key): bool
 	{
 		return isset($this->cookie[$key]);
 	}
 
 	// Get all GET parameters
+	/**
+	 * Get all get params.
+	 */
 	public function getAllGetParams(): array
 	{
 		return $this->get;
 	}
 
 	// Get all POST parameters
+	/**
+	 * Get all post params.
+	 */
 	public function getAllPostParams(): array
 	{
 		return $this->post;
 	}
 
 	// Get all FILES parameters
+	/**
+	 * Get all file params.
+	 */
 	public function getAllFileParams(): array
 	{
 		return $this->files;
 	}
 
 	// Get all SERVER parameters
+	/**
+	 * Get all server params.
+	 */
 	public function getAllServerParams(): array
 	{
 		return $this->server;
 	}
 
 	// Get a REQUEST parameter
+	/**
+	 * Get request param.
+	 */
 	public function getRequestParam(string $key, $default = null)
 	{
 		return $this->request[$key] ?? $default;
 	}
 
 	/**
+	 * Set request param.
 	 * @param string $key
 	 * @param $value
 	 * @return AfrRequestClass|AfrRequestInterface
@@ -823,6 +927,7 @@ class AfrRequestClass extends AfrSingletonAbstractClass implements AfrRequestInt
 	}
 
 	/**
+	 * Unset request param.
 	 * @param string $key
 	 * @return AfrRequestClass|AfrRequestInterface
 	 */
@@ -833,24 +938,34 @@ class AfrRequestClass extends AfrSingletonAbstractClass implements AfrRequestInt
 	}
 
 	// Check if a REQUEST parameter exists
+	/**
+	 * Has request param.
+	 */
 	public function hasRequestParam(string $key): bool
 	{
 		return isset($this->request[$key]);
 	}
 
 	// Get all REQUEST parameters
+	/**
+	 * Get all request params.
+	 */
 	public function getAllRequestParams(): array
 	{
 		return $this->request;
 	}
 
 	// Get all COOKIE parameters
+	/**
+	 * Get all cookie params.
+	 */
 	public function getAllCookieParams(): array
 	{
 		return $this->cookie;
 	}
 
 	/**
+	 * Set php input mock.
 	 * @param string|null $php_input_mock
 	 * @return AfrRequestClass|AfrRequestInterface
 	 */
@@ -862,6 +977,9 @@ class AfrRequestClass extends AfrSingletonAbstractClass implements AfrRequestInt
 		return $this;
 	}
 
+	/**
+	 * Get php input.
+	 */
 	public function getPhpInput(): ?string
 	{
 		//TODO: https://www.php.net/manual/en/function.stream-wrapper-register.php
@@ -875,6 +993,7 @@ class AfrRequestClass extends AfrSingletonAbstractClass implements AfrRequestInt
 	}
 
 	/**
+	 * Set php stdin mock.
 	 * @param string|null $php_stdin_mock
 	 * @return AfrRequestClass|AfrRequestInterface
 	 */
@@ -886,6 +1005,9 @@ class AfrRequestClass extends AfrSingletonAbstractClass implements AfrRequestInt
 		return $this;
 	}
 
+	/**
+	 * Get php stdin.
+	 */
 	public function getPhpStdin(): ?string
 	{
 		//TODO: https://www.php.net/manual/en/function.stream-wrapper-register.php
@@ -897,12 +1019,16 @@ class AfrRequestClass extends AfrSingletonAbstractClass implements AfrRequestInt
 	}
 
 
+	/**
+	 * Get php sapi.
+	 */
 	public function getPhpSapi(): string
 	{
 		return $this->php_sapi;
 	}
 
 	/**
+	 * Set php sapi.
 	 * @param string $php_sapi
 	 * @return AfrRequestClass|AfrRequestInterface
 	 */
@@ -913,6 +1039,7 @@ class AfrRequestClass extends AfrSingletonAbstractClass implements AfrRequestInt
 	}
 
 	/**
+	 * Getopt.
 	 * @param string $short_options
 	 * @param array $long_options
 	 * @param int|null $rest_index
@@ -934,6 +1061,7 @@ class AfrRequestClass extends AfrSingletonAbstractClass implements AfrRequestInt
 	}
 
 	/**
+	 * Getopt detect all args.
 	 * @return array|false
 	 * @throws AfrContainerException
 	 * @throws AfrEventException
@@ -949,6 +1077,7 @@ class AfrRequestClass extends AfrSingletonAbstractClass implements AfrRequestInt
 
 
 	/**
+	 * Detect argv key presence.
 	 * @param string $sArgvKey
 	 * @return array [true|false, null|$sValue];
 	 * @throws AfrContainerException

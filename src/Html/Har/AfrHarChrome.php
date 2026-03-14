@@ -12,6 +12,7 @@ class AfrHarChrome
 	protected array $aList = [];
 
 	/**
+	 * Create a new instance.
 	 * @throws AfrException
 	 */
 	public function __construct(
@@ -56,6 +57,9 @@ class AfrHarChrome
 		}
 	}
 
+	/**
+	 * Prepare list.
+	 */
 	public function prepareList(): bool
 	{
 		foreach ($this->aHarJson['log']['entries'] as $logEntry) {
@@ -71,11 +75,17 @@ class AfrHarChrome
 		return count($this->aList) > 0;
 	}
 
+	/**
+	 * Get list.
+	 */
 	public function getList(): array
 	{
 		return $this->aList;
 	}
 
+	/**
+	 * Download list.
+	 */
 	public function downloadList(): array
 	{
 		if(empty($this->aList)) {

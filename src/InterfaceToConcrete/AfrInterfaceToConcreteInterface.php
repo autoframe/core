@@ -19,6 +19,7 @@ use Autoframe\Core\InterfaceToConcrete\Exception\AfrInterfaceToConcreteException
 interface AfrInterfaceToConcreteInterface
 {
     /**
+     * Get class interface to concrete.
      * @param string|null $sFilterFQCN
 	 * @return array
      * @throws AfrInterfaceToConcreteException
@@ -27,34 +28,40 @@ interface AfrInterfaceToConcreteInterface
     public function getClassInterfaceToConcrete(string $sFilterFQCN = null): array;
 
     /**
+     * Get latest instance.
      * @return AfrInterfaceToConcreteInterface|null
      */
     public static function getLatestInstance(): ?AfrInterfaceToConcreteInterface;
 
 
 	/**
+     * Get settings.
 	 * @param string|null $sType
 	 * @return array|mixed
 	 */
     public function getSettings(string $sType = null);
 
     /**
+     * Hash v.
      * @param string $s
      * @return string
      */
     public function hashV(string $s): string;
 
     /**
+     * Get paths.
      * @return array
      */
     public function getPaths(): array;
 
     /**
+     * Get afr to concrete strategies.
      * @return AfrToConcreteStrategiesInterface
      */
     public function getAfrToConcreteStrategies(): AfrToConcreteStrategiesInterface;
 
     /**
+     * Set afr to concrete strategies.
      * @param AfrToConcreteStrategiesInterface $oAfrToConcreteStrategies
      * @return AfrToConcreteStrategiesInterface
      */

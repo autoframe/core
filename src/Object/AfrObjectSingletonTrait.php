@@ -37,6 +37,7 @@ trait AfrObjectSingletonTrait
     }
 
     /**
+     * Restore the instance after unserialization.
      * @throws AfrException
      */
     public function __wakeup()
@@ -97,6 +98,7 @@ trait AfrObjectSingletonTrait
     }
 
     /**
+     * Has instance.
      * @return bool
      */
     public static function hasInstance(): bool

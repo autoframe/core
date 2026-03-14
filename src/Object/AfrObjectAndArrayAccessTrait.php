@@ -92,6 +92,9 @@ trait AfrObjectAndArrayAccessTrait
      * @abstracting ArrayAccess
      */
     #[\ReturnTypeWillChange]
+    /**
+     * Offset get.
+     */
     public function offsetGet($offset)
     {
         return $this->offsetExists($offset) ? $this->aData[$offset] : null;

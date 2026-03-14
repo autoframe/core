@@ -22,6 +22,7 @@ class AfrCliQaRouter
 	protected static array $aActions = [];
 
 	/**
+	 * Add action group.
 	 * @param string $sTitle
 	 * @param array|Closure $aoClosureOrArray
 	 * @param bool $bMergeWithExisting
@@ -61,6 +62,7 @@ class AfrCliQaRouter
 	}
 
 	/**
+	 * Run.
 	 * @param string|null $sQaIndexStack
 	 * @return int
 	 * @throws AfrException
@@ -91,6 +93,7 @@ class AfrCliQaRouter
 	}
 
 	/**
+	 * Handle cli qa stack.
 	 * @param string $actionStackTitleKey
 	 * @param array|Closure $oaDynamicOptions Contains array stack of closures
 	 * @return void

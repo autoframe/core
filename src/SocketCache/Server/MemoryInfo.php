@@ -33,6 +33,7 @@ trait MemoryInfo
     }
 
     /**
+     * Get memory usage info.
      * @param bool $bForceNew
      * @return array
      */
@@ -59,6 +60,7 @@ trait MemoryInfo
     }
 
     /**
+     * Get memory usage info as string.
      * @param bool $bForceNew
      * @return string
      */

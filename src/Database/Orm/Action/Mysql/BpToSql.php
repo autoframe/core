@@ -8,6 +8,7 @@ trait BpToSql
 {
 
 	/**
+	 * Blueprint to table sql.
 	 * @throws AfrOrmException
 	 */
 	public static function blueprintToTableSql(array $aBlueprint): string

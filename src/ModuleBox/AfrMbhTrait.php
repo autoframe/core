@@ -80,12 +80,16 @@ trait AfrMbhTrait
 	];
 
 	/** @throws AfrModuleException */
+	/**
+	 * Register module fqcn.
+	 */
 	public function registerModuleFQCN(string $sFqcnModule, array $aModConfig = []): void //K
 	{
 		$this->pushModuleConfig($sFqcnModule, $sFqcnModule, $aModConfig);
 	}
 
 	/**
+	 * Register module using closure.
 	 * @throws AfrModuleException
 	 */
 	public function registerModuleUsingClosure(string $sFqcnModule, Closure $oClosure, array $aModConfig = []): void //K
@@ -94,6 +98,7 @@ trait AfrMbhTrait
 	}
 
 	/**
+	 * Register module instance.
 	 * @throws AfrModuleException
 	 */
 	public function registerModuleInstance(AfrModuleInterface $oModule, array $aModConfig = []): void //K
@@ -102,6 +107,7 @@ trait AfrMbhTrait
 	}
 
 	/**
+	 * Register module fqcn list from app config.
 	 * @throws AfrEventException
 	 * @throws AfrException
 	 * @throws AfrModuleException
@@ -123,6 +129,7 @@ trait AfrMbhTrait
 	}
 
 	/**
+	 * Register module fqcn list from app config loop.
 	 * @throws AfrModuleException
 	 */
 	public function registerModuleFqcnListFromAppConfigLoop(array $aConfigFQCN): void //K
@@ -183,6 +190,9 @@ trait AfrMbhTrait
 	}
 
 	/** @throws AfrModuleException|AfrEnvException */
+	/**
+	 * Is resolvable module.
+	 */
 	public function isResolvableModule(string $sModuleFqcn, bool $bCountReplacersAsTrue): bool //K
 	{
 		$this->buildGraphIfNeeded();
@@ -191,6 +201,9 @@ trait AfrMbhTrait
 	}
 
 	/** @throws AfrModuleException|AfrEnvException */
+	/**
+	 * Is resolved module.
+	 */
 	public function isResolvedModule(string $sModuleFqcn, bool $bCountReplacersAsTrue, bool $bCountEmptyInstanceAsResolved = false): bool //K
 	{
 		$this->buildGraphIfNeeded();
@@ -203,6 +216,9 @@ trait AfrMbhTrait
 	}
 
 	/** @throws AfrModuleException|AfrEnvException */
+	/**
+	 * Is disabled module.
+	 */
 	public function isDisabledModule(string $sModuleFqcn): ?bool //K
 	{
 		$this->buildGraphIfNeeded();
@@ -211,6 +227,9 @@ trait AfrMbhTrait
 
 	/** @throws AfrModuleException|AfrEnvException */
 
+	/**
+	 * Get module info.
+	 */
 	public function getModuleInfo(string $sModuleFqcn): ?array //K
 	{
 		$this->buildGraphIfNeeded();
@@ -234,6 +253,9 @@ trait AfrMbhTrait
 
 	/** @throws AfrModuleException|AfrEnvException */
 
+	/**
+	 * Get modules effective configs list.
+	 */
 	public function getModulesEffectiveConfigsList(): array //K
 	{
 		$this->buildGraphIfNeeded();
@@ -242,6 +264,9 @@ trait AfrMbhTrait
 
 	/** @throws AfrModuleException|AfrEnvException */
 
+	/**
+	 * Get module effective configs.
+	 */
 	public function getModuleEffectiveConfigs(string $sModuleFqcn, bool $bGetBaseConfigNotReplacer): ?array //K
 	{
 		$this->buildGraphIfNeeded();
@@ -251,6 +276,9 @@ trait AfrMbhTrait
 	}
 
 	/** @throws AfrModuleException|AfrEnvException */
+	/**
+	 * Get module functionality resolved list.
+	 */
 	public function getModuleFunctionalityResolvedList(string &$sModuleFqcn, bool $bCountReplacersAsTrue = true): ?array //K
 	{
 		if (!$this->isResolvableModule($sModuleFqcn, $bCountReplacersAsTrue)) return null;
@@ -273,6 +301,9 @@ trait AfrMbhTrait
 
 
 	/** @throws AfrModuleException|AfrEnvException */
+	/**
+	 * Get module replacement map.
+	 */
 	public function getModuleReplacementMap(string $sModuleFqcn, bool $bBuildGraphIfNeeded = true): ?string //K
 	{
 		if ($bBuildGraphIfNeeded) $this->buildGraphIfNeeded();
@@ -288,6 +319,7 @@ trait AfrMbhTrait
 	}
 
 	/**
+	 * Resolve module.
 	 * @param string $sModuleFqcn
 	 * @return AfrModuleInterface|null
 	 * @throws AfrContainerException|AfrEventException
@@ -345,6 +377,9 @@ trait AfrMbhTrait
 
 
 	/** @throws AfrModuleException|AfrEnvException */
+	/**
+	 * Get functionality effective config by module interface.
+	 */
 	public function getFunctionalityEffectiveConfigByModuleInterface(string $sModuleFqcn, string $sFunctionalityInterface): ?array //K
 	{
 		if (empty($snKey = $this->getFunctionalityWrapKey($sModuleFqcn, $sFunctionalityInterface))) return null;
@@ -353,6 +388,9 @@ trait AfrMbhTrait
 
 
 	/** @throws AfrModuleException|AfrEnvException */
+	/**
+	 * Get functionality effective config.
+	 */
 	public function getFunctionalityEffectiveConfig(object $oFunctionalityInstance): ?array//K
 	{
 		if (empty($snKey = $this->getFunctionalityWrapKeyByFuncInstance($oFunctionalityInstance))) return null;
@@ -360,6 +398,9 @@ trait AfrMbhTrait
 	}
 
 	/** @throws AfrModuleException|AfrEnvException */
+	/**
+	 * Get functionality effective config by wrap key.
+	 */
 	public function getFunctionalityEffectiveConfigByWrapKey(string $sWrapKey): ?array //K
 	{
 		$this->buildGraphIfNeeded();
@@ -384,6 +425,9 @@ trait AfrMbhTrait
 	}
 
 	/** @throws AfrModuleException|AfrEnvException */
+	/**
+	 * Get functionality settings by wrap key.
+	 */
 	public function getFunctionalitySettingsByWrapKey(string $sWrapKey): ?array //K
 	{
 		$anConfig = $this->getFunctionalityEffectiveConfigByWrapKey($sWrapKey);
@@ -391,6 +435,9 @@ trait AfrMbhTrait
 	}
 
 	/** @throws AfrModuleException|AfrEnvException */
+	/**
+	 * Get functionality settings by func instance.
+	 */
 	public function getFunctionalitySettingsByFuncInstance(object $oFunctionalityInstance): ?array //K
 	{
 		if (empty($snKey = $this->getFunctionalityWrapKeyByFuncInstance($oFunctionalityInstance))) return null;
@@ -399,6 +446,9 @@ trait AfrMbhTrait
 	}
 
 	/** @throws AfrModuleException|AfrEnvException */
+	/**
+	 * Get functionality apply settings closure.
+	 */
 	public function getFunctionalityApplySettingsClosure(string $sWrapKey): ?Closure //K
 	{
 		$anConfig = $this->getFunctionalityEffectiveConfigByWrapKey($sWrapKey);
@@ -407,6 +457,9 @@ trait AfrMbhTrait
 	}
 
 	/** @throws AfrModuleException|AfrEnvException */
+	/**
+	 * Get functionality related modules tree.
+	 */
 	public function getFunctionalityRelatedModulesTree(object $oFunctionalityInstance): ?array //K
 	{
 		$this->buildGraphIfNeeded();
@@ -416,6 +469,9 @@ trait AfrMbhTrait
 	}
 
 	/** @throws AfrModuleException|AfrEnvException */
+	/**
+	 * Get functionality related modules tree by wrap key.
+	 */
 	public function getFunctionalityRelatedModulesTreeByWrapKey(string $sWrapKey): ?array //K
 	{
 		$this->buildGraphIfNeeded();
@@ -423,6 +479,9 @@ trait AfrMbhTrait
 	}
 
 	/** @throws AfrModuleException|AfrEnvException */
+	/**
+	 * Get functionality wrap key by func instance.
+	 */
 	public function getFunctionalityWrapKeyByFuncInstance(object $oFunctionalityInstance): ?string //K
 	{
 		$this->buildGraphIfNeeded();
@@ -431,6 +490,9 @@ trait AfrMbhTrait
 
 
 	/** @throws AfrModuleException|AfrEnvException */
+	/**
+	 * Get functionality list.
+	 */
 	public function getFunctionalityList(): array //K
 	{
 		$this->buildGraphIfNeeded();
@@ -453,6 +515,7 @@ trait AfrMbhTrait
 
 
 	/**
+	 * Resolve functionality by module instance.
 	 * @param string $sFuncInterfaceFqcn
 	 * @param AfrModuleInterface $qModuleInstance
 	 * @return object|null
@@ -498,6 +561,7 @@ trait AfrMbhTrait
 	}
 
 	/**
+	 * Resolve functionality by module fqcn.
 	 * @param string $sFuncInterfaceFqcn
 	 * @param string $sModuleFqcn
 	 * @param bool $bAutoResolveModule
@@ -563,6 +627,9 @@ trait AfrMbhTrait
 
 
 	/** @throws AfrModuleException|AfrEnvException */
+	/**
+	 * Get functionality parent modules fqcns by wrap key.
+	 */
 	public function getFunctionalityParentModulesFQCNsByWrapKey(string $sFunctionalityWrapKey): ?array //K
 	{
 		$aParentTree = $this->getFunctionalityRelatedModulesTreeByWrapKey($sFunctionalityWrapKey);
@@ -571,6 +638,9 @@ trait AfrMbhTrait
 
 
 	/** @throws AfrModuleException|AfrEnvException */
+	/**
+	 * Get functionality parent modules fqcns.
+	 */
 	public function getFunctionalityParentModulesFQCNs(object $oFunctionalityInstance): ?array //K
 	{
 		$aParentTree = $this->getFunctionalityRelatedModulesTreeByWrapKey(
@@ -581,6 +651,9 @@ trait AfrMbhTrait
 
 
 	/** @throws AfrModuleException|AfrEnvException */
+	/**
+	 * Get functionality wrap key.
+	 */
 	public function getFunctionalityWrapKey(
 		string $sModuleFqcn,
 		string &$sFuncInterfaceFqcn
@@ -758,6 +831,7 @@ trait AfrMbhTrait
 	}
 
 	/**
+	 * Get functionality group for resolving.
 	 * @param string $sFuncInterfaceFqcn
 	 * @param array $aExcludeModulesFQCNs
 	 * @param array $aAllowedModulesFQCNs
@@ -810,6 +884,7 @@ trait AfrMbhTrait
 
 
 	/**
+	 * Set cache.
 	 * @throws AfrEventException
 	 * @throws AfrException
 	 * @throws AfrEnvException
@@ -828,6 +903,7 @@ trait AfrMbhTrait
 	}
 
 	/**
+	 * Load from cache.
 	 * @throws AfrException
 	 * @throws AfrEventException
 	 * @throws AfrContainerException
@@ -849,6 +925,9 @@ trait AfrMbhTrait
 
 
 	/** @throws AfrEnvException */
+	/**
+	 * Xet cache seconds.
+	 */
 	public function xetCacheSeconds(int $iCacheSeconds = null): int
 	{
 		if (static::$bDebug) return 0;
@@ -862,6 +941,9 @@ trait AfrMbhTrait
 	}
 
 	/** @throws AfrEnvException */
+	/**
+	 * Xet cache flag.
+	 */
 	public function xetCacheFlag(bool $bTenantCache = null): bool
 	{
 		if (static::$bDebug) return false;
@@ -1227,6 +1309,9 @@ trait AfrMbhTrait
 			AfrContainerFacade::getContainer()->get($sFQCN);
 	}
 
+	/**
+	 * Hard flush instances.
+	 */
 	public function hardFlushInstances(bool $bFlushRegistered): self
 	{
 		$this->aModulesInstances = $this->aWrapFunctionalitiesInstances = $this->aWrapFunctionalitiesInstancesSplMap = [];
@@ -1238,6 +1323,7 @@ trait AfrMbhTrait
 
 
 	/**
+	 * Apply default tenant config.
 	 * @throws AfrException
 	 * @throws AfrEventException
 	 * @throws AfrModuleException
@@ -1266,6 +1352,9 @@ trait AfrMbhTrait
 
 	}
 
+	/**
+	 * Sample tenant default config.
+	 */
 	public static function sampleTenantDefaultConfig(): ?string
 	{
 		return file_get_contents(__DIR__ . DIRECTORY_SEPARATOR . 'config.sample.AfrModuleBox.php');

@@ -61,6 +61,9 @@ class AfrCronJobSourceToRefactor
 		AfrCronJobDaemon::skipped => false, //line starts with #
 	];
 */
+	/**
+	 * Get self sources.
+	 */
 	public function getSelfSources(): ?array
 	{
 		return [
@@ -70,6 +73,9 @@ class AfrCronJobSourceToRefactor
 		];
 	}
 
+	/**
+	 * Push cron job sources.
+	 */
 	public function pushCronJobSources(): ?array
 	{
 		//TODO C:\xampp\htdocs\core\src\Cron\AfrConJobSources.php @ registerCronJobSourcesFromModules() K

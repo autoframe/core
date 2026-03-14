@@ -40,6 +40,7 @@ class AfrUtf
     ];
 
     /**
+     * Diacritice fix from isox.
      * @param string $str
      * @return string
      */
@@ -53,6 +54,7 @@ class AfrUtf
     }
 
     /**
+     * Diacritice fix from entities.
      * @param string $str
      * @return string
      */
@@ -66,6 +68,7 @@ class AfrUtf
     }
 
     /**
+     * Html entity decode.
      * @param string $string
      * @return string
      */
@@ -78,6 +81,7 @@ class AfrUtf
     }
 
     /**
+     * Utf to array.
      * @param string $utfStr
      * @return array
      */
@@ -92,6 +96,7 @@ class AfrUtf
     }
 
     /**
+     * Next char.
      * @param string $string
      * @param int $pointer
      * @return false|string
@@ -121,6 +126,7 @@ class AfrUtf
     }
 
     /**
+     * Str split unicode.
      * @param string $str
      * @param int $l
      * @return array|false|string[]
@@ -131,6 +137,7 @@ class AfrUtf
     }
 
     /**
+     * Utf8 to entities.
      * @param string $string
      * @return string
      */
@@ -170,6 +177,7 @@ class AfrUtf
     }
 
     /**
+     * Convert to numeric entities.
      * @param string $string
      * @param string $encoding
      * @param int $iMapId
