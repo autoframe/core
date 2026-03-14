@@ -20,6 +20,7 @@ php.ini => zend_extension=opcache
 
 ### speedup tips env
 
+- env files are processed and saved as a 
 /afr.env to afr.php 
 
     env files as .php and oppcache
@@ -27,3 +28,7 @@ php.ini => zend_extension=opcache
 
 ### use memcached+redis+sockCache
 ### use worker as bridge using apcu for fast / reusable keys
+
+### New project and first deploy of config files 
+- php afr-deploy                #Assisted Q&A
+- php afr-deploy {deploy-path}  #Custom path

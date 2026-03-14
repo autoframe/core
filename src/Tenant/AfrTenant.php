@@ -459,15 +459,18 @@ class AfrTenant
 
 
 		if (!is_file($sAfrBootstrapFile = static::getBaseDirPath() . $ds . self::AFR_BOOTSTRAP_PHP . '.php')) {
+			$sAlp = AfrVendorDir::getVendorPath() . $ds . 'autoload.php';
 			$sContents = "<?php\nrequire_once __DIR__ . DIRECTORY_SEPARATOR . ";
 			$sContents .= "'" . AfrDirPathClass::getInstanceNoContainerBindings()->getRelativePath(
-					AfrVendorDir::getVendorPath() . $ds . 'autoload.php',
+					$sAlp,
 					$sAfrBootstrapFile
-				) . "';\n\n";
+				) . "';\n//require_once '$sAlp';\n\n";
 			$sContents .= "use Autoframe\Core\Afr\Afr;\n\n";
 			$sContents .= 'Afr::makeApp(__DIR__, null)->run();' . "\n";
 			file_put_contents($sAfrBootstrapFile, $sContents);
 			$aActionMessages[] = 'File created: ' . $sAfrBootstrapFile;
+			echo "\nALP: $sAlp\nOUF: $sAfrBootstrapFile\n";
+
 		}
 
 		/** @var $sFQCN_DTCI AfrDefaultTenantConfigsInterface */

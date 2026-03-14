@@ -3,12 +3,7 @@ require_once __DIR__ . '/vendor/autoload.php';
 
 use Autoframe\Core\Afr\Afr;
 
+$aReport = Afr::makeApp(__DIR__ . DIRECTORY_SEPARATOR . 'baseApp')->run();
 
-//const AFR_BASE_DIR = __DIR__ . DIRECTORY_SEPARATOR . 'baseTest';
-const AFR_BASE_DIR = __DIR__ . DIRECTORY_SEPARATOR . 'afrDeployTest';
-
-
-$aReport = Afr::makeApp()->run(); //print_r($aReport);
-
-//print_r($aReport); // TODO lor or save the report
+//print_r($aReport); // TODO save the report
 

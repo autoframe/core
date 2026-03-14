@@ -1,28 +1,57 @@
 #!/usr/bin/env php
 <?php
 
-$baseDir = __DIR__;
+/**
+ * Usage:
+ * composer exec afr-deploy
+ * composer exec afr-deploy {deploy.path}
+ * ./vendor/bin/afr-deploy
+ * ./vendor/bin/afr-deploy {deploy.path}
+ *
+ */
 
-$autoloadPaths = array(
-	$baseDir . '/vendor/autoload.php',
-	$baseDir . '/../../autoload.php',
+
+if (is_file($sAutoloadPath = __DIR__ . '/../../autoload.php')) {
+	//App directory path, where composer.json is located and where the project will exist
+	$sDeployPath = realpath(__DIR__ . '/../../../');
+} elseif (is_file($sAutoloadPath = __DIR__ . '/vendor/autoload.php')) {
+	//Framework only local development
+	if (!is_dir($sDevDirPath = __DIR__ . '/baseApp')) mkdir($sDevDirPath, 0755);
+	$sDeployPath = realpath($sDevDirPath); //local framework dev
+} else throw new \Exception('Could not find the vendor autoload path');
+
+require_once($sAutoloadPath);
+
+$sUserDeployDir = !empty($_SERVER['argv'][1]) && is_dir($_SERVER['argv'][1]) && strlen($_SERVER['argv'][1]) > 2 ? realpath($_SERVER['argv'][1]) : null;
+
+if (empty($sDeployPath) && empty($sUserDeployDir)) {
+	throw new \Exception('Invalid deploy AFR deploy path: "' . ($sUserDeployDir ?? $sDeployPath ?? '') . '"');
+}
+
+define('SYNTAX_DEPLTO', 'Deploy to: ');
+define('SYNTAX_BRKP', 'Break');
+$sCwd = realpath(getcwd());
+$sDefault = SYNTAX_BRKP;
+
+if (!empty($sUserDeployDir)) {
+	$aOptions = [SYNTAX_BRKP, SYNTAX_DEPLTO . $sUserDeployDir];
+	if ($sUserDeployDir !== $sDeployPath) $aOptions[] = SYNTAX_DEPLTO . $sDeployPath;
+} else {
+	$aOptions = [SYNTAX_BRKP, SYNTAX_DEPLTO . $sDeployPath];
+}
+if ($sCwd && empty($sDevDirPath) && !in_array(SYNTAX_DEPLTO . $sCwd, $aOptions)) $aOptions[] = SYNTAX_DEPLTO . $sCwd;
+
+$sAnswear = \Autoframe\Core\CliTools\AfrCliPromptMenu::promptMenu(
+	"Continue the AFR file system deployment?",
+	$aOptions,
+	$sDefault,
+	1,
+	"You are about to create initialize the AFR file system\nIf any issues run `php vendor/bin/afr-deploy`"
 );
-
-$foundVendorAutoload = false;
-foreach ($autoloadPaths as $path) {
-	if (file_exists($path)) {
-		require $path;
-		$foundVendorAutoload = true;
-		break;
-	}
+if(!(empty($sAnswear) || $sAnswear === SYNTAX_BRKP)){
+	define('AFR_DEPLOY_PATH', substr($sAnswear, strlen(SYNTAX_DEPLTO)));
+	echo "\n🚀 \Autoframe\Core\Afr\Afr::makeApp('".AFR_DEPLOY_PATH."')->run(); 🌟\n ";
+	\Autoframe\Core\Afr\Afr::makeApp(AFR_DEPLOY_PATH)->run();
 }
+elseif($sAnswear === SYNTAX_BRKP) echo "\n\033[31mAborting AFR file system deployment\033[0m \n";
 
-if (!$foundVendorAutoload) {
-	throw new \Exception('Could not find autoload path in any of the searched locations');
-}
-//echo "basedir: $baseDir\n";
-//echo "cwd: ".getcwd()."\n";
-//print_r($_SERVER['argv']);
-//print_r(debug_backtrace());
-define('AFR_DEPLOY_PATH', getcwd().'/afrDeployTest'); //TODO!!!!!!
-\Autoframe\Core\Afr\Afr::makeApp(AFR_DEPLOY_PATH)->run();

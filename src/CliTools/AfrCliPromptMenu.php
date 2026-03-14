@@ -72,10 +72,15 @@ class AfrCliPromptMenu
             /**
              * Return selected value if valid
              */
-            $keystroke = strtolower($keystrokeOrig);
+            $keystroke = strtolower((string)$keystrokeOrig);
             if (isset($options[$keystroke])) {
                 return $options[$keystroke];
             }
+
+	        if($keystrokeOrig===false || strlen($keystrokeOrig)<1){
+		        echo "\n\033[3{$red}mUser input is unavailable. Defaulting to ($default)\033[0m \n";
+		        return $default;
+	        }
 
             /**
              * Return default if keystroke <RETURN>
@@ -83,6 +88,8 @@ class AfrCliPromptMenu
             if (ord($keystroke) == 10 || $iMaxPrompts < 1) {
                 return $default;
             }
+
+
 
             /**
              * No valid choice. Show menu again
@@ -99,6 +106,7 @@ class AfrCliPromptMenu
                 echo PHP_EOL;
             }
             echo "\033[3{$red}m$prompt:\033[0m ";
+
         }
         return $default;
     }

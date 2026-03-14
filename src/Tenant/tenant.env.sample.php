@@ -24,10 +24,10 @@ use Autoframe\Core\Tenant\AfrTenant;
 //AfrTenant::getBaseDirPath() || AfrTenant::setBaseDirPath(__DIR__);
 
 (new AfrTenant('www'))->setProtocolDomainName([
-	'https://www.b2b-app.ro',
-	'https://b2b-app.ro',
-	'http://www.b2b-app.test',
-	'http://b2b-app.test',
+	'https://www.app.com',
+	'https://app.com',
+	'http://www.app.test',
+	'http://app.test',
 	'http://localhost',
 	'http://localhost:808',
 	'http://localhost:8080',
@@ -35,16 +35,16 @@ use Autoframe\Core\Tenant\AfrTenant;
 ])
 	->setEnv($sEnv = 'dev')
 	->setDebug($bDebug = true)
-	->setRoot('/')
+	->setRoot('/') //route mounting
 	->setTempDir()
 	->setHtmlDir()
 	->setAssetsDir()
 	->setLogsDir()
 	->autoSetupAndPushTenantConfig();
 
-(new AfrTenant('online-b2b-app'))->setProtocolDomainName([
-	'https://online.b2b-app.ro',
-	'http://online.b2b-app.test',
+(new AfrTenant('tenant2-app'))->setProtocolDomainName([
+	'https://online.app.com',
+	'http://online.app.test',
 	'http://online.test',
 ])
 	->setEnv($sEnv)
