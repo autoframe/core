@@ -20,48 +20,58 @@ if ($oGhr->isPushOnMasterBranch()) {
 }
 */
 
+/**
+ * Parse and validate GitHub webhook requests.
+ *
+ * Responsibilities:
+ * - read webhook headers and payload,
+ * - validate HMAC signature (`x-hub-signature` / `x-hub-signature-256`),
+ * - expose helper predicates for common GitHub events,
+ * - provide small automation helper for push-on-master flows.
+ */
 class AfrGitHook
 {
-    protected string $sExceptionClass;
+    protected string $sExceptionClass = '\\Exception';
     protected array $aHeaders = [];
-    protected string $sGitHookSecret;
-    protected string $sJsonInput;
-    protected array $aPayload;
-
+    protected string $sGitHookSecret = '';
+    protected string $sJsonInput = '';
+    protected array $aPayload = [];
 
     /**
      * Create a new instance.
+     *
      * @throws Throwable
      */
     public function __construct(
         string $sGitHookSecret = '',
-        string $sExceptionClass = '\Exception',
+        string $sExceptionClass = '\\Exception',
         bool   $bDumpToFile = false,
         bool   $bSkipHeaderShaChecks = false
-    )
-    {
+    ) {
         if (!$sGitHookSecret) {
             if (defined('X_HUB_SIGNATURE')) {
                 $sGitHookSecret = constant('X_HUB_SIGNATURE');
             } elseif (defined('X_HUB_SIGNATURE_256')) {
                 $sGitHookSecret = constant('X_HUB_SIGNATURE_256');
             } elseif (!empty($_ENV['X_HUB_SIGNATURE'])) {
-                $sGitHookSecret = $_ENV['X_HUB_SIGNATURE'];
+                $sGitHookSecret = (string)$_ENV['X_HUB_SIGNATURE'];
             } elseif (!empty($_ENV['X_HUB_SIGNATURE_256'])) {
-                $sGitHookSecret = $_ENV['X_HUB_SIGNATURE_256'];
+                $sGitHookSecret = (string)$_ENV['X_HUB_SIGNATURE_256'];
             }
         }
         $this->sGitHookSecret = $sGitHookSecret;
         $this->sExceptionClass = $sExceptionClass;
 
-        foreach (getallheaders() as $sKey => $sValue) {
+        foreach ($this->getRequestHeaders() as $sKey => $sValue) {
             $sKey = strtolower($sKey);
-            if (substr($sKey, 0, 2) == 'x-') {
-                $this->aHeaders[$sKey] = $sValue;
+            if (substr($sKey, 0, 2) === 'x-') {
+                $this->aHeaders[$sKey] = (string)$sValue;
             }
         }
+
         $this->sJsonInput = (string)@file_get_contents('php://input');
-        $this->aPayload = $this->sJsonInput ? (array)@json_decode($this->sJsonInput, true) : $this->sJsonInput;
+        $aDecoded = $this->sJsonInput !== '' ? json_decode($this->sJsonInput, true) : [];
+        $this->aPayload = is_array($aDecoded) ? $aDecoded : [];
 
         if ($bDumpToFile) {
             file_put_contents(
@@ -82,18 +92,39 @@ class AfrGitHook
                     'isPing' => $this->isPing(),
                     'COMMIT_INFO' => $this->getCommitInfo(),
                     'PAYLOAD' => $this->aPayload,
-                ], true));
+                ], true)
+            );
         }
+
         if (!$bSkipHeaderShaChecks) {
             $this->checkHeadersAndSignature();
         }
     }
 
+    /**
+     * Build request headers in web and non-web runtimes.
+     */
+    protected function getRequestHeaders(): array
+    {
+        if (function_exists('getallheaders')) {
+            $aHeaders = (array)getallheaders();
+            if (!empty($aHeaders)) {
+                return $aHeaders;
+            }
+        }
+
+        $aHeaders = [];
+        foreach ($_SERVER as $sKey => $sValue) {
+            if (strpos($sKey, 'HTTP_') !== 0) {
+                continue;
+            }
+            $sHeader = strtolower(str_replace('_', '-', substr($sKey, 5)));
+            $aHeaders[$sHeader] = (string)$sValue;
+        }
+        return $aHeaders;
+    }
 
     /**
-     * @param string $sMsg
-     * @param int $statusCode
-     * @return void
      * @throws Throwable
      */
     protected function handleException(string $sMsg, int $statusCode = 500): void
@@ -106,39 +137,46 @@ class AfrGitHook
     }
 
     /**
+     * Validate webhook headers and signature.
+     *
      * @throws Throwable
      */
     protected function checkHeadersAndSignature(): bool
     {
-        if (empty($this->getEventType())) {
-            $this->handleException('Missing E Header');
+        if ($this->getEventType() === '') {
+            $this->handleException('Missing event header');
         }
         if (empty($this->aHeaders['x-hub-signature']) && empty($this->aHeaders['x-hub-signature-256'])) {
-            $this->handleException('Missing signature');
+            $this->handleException('Missing signature header');
+        }
+        if ($this->sGitHookSecret === '') {
+            $this->handleException('Missing webhook secret', 403);
         }
 
-        if (empty($this->sJsonInput)) {
+        if ($this->sJsonInput === '') {
             $this->handleException('Post body is empty');
-        } elseif (empty($this->aPayload)) {
-            $this->handleException('Miss formatted body');
         }
-        $sSha = !empty($this->aHeaders['x-hub-signature-256']) ? 'sha256' : 'sha1';
-        $sSignature = $this->aHeaders['x-hub-signature-256'] ?? $this->aHeaders['x-hub-signature'];
+        if (empty($this->aPayload)) {
+            $this->handleException('Malformed JSON body');
+        }
 
-        $bValidSignature = hash_equals($sSha . '=' . hash_hmac($sSha, $this->sJsonInput, $this->sGitHookSecret), $sSignature);
+        $sSha = !empty($this->aHeaders['x-hub-signature-256']) ? 'sha256' : 'sha1';
+        $sSignature = (string)($this->aHeaders['x-hub-signature-256'] ?? $this->aHeaders['x-hub-signature']);
+
+        $sExpectedSignature = $sSha . '=' . hash_hmac($sSha, $this->sJsonInput, $this->sGitHookSecret);
+        $bValidSignature = hash_equals($sExpectedSignature, $sSignature);
         if (!$bValidSignature) {
-            $this->handleException('Unauthorized Signature header or Secret Key', 403);
+            $this->handleException('Unauthorized signature header or secret key', 403);
         }
         return $bValidSignature;
     }
-
 
     /**
      * Get event type.
      */
     public function getEventType(): string
     {
-        return strtolower((string)$this->aHeaders['x-github-event'] ?? '');
+        return strtolower((string)($this->aHeaders['x-github-event'] ?? ''));
     }
 
     /**
@@ -146,7 +184,7 @@ class AfrGitHook
      */
     public function getEventDelivery(): string
     {
-        return strtolower((string)$this->aHeaders['x-github-delivery'] ?? '');
+        return strtolower((string)($this->aHeaders['x-github-delivery'] ?? ''));
     }
 
     /**
@@ -162,7 +200,7 @@ class AfrGitHook
      */
     public function getHeadCommitMessage(): string
     {
-        return $this->aPayload['head_commit']['message'] ?? '';
+        return (string)($this->aPayload['head_commit']['message'] ?? '');
     }
 
     /**
@@ -181,13 +219,12 @@ class AfrGitHook
         return strpos($this->getHeadCommitMessage(), 'Merge branch') !== false;
     }
 
-
     /**
      * Is fix conflict.
      */
     public function isFixConflict(): bool
     {
-        return strpos($this->getHeadCommitMessage(), 'fix conflict') !== false;
+        return stripos($this->getHeadCommitMessage(), 'fix conflict') !== false;
     }
 
     /**
@@ -233,7 +270,7 @@ class AfrGitHook
                 $this->getHeadCommitMessage(),
                 $matches
             )) {
-                if ($matches[1] == $matches[2]) {
+                if ($matches[1] === $matches[2]) {
                     return true;
                 }
             }
@@ -269,7 +306,7 @@ class AfrGitHook
      */
     public function getBranchName(): string
     {
-        return (string)substr($this->aPayload['ref'] ?? '', strlen('refs/heads/'));
+        return (string)substr((string)($this->aPayload['ref'] ?? ''), strlen('refs/heads/'));
     }
 
     /**
@@ -278,22 +315,19 @@ class AfrGitHook
     public function isOnMasterBranch(): bool
     {
         $sBranch = $this->getBranchName();
-        if (strlen($sBranch) < 1) {
+        if ($sBranch === '') {
             return false;
         }
 
         if (
             !empty($this->aPayload['repository']['master_branch']) &&
-            !in_array($this->aPayload['repository']['master_branch'], AfrGitExec::$defaultMasterBranchNames)) {
-            AfrGitExec::$defaultMasterBranchNames = [$this->aPayload['repository']['master_branch']];
+            !in_array($this->aPayload['repository']['master_branch'], AfrGitExec::$defaultMasterBranchNames, true)
+        ) {
+            AfrGitExec::$defaultMasterBranchNames = [(string)$this->aPayload['repository']['master_branch']];
         }
 
-        return in_array(
-            $sBranch,
-            AfrGitExec::$defaultMasterBranchNames
-        );
+        return in_array($sBranch, AfrGitExec::$defaultMasterBranchNames, true);
     }
-
 
     /**
      * Is push on master branch.
@@ -304,19 +338,22 @@ class AfrGitHook
     }
 
     /**
-     * Reply to github.
+     * Reply to GitHub.
      */
     public function replyToGithub(int $status = 200, string $message = 'success'): void
     {
-        http_response_code($status);
-        header('Content-Type: application/json; charset=utf-8');
-        echo json_encode(['status' => $status, 'message' => $message]);
+        if (!headers_sent()) {
+            http_response_code($status);
+            header('Content-Type: application/json; charset=utf-8');
+        }
+
+        $sPayload = json_encode(['status' => $status, 'message' => $message]);
+        echo $sPayload !== false ? $sPayload : '{"status":' . (int)$status . ',"message":"' . addslashes($message) . '"}';
     }
 
     /**
-     * $gitExec = new gitExec(__DIR__ . '/origin');
-     * print_r($gitExec->setGitConfigDefault('autoframe','USER@gmail.com'));
-     * print_r($gitExec->gitCloneWithUserToken('https://github.com/autoframe/hx','USER','ghp_TOKEN'));
+     * Handle automation for push/release/merge-to-master events.
+     *
      * @param AfrGitExec $gitExec
      * @return array
      */
@@ -327,7 +364,4 @@ class AfrGitHook
         }
         return [];
     }
-
-
 }
-
