@@ -18,6 +18,7 @@ trait AfrCacheSocketConfigStatic
 
 
     /**
+     * Has config.
      * @param string $sName
      * @return bool
      */
@@ -29,6 +30,7 @@ trait AfrCacheSocketConfigStatic
     }
 
     /**
+     * Set sock config parameters.
      * @param string|array $mPropertiesOrDriverName
      * @return void
      * @throws AfrCacheSocketException
@@ -79,6 +81,9 @@ trait AfrCacheSocketConfigStatic
     }
 
 
+    /**
+     * Server up.
+     */
     public static function serverUp(AfrCacheSocketConfig $oConfigInstance): void
     {
         if ($pf = @fsockopen(

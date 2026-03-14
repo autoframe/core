@@ -15,6 +15,7 @@ class AfrGetOpt extends AfrSingletonAbstractClass
 	protected array $aDetectCache = [];
 
 	/**
+	 * Tokenize cli line input.
 	 * @param string $input = 'test.php -f \'value for f\' --required value --optional="optional value"';
 	 * @return array = [ 'test.php','-f','value for f','--required','value','--optional=optional value' ];
 	 */
@@ -72,6 +73,9 @@ class AfrGetOpt extends AfrSingletonAbstractClass
 	}
 
 
+	/**
+	 * Set argv from array.
+	 */
 	public function setArgvFromArray(array $argv = null): self
 	{
 		$this->argv = $argv;
@@ -79,6 +83,7 @@ class AfrGetOpt extends AfrSingletonAbstractClass
 	}
 
 	/**
+	 * Set argv from request.
 	 * @param AfrRequestInterface $oRequest
 	 * @return $this
 	 * @throws AfrException
@@ -93,6 +98,7 @@ class AfrGetOpt extends AfrSingletonAbstractClass
 	}
 
 	/**
+	 * Getopt.
 	 * @param string $short_options
 	 * @param array $long_options
 	 * @param int|null $rest_index
@@ -295,6 +301,7 @@ class AfrGetOpt extends AfrSingletonAbstractClass
 
 
 	/**
+	 * Getopt detect all args.
 	 * @param array|null $arguments
 	 * @param bool $bWildcardAnyArg
 	 * @return array

@@ -11,6 +11,7 @@ use Autoframe\Core\Database\Orm\Blueprint\AfrOrmBlueprintInterface;
 class MigrateFromDb implements AfrOrmBlueprintInterface
 {
     /**
+     * Migrate all dbs from alias.
      * @param string $sAlias
      * @return void
      * @throws AfrDatabaseConnectionException

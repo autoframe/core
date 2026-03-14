@@ -15,6 +15,7 @@ trait AfrEntityTrait
 
 
     /**
+     * Is public.
      * @param string $sProperty
      * @return bool
      */
@@ -26,6 +27,7 @@ trait AfrEntityTrait
     }
 
     /**
+     * Get entity public vars.
      * @return array
      */
     public function getEntityPublicVars(): array
@@ -65,6 +67,7 @@ trait AfrEntityTrait
     }
 
     /**
+     * Set an inaccessible property value.
      * @param string $sProperty
      * @param $mValue
      * @return void
@@ -80,6 +83,7 @@ trait AfrEntityTrait
 
 
     /**
+     * Determine if an inaccessible property is set.
      * @param string $sProperty
      * @return bool
      */
@@ -89,6 +93,7 @@ trait AfrEntityTrait
     }
 
     /**
+     * Retrieve an inaccessible property value.
      * @param $name
      * @return mixed
      */
@@ -101,6 +106,7 @@ trait AfrEntityTrait
     }
 
     /**
+     * Return the string representation of the instance.
      * @return string
      */
     public function __toString(): string
@@ -109,6 +115,7 @@ trait AfrEntityTrait
     }
 
     /**
+     * Get.
      * @param string $sProperty
      * @return mixed Entity value if exist or Null
      */
@@ -135,6 +142,7 @@ trait AfrEntityTrait
     }
 
     /**
+     * Is dirty.
      * @return bool
      */
     public function isDirty(): bool
@@ -143,6 +151,7 @@ trait AfrEntityTrait
     }
 
     /**
+     * Not dirty.
      * @return void
      */
     public function notDirty(): void
@@ -152,6 +161,7 @@ trait AfrEntityTrait
     }
 
     /**
+     * Get dirty properties.
      * @return array
      */
     public function getDirtyProperties(): array
@@ -178,6 +188,7 @@ trait AfrEntityTrait
     }
 
     /**
+     * Cast to data type.
      * @param string $sProperty
      * @param $mValue
      * @return array|bool|float|int|string|object|resource|mixed
@@ -241,6 +252,7 @@ trait AfrEntityTrait
 
 
     /**
+     * Get default value.
      * @param string $sProperty
      * @return array|false|float|int|object|string|null
      */
@@ -283,6 +295,7 @@ trait AfrEntityTrait
     }
 
     /**
+     * Reset defaults.
      * @return int
      */
     public function resetDefaults(): int
@@ -296,6 +309,7 @@ trait AfrEntityTrait
     }
 
     /**
+     * Copy public properties.
      * @param object $oSourceObject
      * @return bool
      * @throws AfrEntityException
@@ -325,6 +339,7 @@ trait AfrEntityTrait
     }
 
     /**
+     * Cast for database.
      * @param bool $bOnlyDirty
      * @return array
      */

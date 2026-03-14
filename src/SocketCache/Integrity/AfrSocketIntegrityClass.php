@@ -11,6 +11,7 @@ class AfrSocketIntegrityClass implements AfrSocketIntegrityInterface
     protected array $aObfuscateMap;
 
     /**
+     * Create a new instance.
      * @param AfrCacheSocketConfig $oConfig
      */
     public function __construct(AfrCacheSocketConfig $oConfig)
@@ -26,6 +27,7 @@ class AfrSocketIntegrityClass implements AfrSocketIntegrityInterface
     }
 
     /**
+     * Sv decode read.
      * @param string $sRawRead
      * @return array
      */
@@ -54,6 +56,7 @@ class AfrSocketIntegrityClass implements AfrSocketIntegrityInterface
     }
 
     /**
+     * Sv code write.
      * @param string $sWrite
      * @return string
      */
@@ -67,6 +70,7 @@ class AfrSocketIntegrityClass implements AfrSocketIntegrityInterface
     }
 
     /**
+     * Cl decode read.
      * @param string $sRawRead
      * @return array
      */
@@ -76,6 +80,7 @@ class AfrSocketIntegrityClass implements AfrSocketIntegrityInterface
     }
 
     /**
+     * Cl code write.
      * @param string $sWrite
      * @return string
      */

@@ -100,6 +100,9 @@ class AfrVideoToMp3
 		$this->setOutputDir($outputDir);
 	}
 
+	/**
+	 * Set cover size.
+	 */
 	public function setCoverSize(int $size): self
 	{
 		if ($size < 100 || $size > 2000) {
@@ -109,6 +112,9 @@ class AfrVideoToMp3
 		return $this;
 	}
 
+	/**
+	 * Set input dir.
+	 */
 	public function setInputDir(string $dir): self
 	{
 		$dir = rtrim($dir, "\\/");
@@ -118,6 +124,9 @@ class AfrVideoToMp3
 		return $this;
 	}
 
+	/**
+	 * Set output dir.
+	 */
 	public function setOutputDir(string $dir): self
 	{
 		$dir = rtrim($dir, "\\/");
@@ -131,12 +140,18 @@ class AfrVideoToMp3
 		return $this;
 	}
 
+	/**
+	 * Keep input files.
+	 */
 	public function keepInputFiles(bool $keep): self
 	{
 		$this->deleteInputAfter = !$keep;
 		return $this;
 	}
 
+	/**
+	 * Set bitrate.
+	 */
 	public function setBitrate(int $kbps): self
 	{
 		if ($kbps < 64 || $kbps > 320) {
@@ -146,7 +161,13 @@ class AfrVideoToMp3
 		return $this;
 	}
 
+	/**
+	 * Set ffmpeg binary.
+	 */
 	public function setFfmpegBinary(string $path): self { $this->ffmpegBin = $path; return $this; }
+	/**
+	 * Set ffprobe binary.
+	 */
 	public function setFfprobeBinary(string $path): self { $this->ffprobeBin = $path; return $this; }
 
 	/**

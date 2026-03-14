@@ -5,6 +5,9 @@ namespace Autoframe\Core\MockClasses;
 class MockSubclass33 implements MockSubclass3Interface
 {
     public int $iVal;
+    /**
+     * Create a new instance.
+     */
     public function __construct()
     {
         echo __CLASS__.'->'.__FUNCTION__.PHP_EOL;
@@ -12,6 +15,7 @@ class MockSubclass33 implements MockSubclass3Interface
     }
 
     /**
+     * Get ival.
      * @return int
      */
     public function getIVal(): int

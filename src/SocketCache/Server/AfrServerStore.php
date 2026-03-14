@@ -168,6 +168,7 @@ class AfrServerStore extends AfrCacheSocketStore
     }
 
     /**
+     * Get all keys.
      * @return array
      */
     public function getAllKeys(): array
@@ -377,6 +378,7 @@ class AfrServerStore extends AfrCacheSocketStore
 
 
     /**
+     * Delete.
      * @param string $sKey
      * @param int $iDelay
      * @return bool

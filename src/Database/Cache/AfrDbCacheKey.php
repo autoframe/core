@@ -11,6 +11,9 @@ class AfrDbCacheKey
 	protected string $sFunction;
 	protected array $aParams;
 
+	/**
+	 * Create a new instance.
+	 */
 	public function __construct(
 		string $sFunction,
 		array  $aParams,
@@ -26,49 +29,76 @@ class AfrDbCacheKey
 		$this->aParams = $aParams;
 	}
 
+	/**
+	 * Get cnx alias.
+	 */
 	public function getCnxAlias(): ?string
 	{
 		return $this->sCnxAlias;
 	}
 
+	/**
+	 * Ignore cnx alias.
+	 */
 	public function ignoreCnxAlias(): self
 	{
 		$this->sCnxAlias = null;
 		return $this;
 	}
 
+	/**
+	 * Get db name.
+	 */
 	public function getDbName(): ?string
 	{
 		return $this->sDbName;
 	}
 
+	/**
+	 * Ignore db name.
+	 */
 	public function ignoreDbName(): self
 	{
 		$this->sDbName = null;
 		return $this;
 	}
 
+	/**
+	 * Get table name.
+	 */
 	public function getTableName(): ?string
 	{
 		return $this->sTableName;
 	}
 
+	/**
+	 * Ignore table name.
+	 */
 	public function ignoreTableName(): self
 	{
 		$this->sTableName = null;
 		return $this;
 	}
 
+	/**
+	 * Get function.
+	 */
 	public function getFunction(): string
 	{
 		return $this->sFunction;
 	}
 
+	/**
+	 * Get params.
+	 */
 	public function getParams(): array
 	{
 		return $this->aParams;
 	}
 
+	/**
+	 * Ignore params.
+	 */
 	public function ignoreParams(): self
 	{
 		$this->aParams = [];
@@ -76,6 +106,9 @@ class AfrDbCacheKey
 	}
 
 
+	/**
+	 * Return the string representation of the instance.
+	 */
 	public function __toString()
 	{
 		return
@@ -92,6 +125,7 @@ class AfrDbCacheKey
 	}
 
 	/**
+	 * Cleanup filename.
 	 * @param string|null $filename
 	 * @return string
 	 */

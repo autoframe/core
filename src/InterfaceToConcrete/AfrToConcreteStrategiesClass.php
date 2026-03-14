@@ -90,6 +90,9 @@ class AfrToConcreteStrategiesClass implements AfrToConcreteStrategiesInterface, 
 
 	];
 
+	/**
+	 * Create a new instance.
+	 */
 	public function __construct()
 	{
 		static::$oLatestInstance = $this;
@@ -108,6 +111,7 @@ class AfrToConcreteStrategiesClass implements AfrToConcreteStrategiesInterface, 
 	}
 
 	/**
+	 * Set instance.
 	 * @param AfrToConcreteStrategiesInterface $oLatestInstance
 	 * @return AfrToConcreteStrategiesInterface
 	 */
@@ -126,6 +130,7 @@ class AfrToConcreteStrategiesClass implements AfrToConcreteStrategiesInterface, 
 	}
 
 	/**
+	 * Set context.
 	 * @param string $sContext
 	 * @return AfrToConcreteStrategiesInterface
 	 */
@@ -136,6 +141,7 @@ class AfrToConcreteStrategiesClass implements AfrToConcreteStrategiesInterface, 
 	}
 
 	/**
+	 * Get context.
 	 * @return string
 	 */
 	public function getContext(): string
@@ -158,6 +164,7 @@ class AfrToConcreteStrategiesClass implements AfrToConcreteStrategiesInterface, 
 	}
 
 	/**
+	 * Get closure fns.
 	 * @return array
 	 */
 	public function getClosureFns(): array
@@ -166,6 +173,7 @@ class AfrToConcreteStrategiesClass implements AfrToConcreteStrategiesInterface, 
 	}
 
 	/**
+	 * Extend strategy context bound.
 	 * @param string $sNotConcrete
 	 * @param string $sConcrete
 	 * @param string $sContext
@@ -183,6 +191,7 @@ class AfrToConcreteStrategiesClass implements AfrToConcreteStrategiesInterface, 
 	}
 
 	/**
+	 * Get context bounded.
 	 * @return array
 	 */
 	public function getContextBounded(): array
@@ -191,6 +200,7 @@ class AfrToConcreteStrategiesClass implements AfrToConcreteStrategiesInterface, 
 	}
 
 	/**
+	 * Extend strategy context http request uri regex.
 	 * @param string $sNotConcrete
 	 * @param string $sConcrete
 	 * @param string $sRegex
@@ -210,6 +220,7 @@ class AfrToConcreteStrategiesClass implements AfrToConcreteStrategiesInterface, 
 	}
 
 	/**
+	 * Get context http request uri regex.
 	 * @return array
 	 */
 	public function getContextHttpRequestUriRegex(): array
@@ -218,6 +229,7 @@ class AfrToConcreteStrategiesClass implements AfrToConcreteStrategiesInterface, 
 	}
 
 	/**
+	 * Extend strategy strategy context namespace filter arr.
 	 * @param string $sNamespace
 	 * @param string $sContext
 	 * @return AfrToConcreteStrategiesInterface
@@ -233,6 +245,7 @@ class AfrToConcreteStrategiesClass implements AfrToConcreteStrategiesInterface, 
 	}
 
 	/**
+	 * Get context namespace filter arr.
 	 * @return array
 	 */
 	public function getContextNamespaceFilterArr(): array
@@ -279,6 +292,9 @@ class AfrToConcreteStrategiesClass implements AfrToConcreteStrategiesInterface, 
 		}
 	}
 
+	/**
+	 * Sample tenant default config.
+	 */
 	public static function sampleTenantDefaultConfig(): ?string
 	{
 		return file_get_contents(__DIR__ . DIRECTORY_SEPARATOR . 'config.sample.AfrToConcreteStrategiesClass.php');
@@ -370,6 +386,7 @@ class AfrToConcreteStrategiesClass implements AfrToConcreteStrategiesInterface, 
 	}
 
 	/**
+	 * Set priority rule.
 	 * @param string $sPriorityRule
 	 * @return AfrToConcreteStrategiesInterface
 	 * @throws AfrInterfaceToConcreteException
@@ -384,6 +401,7 @@ class AfrToConcreteStrategiesClass implements AfrToConcreteStrategiesInterface, 
 	}
 
 	/**
+	 * Get priority rule.
 	 * @return string
 	 */
 	public function getPriorityRule(): string
@@ -393,6 +411,7 @@ class AfrToConcreteStrategiesClass implements AfrToConcreteStrategiesInterface, 
 
 
 	/**
+	 * Get priority rules.
 	 * @return array
 	 */
 	public function getPriorityRules(): array
@@ -402,6 +421,7 @@ class AfrToConcreteStrategiesClass implements AfrToConcreteStrategiesInterface, 
 
 
 	/**
+	 * Add priority rules.
 	 * @param string $sName
 	 * @param array $aPriorities
 	 * @param bool $bSetPriorityRule
@@ -425,6 +445,7 @@ class AfrToConcreteStrategiesClass implements AfrToConcreteStrategiesInterface, 
 	}
 
 	/**
+	 * Add strategy.
 	 * @param string $sName
 	 * @param callable $closure
 	 * @return self
@@ -438,6 +459,7 @@ class AfrToConcreteStrategiesClass implements AfrToConcreteStrategiesInterface, 
 	}
 
 	/**
+	 * Get strategies.
 	 * @return array
 	 */
 	public function getStrategies(): array
@@ -676,6 +698,7 @@ class AfrToConcreteStrategiesClass implements AfrToConcreteStrategiesInterface, 
 
 
 	/**
+	 * Xet tenant to concrete strategies config state.
 	 *
 	 * @param bool|null $bConfigLoaded
 	 * @return AfrToConcreteStrategiesInterface|bool

@@ -9,6 +9,7 @@ use Autoframe\Core\String\Obj\AfrClosureToStr;
 class AfrArrExportArrayAsStringClass extends AfrSingletonAbstractClass implements AfrArrExportArrayAsStringInterface
 {
 	/**
+	 * Export php array as string.
 	 * @param array $aData
 	 * @param string $sQuot
 	 * @param string $sEndOfLine

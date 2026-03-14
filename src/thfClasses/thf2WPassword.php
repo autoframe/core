@@ -60,11 +60,17 @@ class Openssl2WPassword {
 		return $session_id;
 	}
 
+	/**
+	 * Get iv.
+	 */
 	public function _getIv() {
 		$ivlen = openssl_cipher_iv_length(self::SESS_CIPHER);
 		return substr(md5($this->_getSalt()), 0, $ivlen);
 	}
 
+	/**
+	 * Get salt.
+	 */
 	public function _getSalt() {
 		return $this->drupal->drupalGetHashSalt();
 	}

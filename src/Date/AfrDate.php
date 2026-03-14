@@ -11,6 +11,7 @@ class AfrDate implements AfrConfigurableInstanceInterface
     use AfrConfigurableInstanceTrait;
 
     /**
+     * Create a new instance.
      * @param $a
      */
     public function __construct($a)

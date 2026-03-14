@@ -75,6 +75,7 @@ class AfrCacheSocketConfig
 
 
     /**
+     * Create a new instance.
      * @param $mPropertiesOrDriverName
      * @throws AfrCacheSocketException
      */
@@ -102,6 +103,9 @@ class AfrCacheSocketConfig
     }
 
 
+    /**
+     * Xet integrity validator.
+     */
     public function xetIntegrityValidator(AfrSocketIntegrityInterface $oIntegrity = null): AfrSocketIntegrityInterface
     {
         if (!empty($oIntegrity)) {
@@ -113,6 +117,7 @@ class AfrCacheSocketConfig
     }
 
     /**
+     * Extend.
      * @param array $aProperty
      * @return $this
      */
@@ -133,22 +138,32 @@ class AfrCacheSocketConfig
     }
 
 
+    /**
+     * Prepare the instance for serialization.
+     */
     public function __sleep()
     {
         return array_diff(array_keys(get_object_vars($this)), ['mSocket']);
     }
 
+    /**
+     * Restore the instance after unserialization.
+     */
     public function __wakeup()
     {
         self::$aInstances[$this->driver] = $this;
     }
 
+    /**
+     * Return the string representation of the instance.
+     */
     public function __toString(): string
     {
         return serialize($this);
     }
 
     /**
+     * Up.
      * @param string $sSerializedBase64Instance Serialized and base64 Config instance
      * @param string $sDriver
      * @param bool $bPrintInfo

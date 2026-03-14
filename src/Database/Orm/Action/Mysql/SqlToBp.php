@@ -9,6 +9,7 @@ use Autoframe\Core\Database\Orm\Exception\AfrOrmException;
 trait SqlToBp
 {
 	/**
+	 * Parse create table blueprint.
 	 * @throws AfrOrmException
 	 */
 	public static function parseCreateTableBlueprint(
@@ -37,12 +38,16 @@ trait SqlToBp
 	}
 
 
+	/**
+	 * Get selected db.
+	 */
 	public static function getSelectedDb(string $sConnAlias = null, \PDO $PDO = null): ?string
 	{
 		return 'SELECT DATABASE() as dbName; ';
 	}
 
 	/**
+	 * Parse creat database blueprint.
 	 * @throws AfrOrmException
 	 */
 	public static function parseCreatDatabaseBlueprint(string $sDatabaseSql = ''): array
@@ -242,6 +247,7 @@ trait SqlToBp
 
 
 	/**
+	 * Parse extract quoted value.
 	 * @param string $sText
 	 * @param string $sQuot
 	 * @param int $iStartOffset

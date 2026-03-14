@@ -6,6 +6,7 @@ namespace Autoframe\Core\Date\Month\Language;
 class AfrDateMonthLanguageRo implements AfrDateMonthLanguageInterface
 {
     /**
+     * Get month names.
      * @return string[]
      */
     public function getMonthNames(): array
@@ -28,6 +29,7 @@ class AfrDateMonthLanguageRo implements AfrDateMonthLanguageInterface
     }
 
     /**
+     * Get month names short.
      * @return string[]
      */
     public function getMonthNamesShort(): array

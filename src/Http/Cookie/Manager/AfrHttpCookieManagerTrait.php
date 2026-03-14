@@ -18,6 +18,7 @@ trait AfrHttpCookieManagerTrait
     protected string $sDomainAutodetect;
 
     /**
+     * Set cookie.
      * @param string $name
      * @param string $value
      * @param $iExpires_or_aOptions `0 = session; timestamp or arr [lifetime path domain secure httponly 'samesite' => 'Strict|Lax|None']
@@ -103,6 +104,7 @@ trait AfrHttpCookieManagerTrait
 
 
     /**
+     * Unset cookie.
      * @param string $name
      * @param string $path
      * @param string $domain
@@ -126,6 +128,7 @@ trait AfrHttpCookieManagerTrait
 
 
     /**
+     * Fix cookie name.
      * @param string $sName
      * @return string
      */
@@ -137,6 +140,7 @@ trait AfrHttpCookieManagerTrait
 
 
     /**
+     * Force expire all cookies.
      * @param array $aNames
      * @param $asPaths ['/','/myaccount/']
      * @param $asDomains ['.example.com']
@@ -169,6 +173,7 @@ trait AfrHttpCookieManagerTrait
 
 
 	/**
+     * Force expire cookie.
 	 * @param string $sName
 	 * @param null $asPaths ['/','/myaccount/']
 	 * @param null $asDomains ['.example.com']
@@ -283,6 +288,7 @@ trait AfrHttpCookieManagerTrait
     }
 
     /**
+     * Domain name autodetect.
      * @return string
      */
     public function domainNameAutodetect(): string
@@ -310,6 +316,7 @@ trait AfrHttpCookieManagerTrait
     }
 
     /**
+     * Get same site options.
      * @return string[]
      */
     public function getSameSiteOptions(): array
@@ -318,6 +325,7 @@ trait AfrHttpCookieManagerTrait
     }
 
     /**
+     * Set index.
      * @param AfrHttpCookieInterface $oCookie
      * @return void
      */
@@ -327,6 +335,7 @@ trait AfrHttpCookieManagerTrait
     }
 
     /**
+     * Get all indexes.
      * @return AfrHttpCookieInterface[]
      */
     public function getAllIndexes(): array
@@ -335,6 +344,7 @@ trait AfrHttpCookieManagerTrait
     }
 
     /**
+     * Unset index.
      * @param string $sCookieName
      * @return void
      */
@@ -346,6 +356,7 @@ trait AfrHttpCookieManagerTrait
     }
 
     /**
+     * Isset index.
      * @param string $sCookieName
      * @return bool
      */
@@ -355,6 +366,7 @@ trait AfrHttpCookieManagerTrait
     }
 
     /**
+     * Assume all http cookies.
      * @return AfrHttpCookieInterface[]
      * @throws AfrHttpCookieException
      */
@@ -369,6 +381,7 @@ trait AfrHttpCookieManagerTrait
     }
 
 	/**
+     * Assume http cookie.
 	 * @param string $sCookieName
 	 * @return false|AfrHttpCookieInterface
 	 * @throws AfrContainerException

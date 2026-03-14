@@ -84,6 +84,9 @@ abstract class AfrObjectAbstractConstructorSingletonFactory
     }
 
 
+    /**
+     * Get instance.
+     */
     public function getInstance(): object
     {
         /** @var object $sClassName */

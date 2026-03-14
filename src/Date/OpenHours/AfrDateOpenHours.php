@@ -6,6 +6,7 @@ namespace Autoframe\Core\Date\OpenHours;
 class AfrDateOpenHours implements AfrDateOpenHoursInterface
 {
     /**
+     * Open hours value sweep.
      * @param int $iFromHour
      * @param int $iToHour
      * @param int $iSplitHourIn
@@ -42,6 +43,7 @@ class AfrDateOpenHours implements AfrDateOpenHoursInterface
     }
 
     /**
+     * Open hours html options sweep.
      * @param int $iFromHour
      * @param int $iToHour
      * @param int $iSplitHourIn

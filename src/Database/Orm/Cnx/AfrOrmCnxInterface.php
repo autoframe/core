@@ -9,6 +9,9 @@ use PDO;
 interface AfrOrmCnxInterface
 {
 	/** @return string connection manager alias string */
+	/**
+	 * Orm cnx alias.
+	 */
 	public static function _ORM_Cnx_Alias(): string;
 
 
@@ -20,12 +23,14 @@ interface AfrOrmCnxInterface
 	public static function _ORM_Cnx_Driver(): string;
 
 	/**
+	 * Orm cnx pdo.
 	 * @return PDO
 	 * @throws AfrDatabaseConnectionException
 	 */
 	public static function _ORM_Cnx_Pdo(): PDO;
 
 	/**
+	 * Orm cnx alias info.
 	 * @return array|null
 	 * @throws AfrOrmException
 	 */

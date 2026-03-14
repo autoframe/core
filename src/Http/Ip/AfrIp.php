@@ -14,6 +14,9 @@ class AfrIp extends AfrSingletonAbstractClass
 	protected array $aTrustedProxies; // AFR_TRUSTED_PROXIES_IPS_LIST = 127.0.0.1,192.168.0.1, CF-IP
 	protected array $aTrustedIpHeadersBehindLbOrProxy; // AFR_TRUSTED_PROXIES_IP_HEADER_LIST = HTTP_X_FORWARDED_FOR,HTTP_X_FORWARDED,HTTP_FORWARDED_FOR,HTTP_FORWARDED,HTTP_CF_CONNECTING_IP,HTTP_TRUE_CLIENT_IP,HTTP_CLIENT_IP
 
+	/**
+	 * Get trusted ip headers behind lb or proxy.
+	 */
 	public function getTrustedIpHeadersBehindLbOrProxy(): array
 	{
 		if (!isset($this->aTrustedIpHeadersBehindLbOrProxy)) {
@@ -29,6 +32,9 @@ class AfrIp extends AfrSingletonAbstractClass
 	}
 
 
+	/**
+	 * Get trusted proxies ips.
+	 */
 	public function getTrustedProxiesIps(): array
 	{
 		if (!isset($this->aTrustedProxies)) {
@@ -41,6 +47,7 @@ class AfrIp extends AfrSingletonAbstractClass
 
 
 	/**
+	 * Get real client ip addr.
 	 * @param AfrRequestClass|null $rq
 	 * @return string
 	 */
@@ -88,10 +95,19 @@ class AfrIp extends AfrSingletonAbstractClass
 	}
 
 
+	/**
+	 * Is ip v4 or ip v6.
+	 */
 	public function isIpV4OrIpV6(string $ip): bool { return (bool)filter_var($ip, FILTER_VALIDATE_IP); }
 
+	/**
+	 * Is ip v4.
+	 */
 	public function isIpV4(string $ip): bool { return (bool)filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4); }
 
+	/**
+	 * Is ip v6.
+	 */
 	public function isIpV6(string $ip): bool { return (bool)filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6); }
 
 //0000:0000:0000:0000:0000:0000:192.168.111.111 ipv6+tunnel 46 chars
@@ -102,6 +118,7 @@ class AfrIp extends AfrSingletonAbstractClass
 //0123:4567:89ab:cdef:0123:4567:89ab:cdef //39 chrs
 
 	/**
+	 * Uncompressed ip v6.
 	 * @param string $ip
 	 * @return string
 	 */
@@ -124,6 +141,7 @@ class AfrIp extends AfrSingletonAbstractClass
 	}
 
 	/**
+	 * Expand ip v6.
 	 * @param string $ip Eg. fe80:01::af0
 	 * @return string  Eg. fe80:0001:0000:0000:0000:0000:0000:0af0
 	 */

@@ -25,6 +25,9 @@ trait AfrSingletonClassicTrait
 	}
 
 
+	/**
+	 * Get instance.
+	 */
 	public static function getInstance():self
 	{
 		return self::$instances[static::class] ??= new static();

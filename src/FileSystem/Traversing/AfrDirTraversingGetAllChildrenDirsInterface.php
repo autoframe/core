@@ -9,6 +9,7 @@ use Autoframe\Core\FileSystem\Traversing\Exception\AfrFileSystemTraversingExcept
 interface AfrDirTraversingGetAllChildrenDirsInterface
 {
     /**
+     * Get all children dirs.
      * @param string $sDirPath
      * @param int $iMaxLevels
      * @param bool $bFollowSymlinks

@@ -31,6 +31,7 @@ trait AfrCachePhpFileToArrayTrait
 	private static float $compareIntFloat = 1770000000.0;
 
 	/**
+	 * Get from cache.
 	 * @param string|object $soAliasSubDir
 	 * @param string|null $sCacheFileName
 	 * @param float|int|null $fiSec
@@ -64,6 +65,9 @@ trait AfrCachePhpFileToArrayTrait
 		return $aRead['data'] ?? null;
 	}
 
+	/**
+	 * Get from cache inline.
+	 */
 	public function getFromCacheInline($soAliasSubDir, string $sCacheFileName = null, int $iSec = null): ?array
 	{
 		$sFile = static::getClassCacheTempFilePath($soAliasSubDir, $sCacheFileName ?? static::$sPhpIncludeCacheFileName);
@@ -73,6 +77,7 @@ trait AfrCachePhpFileToArrayTrait
 	}
 
 	/**
+	 * Set to cache.
 	 * @param array|null $aDataToString
 	 * @param string|object $soAliasSubDir
 	 * @param float|int|null $fiExpireTime
@@ -108,6 +113,7 @@ trait AfrCachePhpFileToArrayTrait
 
 
 	/**
+	 * Set to cache inline.
 	 * @param array|null $aDataToString
 	 * @param $soAliasSubDir
 	 * @param string|null $sCacheFileName
@@ -129,6 +135,7 @@ trait AfrCachePhpFileToArrayTrait
 
 
 	/**
+	 * Xet over write fallback.
 	 * @return AfrOverWriteClass|AfrOverWriteInterface
 	 * @throws AfrEventException|AfrContainerException
 	 */
@@ -140,6 +147,7 @@ trait AfrCachePhpFileToArrayTrait
 
 
 	/**
+	 * Xet over write.
 	 * @return AfrOverWriteClass|AfrOverWriteInterface
 	 * @throws AfrEventException|AfrContainerException
 	 */
@@ -151,6 +159,7 @@ trait AfrCachePhpFileToArrayTrait
 
 
 	/**
+	 * Xet export array.
 	 * @return AfrArrExportArrayAsStringClass|AfrArrExportArrayAsStringInterface
 	 * @throws AfrEventException|AfrContainerException
 	 */
@@ -162,6 +171,7 @@ trait AfrCachePhpFileToArrayTrait
 
 
 	/**
+	 * Xet export array fallback.
 	 * @return AfrArrExportArrayAsStringClass|AfrArrExportArrayAsStringInterface
 	 * @throws AfrEventException|AfrContainerException
 	 */
@@ -172,6 +182,7 @@ trait AfrCachePhpFileToArrayTrait
 	}
 
 	/**
+	 * Get tenant default temp dir.
 	 * @param string|object|null $soAliasSubDir
 	 * @return string
 	 * @throws AfrException
@@ -185,6 +196,7 @@ trait AfrCachePhpFileToArrayTrait
 	}
 
 	/**
+	 * Get class cache temp file path.
 	 * @param string|object $soAliasSubDir
 	 * @param string $sCacheFileName
 	 * @return string
@@ -203,6 +215,7 @@ trait AfrCachePhpFileToArrayTrait
 	}
 
 	/**
+	 * Convert arr php str.
 	 * @param array|null $aDataToString
 	 * @return string
 	 * @throws AfrContainerException

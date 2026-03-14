@@ -35,6 +35,7 @@ trait AfrDirPathTrait
 	}
 
 	/**
+	 * Open dir.
 	 * @param string $sDirPath
 	 * @param $context
 	 * @return false|resource
@@ -199,6 +200,7 @@ trait AfrDirPathTrait
 	}
 
 	/**
+	 * Realpath.
 	 * @param string $path
 	 * @param bool $bCheckExistence
 	 * @return false|string
@@ -225,6 +227,7 @@ trait AfrDirPathTrait
 	}
 
 	/**
+	 * Dir exist and writable.
 	 * @throws AfrEnvException
 	 */
 	public function dirExistAndWritable(string $dir, bool $bCreate = true, ?int $expectedPermissions = null, bool $bClearStatCache = false): bool
@@ -234,6 +237,7 @@ trait AfrDirPathTrait
 	}
 
 	/**
+	 * Dir exist and writable s.
 	 * @throws AfrEnvException
 	 */
 	public static function dirExistAndWritableS(string $dir, bool $bCreate = true, ?int $expectedPermissions = null, bool $bClearStatCache = false): bool
@@ -294,6 +298,7 @@ trait AfrDirPathTrait
 
 
 	/**
+	 * Get expected dir permissions.
 	 * @throws AfrEnvException
 	 */
 	public static function getExpectedDirPermissions(): int
@@ -310,6 +315,9 @@ trait AfrDirPathTrait
 	}
 
 
+	/**
+	 * Get relative path.
+	 */
 	public function getRelativePath(
 		string $to,
 		string $from,

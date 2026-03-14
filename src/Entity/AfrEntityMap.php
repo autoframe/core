@@ -17,6 +17,7 @@ class AfrEntityMap
     private static string $public = 'public';
 
     /**
+     * Get.
      * @param string $sEntityClassName
      * @return ReflectionClass
      */
@@ -27,6 +28,7 @@ class AfrEntityMap
     }
 
     /**
+     * Get public.
      * @param string $sEntityClassName
      * @return array
      */
@@ -37,6 +39,7 @@ class AfrEntityMap
     }
 
     /**
+     * Get protected.
      * @param string $sEntityClassName
      * @return array
      */
@@ -47,6 +50,7 @@ class AfrEntityMap
     }
 
     /**
+     * Get private.
      * @param string $sEntityClassName
      * @return array
      */
@@ -57,6 +61,7 @@ class AfrEntityMap
     }
 
     /**
+     * Is public.
      * @param string $sEntityClassName
      * @param string $sPropertyName
      * @return bool
@@ -68,6 +73,7 @@ class AfrEntityMap
     }
 
     /**
+     * Is protected.
      * @param string $sEntityClassName
      * @param string $sPropertyName
      * @return bool
@@ -79,6 +85,7 @@ class AfrEntityMap
     }
 
     /**
+     * Is private.
      * @param string $sEntityClassName
      * @param string $sPropertyName
      * @return bool
@@ -115,6 +122,7 @@ class AfrEntityMap
     }
 
     /**
+     * Get default property value.
      * @param string $sEntityClassName
      * @param string $sProp
      * @return array

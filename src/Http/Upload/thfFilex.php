@@ -53,6 +53,9 @@ class ThfUpload{
 		//	*t*			date('H-i-s')
 		//	*d*			date('Y-m-d')
 	
+	/**
+	 * Upload files.
+	 */
 	public static function upload_files($new_filename_format='',$upload_dir='',$alowed='',$overwritePolicy='',$partial_files_arr=array()){
 		self::check_files_integrity();
 		if(count(self::$FILES)<1){ self::liniarize_class_files($partial_files_arr); }		 //init if necesarry with some files only; use when multiple upload paths
@@ -184,9 +187,15 @@ class ThfUpload{
 		return true;
 	}
 	
+	/**
+	 * Is post files oversize error.
+	 */
 	public static function is_post_files_oversize_error(){
 		return (count($_POST)<1 && count($_FILES)<1 && $_SERVER['REQUEST_METHOD']=='POST' && @floor($_SERVER['CONTENT_LENGTH'])>0 ? true:false);
 	}
+	/**
+	 * Check files integrity.
+	 */
 	public static function check_files_integrity($report=0){
 		set_time_limit(600);
 		if(self::is_post_files_oversize_error() || $report){
@@ -202,6 +211,9 @@ class ThfUpload{
 [CONTENT_LENGTH] => 36759622
 [CONTENT_TYPE] => multipart/form-data; boundary=---------------------------11956435811204*/
 		
+	/**
+	 * Upload one.
+	 */
 	public static function upload_one($input_name, $new_filename_format='contract_*d*',$upload_dir='',$alowed='',$overwritePolicy=''){
 		self::check_files_integrity();
 		self::$FILES=array();//reset
@@ -219,6 +231,9 @@ class ThfUpload{
 	}
 	
 	
+	/**
+	 * Make unique filename.
+	 */
 	public static function make_unique_filename($full_path) {
 		
 		$tmp=pathinfo($full_path);
@@ -249,12 +264,18 @@ class ThfUpload{
 		}
 		return $directory.$file_name;
 	}
+	/**
+	 * Get name.
+	 */
 	public static function get_name($fname){
 		$tmp= pathinfo($fname);
 		if(isset($tmp['extension'])){$tmp['extension']=strtolower(trim($tmp['extension']));}
 		if(isset($tmp['extension']) && $tmp['extension']==='jpeg'){$tmp['extension']='jpg';}
 		return array('filename'=>@$tmp['filename'],'ext'=>@$tmp['extension']);
 	}
+	/**
+	 * Liniarize class files.
+	 */
 	public static function liniarize_class_files($server_files=array()){
 		if(count($server_files)<1){$server_files=$_FILES;}//inherit all global post
 		if(count(self::$FILES)<1){}//first run or run after reset the self::$FILES
@@ -281,6 +302,9 @@ class ThfUpload{
 		}
 	}
 	
+	/**
+	 * File upload message.
+	 */
 	public static function fileUploadMessage($status){
 		$fileUploadErrors=array(
 			UPLOAD_ERR_OK => 'Upload is successfull', //0
@@ -295,16 +319,28 @@ class ThfUpload{
 		return (isset($fileUploadErrors[$status])?$fileUploadErrors[$status]:'Error: file upload not completed.');
 	}
 
+	/**
+	 * Upload return bytes.
+	 */
 	public static function upload_return_bytes($val){
 		$val = trim($val); $last = strtolower($val[strlen($val)-1]); 
 		switch($last) {  case 'g': $val *= 1024;   case 'm': $val *= 1024;   case 'k': $val *= 1024;	}
 		return $val;}
 
+	/**
+	 * Get upload max filesize.
+	 */
 	public static function get_upload_max_filesize(){
 		return min(self::upload_return_bytes(ini_get('upload_max_filesize')),self::upload_return_bytes(ini_get('post_max_size')));}	
 	
+	/**
+	 * Get max paralel upload files.
+	 */
 	public static function get_max_paralel_upload_files(){return floor(ini_get('max_file_uploads'));}
 
+	/**
+	 * Set upload mb limit.
+	 */
 	public static function set_upload_mb_limit($mb=4096){
 		$limit=$mb.'M';	if($mb>1024){$limit=floor($mb/1024).'G';} ini_set('post_max_size',$limit); ini_set('upload_max_filesize', $limit);
 	}

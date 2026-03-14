@@ -19,6 +19,7 @@ trait AfrDirTraversingFileListTrait
     use AfrDirTraversingDependency;
 
     /**
+     * Get dir file list.
      * @param string $sDirPath absolute or relative path
      * @param array $aFilterExtensions ['jpg','php',''] filter images, scripts and file without extension
      * @return array|false

@@ -11,6 +11,7 @@ class AfrIncPhpCache extends AfrSingletonAbstractClass implements Store
 	protected static string $sCacheDir = __DIR__ . DIRECTORY_SEPARATOR . 'cache';
 
 	/**
+	 * Set cache dir.
 	 * @param string $sCacheDir
 	 * @return void
 	 * @throws AfrException

@@ -91,6 +91,7 @@ class AfrClassDependency
 	}
 
 	/**
+	 * Flush.
 	 * @return void
 	 */
 	public static function flush(): void
@@ -102,6 +103,7 @@ class AfrClassDependency
 	}
 
 	/**
+	 * Get dependency info.
 	 * @return self[]
 	 */
 	public static function getDependencyInfo(): array
@@ -110,6 +112,7 @@ class AfrClassDependency
 	}
 
 	/**
+	 * Clear dependency info.
 	 * @return void
 	 */
 	public static function clearDependencyInfo(): void
@@ -134,6 +137,7 @@ class AfrClassDependency
 	}
 
 	/**
+	 * Clear debug fatal error.
 	 * @return void
 	 */
 	public static function clearDebugFatalError(): void
@@ -143,6 +147,7 @@ class AfrClassDependency
 
 
 	/**
+	 * Set skip class info.
 	 * @param array $aFQCN
 	 * @param bool $bMergeWithExisting
 	 * @return array
@@ -224,6 +229,7 @@ class AfrClassDependency
 	}
 
 	/**
+	 * Get skip namespace info.
 	 * @return array
 	 */
 	public static function getSkipNamespaceInfo(): array
@@ -232,6 +238,7 @@ class AfrClassDependency
 	}
 
 	/**
+	 * Is skipped.
 	 * @param $obj_sFQCN
 	 * @return bool
 	 */
@@ -330,6 +337,7 @@ class AfrClassDependency
 	}
 
 	/**
+	 * Get type.
 	 * @return string
 	 */
 	public function getType(): string
@@ -376,6 +384,7 @@ class AfrClassDependency
 
 
 	/**
+	 * Get all dependencies.
 	 * @return array
 	 */
 	public function getAllDependencies(): array
@@ -384,6 +393,7 @@ class AfrClassDependency
 	}
 
 	/**
+	 * Get class name.
 	 * @return string
 	 */
 	public function getClassName(): string
@@ -392,6 +402,7 @@ class AfrClassDependency
 	}
 
 	/**
+	 * Return the string representation of the instance.
 	 * @return string
 	 */
 	public function __toString(): string
@@ -401,6 +412,7 @@ class AfrClassDependency
 
 
 	/** Get parent Classes
+	 * Get parents.
 	 * @return array
 	 */
 	public function getParents(): array
@@ -412,6 +424,7 @@ class AfrClassDependency
 	}
 
 	/** Get parent Traits
+	 * Get traits.
 	 * @return array
 	 */
 	public function getTraits(): array
@@ -423,6 +436,7 @@ class AfrClassDependency
 	}
 
 	/** Get parent Interfaces
+	 * Get interfaces.
 	 * @return array
 	 */
 	public function getInterfaces(): array
@@ -435,6 +449,7 @@ class AfrClassDependency
 
 
 	/**
+	 * Is class.
 	 * @return bool
 	 */
 	public function isClass(): bool
@@ -443,6 +458,7 @@ class AfrClassDependency
 	}
 
 	/**
+	 * Is trait.
 	 * @return bool
 	 */
 	public function isTrait(): bool
@@ -451,6 +467,7 @@ class AfrClassDependency
 	}
 
 	/**
+	 * Is interface.
 	 * @return bool
 	 */
 	public function isInterface(): bool
@@ -459,6 +476,7 @@ class AfrClassDependency
 	}
 
 	/**
+	 * Is enum.
 	 * @return bool
 	 */
 	public function isEnum(): bool
@@ -468,6 +486,7 @@ class AfrClassDependency
 	}
 
 	/**
+	 * Is abstract.
 	 * @return bool
 	 */
 	public function isAbstract(): bool
@@ -489,6 +508,7 @@ class AfrClassDependency
 	}
 
 	/**
+	 * Is instantiable.
 	 * @return bool
 	 */
 	public function isInstantiable(): bool
@@ -511,6 +531,7 @@ class AfrClassDependency
 
 
 	/**
+	 * Is singleton.
 	 * @return bool
 	 */
 	public function isSingleton(): bool

@@ -20,6 +20,9 @@ class cursBnrXML
     {
     }
 
+	/**
+	 * Set xml url.
+	 */
 	public function setXmlUrl(string $sXmlUrl): self
 	{
 		$this->sXmlUrl = $sXmlUrl;
@@ -38,6 +41,9 @@ class cursBnrXML
         }
     }
 
+    /**
+     * Get exchange rate.
+     */
     public function getExchangeRate(string $currency)
     {
 		if(empty($this->date)){
@@ -74,6 +80,9 @@ class cursBnrThf extends cursBnrXML
         }
     }
 
+    /**
+     * Update curs in server val.
+     */
     public function updateCursInServerVal()
     {
         parent::__construct();

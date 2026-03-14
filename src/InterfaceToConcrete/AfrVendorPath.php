@@ -65,6 +65,7 @@ class AfrVendorPath
 	}
 
 	/**
+	 * Get composer json.
 	 * @return array
 	 */
 	public static function getComposerJson(): array
@@ -95,6 +96,7 @@ class AfrVendorPath
 	}
 
 	/**
+	 * Create map.
 	 * @param $sPath
 	 * @return array
 	 */
@@ -216,6 +218,7 @@ class AfrVendorPath
 	}
 
 	/**
+	 * Create map from psr x.
 	 * @param array $aNsDirs
 	 * @return array
 	 */
@@ -340,6 +343,7 @@ class AfrVendorPath
 	}
 
 	/**
+	 * Detect vendor path slow using file system.
 	 * @return string
 	 */
 	public static function detectVendorPathSlowUsingFileSystem(): string

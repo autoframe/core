@@ -8,6 +8,7 @@ class AfrDateDayLanguageFactory implements AfrDateDayLanguageInterface
     private string $sLanguageClass;
 
     /**
+     * Create a new instance.
      * @param string $sLanguage
      */
     public function __construct(string $sLanguage = '')
@@ -29,6 +30,7 @@ class AfrDateDayLanguageFactory implements AfrDateDayLanguageInterface
     }
 
     /**
+     * Get day names.
      * @return string[]
      */
     public function getDayNames(): array
@@ -37,6 +39,7 @@ class AfrDateDayLanguageFactory implements AfrDateDayLanguageInterface
     }
 
     /**
+     * Get day names short.
      * @return string[]
      */
     public function getDayNamesShort(): array

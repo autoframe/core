@@ -11,6 +11,9 @@ use Autoframe\Core\Tenant\AfrTenant;
 
 class AfrCronLogChannelLogInlineCli extends AfrSingletonAbstractClass implements AfrCronLogChannelInterface
 {
+	/**
+	 * Log.
+	 */
 	public function log(AfrCronLoggerInterface $oData): void
 	{
 		$this->somethingPrintedHead($oData);
@@ -55,6 +58,9 @@ class AfrCronLogChannelLogInlineCli extends AfrSingletonAbstractClass implements
 		}
 	}
 
+	/**
+	 * Cleanup gc older than n months.
+	 */
 	public function cleanupGcOlderThan_N_Months(float $fMonths = null, bool $bForce = false): ?bool
 	{
 		return true;

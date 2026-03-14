@@ -23,6 +23,7 @@ trait AfrBase64InlineDataTrait
     }
 
     /**
+     * Get base64 inline one px.
      * @return string
      */
     public function getBase64InlineOnePx(): string

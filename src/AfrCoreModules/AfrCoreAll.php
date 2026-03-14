@@ -12,6 +12,9 @@ use Autoframe\Core\AfrCoreModules\FnContracts\AfrCliRoutesContract;
 class AfrCoreAll implements AfrModuleInterface{
 	use AfrModuleTrait;
 
+	/**
+	 * Get default module config.
+	 */
 	public static function getDefaultModuleConfig(): array
 	{
 		return [
@@ -20,6 +23,9 @@ class AfrCoreAll implements AfrModuleInterface{
 		];
 	}
 
+	/**
+	 * Get default functionalities config.
+	 */
 	public static function getDefaultFunctionalitiesConfig(): array
 	{
 		return [

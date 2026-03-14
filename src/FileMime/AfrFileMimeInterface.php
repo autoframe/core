@@ -6,18 +6,21 @@ namespace Autoframe\Core\FileMime;
 interface AfrFileMimeInterface
 {
 	/**
+	 * Get file mime types.
 	 * @return array
 	 */
 	public function getFileMimeTypes(): array;
 
 
 	/**
+	 * Get file mime extensions.
 	 * @return array
 	 */
 	public function getFileMimeExtensions(): array;
 
 
 	/**
+	 * Get file mime fallback.
 	 * @return string 'application/octet-stream'
 	 */
 	public function getFileMimeFallback(): string;

@@ -14,6 +14,9 @@ ThfAjax::json();
 class ThfAjax{
 	public static $out=array();
 	public static $nl='<hr style="margin:5px;">'; //br |   \r\n
+	/**
+	 * Init.
+	 */
 	public static function init(){
 		self::$out=array(
 			'redirect'=>NULL, //link for redirect after mesessage
@@ -28,21 +31,39 @@ class ThfAjax{
 		);
 	}
 
+	/**
+	 * Redirect.
+	 */
 	public static function redirect($link){self::$out['redirect']=$link;}
+	/**
+	 * Msg.
+	 */
 	public static function msg($msg){
 		if(!$msg){return;}
 		if(is_array(self::$out['msg'])){self::$out['msg'][]=$msg;}
 		elseif(self::$out['msg']){self::$out['msg']=array(self::$out['msg'],$msg);}
 		else{self::$out['msg']=array($msg);}
 	}
+	/**
+	 * Status.
+	 */
 	public static function status($status,$msg=''){
 		if(!$status && !$msg){$msg='Generic state process ERROR!';}
 		self::msg($msg);
 		if(floor(self::$out['status'])==-1 || self::$out['status']){ self::$out['status']=$status;	}
 	}
 
+	/**
+	 * Json.
+	 */
 	public static function json(){self::process();	header('Content-Type:application/json');	die(json_encode(self::$out)); }
+	/**
+	 * Prea.
+	 */
 	public static function prea(){self::process();	prea(self::$out); die;	}
+	/**
+	 * Process.
+	 */
 	public static function process(){
 		if(is_array(self::$out['msg'])){
 			self::$out['msg']=(count(self::$out['msg'])>1?implode(self::$nl,self::$out['msg']):self::$out['msg'][0]);

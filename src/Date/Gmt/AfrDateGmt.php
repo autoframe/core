@@ -6,6 +6,7 @@ namespace Autoframe\Core\Date\Gmt;
 class AfrDateGmt
 {
     /**
+     * Time to gmt.
      * @param int $iTime
      * @return string
      */

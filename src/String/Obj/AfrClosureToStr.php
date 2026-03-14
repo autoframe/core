@@ -10,6 +10,9 @@ use ReflectionType;
 
 class AfrClosureToStr
 {
+	/**
+	 * Dump.
+	 */
 	public static function dump(Closure $closure): string
 	{
 		$rf = new ReflectionFunction($closure);

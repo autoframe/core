@@ -18,6 +18,7 @@ trait AfrSplitMergeCopyDirTrait
     protected static AfrSplitMergeInterface $AfrSplitMergeInterface;
 
     /**
+     * Xet afr split merge interface.
      * @param AfrSplitMergeInterface|null $AfrSplitMergeInterface
      * @return AfrSplitMergeInterface
      */
@@ -34,6 +35,7 @@ trait AfrSplitMergeCopyDirTrait
     }
 
     /**
+     * Split copy dir.
      * @param string $sSourceDir
      * @param string $sDestinationDir
      * @param int $iPartSize
@@ -206,6 +208,7 @@ trait AfrSplitMergeCopyDirTrait
     }
 
     /**
+     * Merge copy dir.
      * @param string $sSourceDir
      * @param string $sDestinationDir
      * @param bool $bOverwriteFiles

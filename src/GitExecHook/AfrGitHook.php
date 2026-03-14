@@ -30,6 +30,7 @@ class AfrGitHook
 
 
     /**
+     * Create a new instance.
      * @throws Throwable
      */
     public function __construct(
@@ -132,62 +133,98 @@ class AfrGitHook
     }
 
 
+    /**
+     * Get event type.
+     */
     public function getEventType(): string
     {
         return strtolower((string)$this->aHeaders['x-github-event'] ?? '');
     }
 
+    /**
+     * Get event delivery.
+     */
     public function getEventDelivery(): string
     {
         return strtolower((string)$this->aHeaders['x-github-delivery'] ?? '');
     }
 
+    /**
+     * Get payload.
+     */
     public function getPayload(): array
     {
         return $this->aPayload;
     }
 
+    /**
+     * Get head commit message.
+     */
     public function getHeadCommitMessage(): string
     {
         return $this->aPayload['head_commit']['message'] ?? '';
     }
 
+    /**
+     * Is merge pull request.
+     */
     public function isMergePullRequest(): bool
     {
         return strpos($this->getHeadCommitMessage(), 'Merge pull request') !== false;
     }
 
+    /**
+     * Is merge branch.
+     */
     public function isMergeBranch(): bool
     {
         return strpos($this->getHeadCommitMessage(), 'Merge branch') !== false;
     }
 
 
+    /**
+     * Is fix conflict.
+     */
     public function isFixConflict(): bool
     {
         return strpos($this->getHeadCommitMessage(), 'fix conflict') !== false;
     }
 
+    /**
+     * Is push.
+     */
     public function isPush(): bool
     {
         return $this->getEventType() === 'push';
     }
 
+    /**
+     * Is release.
+     */
     public function isRelease(): bool
     {
         return $this->getEventType() === 'release';
     }
 
+    /**
+     * Is pull request.
+     */
     public function isPullRequest(): bool
     {
         return $this->getEventType() === 'pull_request';
     }
 
+    /**
+     * Is ping.
+     */
     public function isPing(): bool
     {
         return $this->getEventType() === 'ping';
     }
 
+    /**
+     * Is merge same branch.
+     */
     public function isMergeSameBranch(): bool
     {
         if (!$this->isMergePullRequest() && !$this->isFixConflict()) {
@@ -204,6 +241,9 @@ class AfrGitHook
         return false;
     }
 
+    /**
+     * Get commit info.
+     */
     public function getCommitInfo(): array
     {
         $aCommitInfo = [];
@@ -224,11 +264,17 @@ class AfrGitHook
         return $aCommitInfo;
     }
 
+    /**
+     * Get branch name.
+     */
     public function getBranchName(): string
     {
         return (string)substr($this->aPayload['ref'] ?? '', strlen('refs/heads/'));
     }
 
+    /**
+     * Is on master branch.
+     */
     public function isOnMasterBranch(): bool
     {
         $sBranch = $this->getBranchName();
@@ -249,11 +295,17 @@ class AfrGitHook
     }
 
 
+    /**
+     * Is push on master branch.
+     */
     public function isPushOnMasterBranch(): bool
     {
         return $this->isOnMasterBranch() && ($this->isPush() || $this->isRelease() || $this->isMergeBranch());
     }
 
+    /**
+     * Reply to github.
+     */
     public function replyToGithub(int $status = 200, string $message = 'success'): void
     {
         http_response_code($status);

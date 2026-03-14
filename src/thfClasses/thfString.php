@@ -88,6 +88,7 @@ class thfStrinGGGGGGGGGGGGGGGGGGGGGGGGGGGg
 	}
 
 	/**
+	 * Uh.
 	 * @param string $sHtml
 	 * @param string $sEncoding
 	 * @return string
@@ -101,6 +102,7 @@ class thfStrinGGGGGGGGGGGGGGGGGGGGGGGGGGGg
 	}
 
 	/**
+	 * Scurtez txt.
 	 * @param string $txt
 	 * @param int $len
 	 * @param array $aIgnore
@@ -122,11 +124,17 @@ class thfStrinGGGGGGGGGGGGGGGGGGGGGGGGGGGg
 		return $txt;
 	}
 
+	/**
+	 * Prea.
+	 */
 	public static function prea($mixed): string
 	{
 		echo '<pre>' . print_r(self::h($mixed), true) . '</pre>';
 	}
 
+	/**
+	 * Extract between.
+	 */
 	public static function extract_between($str = NULL, $start_char = NULL, $end_char = NULL)
 	{ //extrag o expresie din interiorul unui string
 		if ($str != NULL && $start_char !== NULL && $start_char != '') {
@@ -159,6 +167,9 @@ class thfStrinGGGGGGGGGGGGGGGGGGGGGGGGGGGg
 		return $out;
 	}
 
+	/**
+	 * Attr class.
+	 */
 	public static function attr_class($classes = '', $quot = '"')
 	{
 		if (is_string($classes) && strlen(trim($classes))) {
@@ -173,6 +184,9 @@ class thfStrinGGGGGGGGGGGGGGGGGGGGGGGGGGGg
 		return NULL;
 	}
 
+	/**
+	 * Parse url get params.
+	 */
 	public static function parse_url_get_params($url = 'www.youtube.com/watch?v=q1uVg13zDwM&gg=1')
 	{
 		$urlp = parse_url($url);
@@ -184,10 +198,19 @@ class thfStrinGGGGGGGGGGGGGGGGGGGGGGGGGGGg
 
 	//http_build_query($array);		parse_str($sursa,$dest_array);		$dest=parse_url();	 // Parse a URL and return its components
 
+	/**
+	 * Base64url encode.
+	 */
 	public static function base64url_encode($data) { return rtrim(strtr(base64_encode($data), '+/', '-_'), '='); }
 
+	/**
+	 * Base64url decode.
+	 */
 	public static function base64url_decode($data) { return base64_decode(str_pad(strtr($data, '-_', '+/'), strlen($data) % 4, '=', STR_PAD_RIGHT)); }
 
+	/**
+	 * Base64 encode image.
+	 */
 	public static function base64_encode_image($filename, $filetype)
 	{
 		$imgbinary = fread(fopen($filename, "r"), filesize($filename));
@@ -197,12 +220,18 @@ class thfStrinGGGGGGGGGGGGGGGGGGGGGGGGGGGg
 	/* CSS: .logo {background: url("<?php echo base64_encode_image ('img/logo.png','png'); ?>") no-repeat; }
 	<img src="<?php echo base64_encode_image ('img/logo.png','png'); ?>"/> 	*/
 
+	/**
+	 * Make 8b key.
+	 */
 	public static function make_8b_key($password = '')
 	{
 		global $_th_sv;
 		return substr(md5((strlen($password) > 1 ? $password : $_th_sv['unique_key'])), 0, 8);
 	}
 
+	/**
+	 * Encrypt.
+	 */
 	public static function encrypt($str, $b64url_enc = 1, $password = '')
 	{
 		$block = mcrypt_get_block_size('des', 'ecb');    # Add PKCS7 padding.
@@ -216,6 +245,9 @@ class thfStrinGGGGGGGGGGGGGGGGGGGGGGGGGGGg
 		return $out;
 	}
 
+	/**
+	 * Decrypt.
+	 */
 	public static function decrypt($str, $b64url_dec = 1, $password = '')
 	{
 		if ($b64url_dec == 1) {
@@ -230,6 +262,9 @@ class thfStrinGGGGGGGGGGGGGGGGGGGGGGGGGGGg
 		return $str;
 	}
 
+	/**
+	 * Array add.
+	 */
 	public static function array_add($arr = array(), $attributes = array(), $overwrite = 1)
 	{
 		if (is_array($attributes) && is_array($arr)) {
@@ -247,6 +282,9 @@ class thfStrinGGGGGGGGGGGGGGGGGGGGGGGGGGGg
 	}
 
 
+	/**
+	 * Crypt apr1 md5.
+	 */
 	public static function crypt_apr1_md5($plainpasswd)
 	{
 		/* .htaccess
@@ -304,6 +342,9 @@ class thfStrinGGGGGGGGGGGGGGGGGGGGGGGGGGGg
 	}
 
 
+	/**
+	 * Write htpasswd file.
+	 */
 	public static function write_htpasswd_file($user_pass = array())
 	{
 		$pw = '';
@@ -335,6 +376,9 @@ class thfStrinGGGGGGGGGGGGGGGGGGGGGGGGGGGg
 		return 1;
 	}
 
+	/**
+	 * Array remove.
+	 */
 	public static function array_remove($arr = array(), $exclude = NULL)
 	{ //$exclude='$key3'; OR  $exclude=array('key1','key2');
 		$new_arr = array();
@@ -362,6 +406,9 @@ class thfStrinGGGGGGGGGGGGGGGGGGGGGGGGGGGg
 		return $new_arr;
 	}
 
+	/**
+	 * Construct get.
+	 */
 	public static function construct_get($arr = array(), $initial_link = '', $urlencode = 1)
 	{    //http_build_query
 		$initial_link = explode('?', $initial_link);
@@ -384,6 +431,9 @@ class thfStrinGGGGGGGGGGGGGGGGGGGGGGGGGGGg
 		return $initial_link;
 	}
 
+	/**
+	 * Num2excel.
+	 */
 	public static function num2excel($n)
 	{
 		for ($r = ""; $n >= 0; $n = intval($n / 26) - 1) $r = chr($n % 26 + 0x41) . $r;
@@ -391,6 +441,9 @@ class thfStrinGGGGGGGGGGGGGGGGGGGGGGGGGGGg
 	}//excel nr to A,B,C
 
 
+	/**
+	 * Deduce line number.
+	 */
 	public static function deduce_line_number($str, $chars_per_line, $nl = '<br />')
 	{ //line counter
 		$l = 0;
@@ -408,10 +461,19 @@ class thfStrinGGGGGGGGGGGGGGGGGGGGGGGGGGGg
 
 
 	//SEO:
+	/**
+	 * Titlu.
+	 */
 	public static function titlu($str, $max = 80) { return scurtez_txt($str, $max); } //nu e nevoie sa i folosesti
 
+	/**
+	 * Descriere.
+	 */
 	public static function descriere($str, $max = 160) { return str_replace('  ', ' ', scurtez_txt($str, $max)); }
 
+	/**
+	 * Keywords.
+	 */
 	public static function keywords($str, $max_keywords = 35, $mai_mari = 1)
 	{//mai mari=lungimea minima a cuvintelor;
 		$max_duplicates_exceprion = 10;
@@ -432,6 +494,9 @@ class thfStrinGGGGGGGGGGGGGGGGGGGGGGGGGGGg
 	}
 	// http://www.google.com/support/webmasters/bin/answer.py?answer=185417
 	//$breadcrumb[]=array('/','OnBreak.ro','alt title'); // link nume link descriere
+	/**
+	 * Breadcrumb.
+	 */
 	public static function breadcrumb($array, $last_element_is_link = 1)
 	{//v2.0
 		global $pagina_generala_produse, $pagina_produs;
@@ -469,6 +534,9 @@ class thfStrinGGGGGGGGGGGGGGGGGGGGGGGGGGGg
 		return 1;
 	}
 
+	/**
+	 * Round decimal.
+	 */
 	public static function round_decimal($float, $decimals = 2)
 	{
 		if (is_numeric($float)) {
@@ -490,6 +558,9 @@ class thfStrinGGGGGGGGGGGGGGGGGGGGGGGGGGGg
 		return $float;
 	}
 
+	/**
+	 * Diacritice fix.
+	 */
 	public static function diacritice_fix($str)
 	{
 		$str = str_replace('ÅŸ', 'ş', $str);
@@ -505,6 +576,9 @@ class thfStrinGGGGGGGGGGGGGGGGGGGGGGGGGGGg
 		return $str;
 	}
 
+	/**
+	 * Diacritice fix v2.
+	 */
 	public static function diacritice_fix_v2($str)
 	{
 		$str = str_replace('&Aring;&Yuml;', 'ş', $str);
@@ -520,8 +594,14 @@ class thfStrinGGGGGGGGGGGGGGGGGGGGGGGGGGGg
 		return $str;
 	}
 
+	/**
+	 * Substri count.
+	 */
 	public static function substri_count($haystack, $needle) { return substr_count(strtoupper($haystack), strtoupper($needle)); }
 
+	/**
+	 * Html table to array.
+	 */
 	public static function html_table_to_array($html)
 	{// nu suporta nested tables (adica sa aiba copii tabel) si suporta numai tabelele cu nr constant de coloane
 		$out = array();
@@ -541,6 +621,9 @@ class thfStrinGGGGGGGGGGGGGGGGGGGGGGGGGGGg
 	}
 
 
+	/**
+	 * Clear spaces.
+	 */
 	public static function clear_spaces($str)
 	{
 		$str = trim(str_replace(array("\r\n", "\r", "\n", '	'), array(' ', ' ', ' ', ' '), $str));
@@ -552,6 +635,9 @@ class thfStrinGGGGGGGGGGGGGGGGGGGGGGGGGGGg
 	//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 	//http://www.portabilitate.ro/getnumber.aspx?lang=ro&number=0742601660
 	//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+	/**
+	 * Is mobile.
+	 */
 	public static function is_mobile($tel)
 	{
 		if (strlen($tel) != 12) {
@@ -570,6 +656,9 @@ class thfStrinGGGGGGGGGGGGGGGGGGGGGGGGGGGg
 		}
 	}
 
+	/**
+	 * Is tel.
+	 */
 	public static function is_tel($tel)
 	{
 		if (strlen($tel) < 13) {
@@ -588,6 +677,9 @@ class thfStrinGGGGGGGGGGGGGGGGGGGGGGGGGGGg
 		}
 	}
 
+	/**
+	 * Validate tel.
+	 */
 	public static function validate_tel($tel)
 	{//prefixe 02 romtelecom, 03 upc, rds, rcs, zaptelfix, vdf acasa 07 mobil;
 		if ($tel[0] == '4') {
@@ -639,6 +731,9 @@ class thfStrinGGGGGGGGGGGGGGGGGGGGGGGGGGGg
 		return $tel;
 	}
 
+	/**
+	 * Tel spaces.
+	 */
 	public static function tel_spaces($nr)
 	{
 		$out = NULL;
@@ -652,6 +747,9 @@ class thfStrinGGGGGGGGGGGGGGGGGGGGGGGGGGGg
 	}
 
 
+	/**
+	 * Utf8 to entities.
+	 */
 	public static function UTF8ToEntities($string)
 	{
 		/* note: apply htmlspecialchars if desired /before/ applying this function
@@ -687,23 +785,35 @@ class thfStrinGGGGGGGGGGGGGGGGGGGGGGGGGGGg
 		return $string;
 	}
 
+	/**
+	 * Get coordonates by address.
+	 */
 	public static function get_coordonates_by_address($adresa)
 	{
 		return json_decode(file_get_contents('https://maps.googleapis.com/maps/api/geocode/json?address=' . urlencode($adresa)), true);
 	}
 
+	/**
+	 * Get lang long by address.
+	 */
 	public static function get_lang_long_by_address($adresa)
 	{
 		$a = get_coordonates_by_address($adresa);
 		return array('lat' => $a['results'][0]['geometry']['location']['lat'], 'lng' => $a['results'][0]['geometry']['location']['lng']);
 	}
 
+	/**
+	 * Embed map by address.
+	 */
 	public static function embed_map_by_address($adresa, $api_key = '', $width = '100%', $height = '400px', $border = 'none', $fullscreen = 'allowfullscreen')
 	{
 		echo '<iframe style="border:' . $border . ';width:' . $width . ';height:' . $height . ';" src="https://www.google.com/maps/embed/v1/search?key=' . $api_key . '&q=' . urlencode($adresa) . '" ' . $fullscreen . '></iframe>';
 		return $a;
 	}
 
+	/**
+	 * Embed streetview by address.
+	 */
 	public static function embed_streetview_by_address($adresa, $api_key = '', $width = '100%', $height = '400px', $border = 'none', $fullscreen = 'allowfullscreen', $heading = 210, $pinch = 10, $fov = 35)
 	{
 		$a = get_lang_long_by_address($adresa);
@@ -711,6 +821,9 @@ class thfStrinGGGGGGGGGGGGGGGGGGGGGGGGGGGg
 		return $a;
 	}
 
+	/**
+	 * Distance.
+	 */
 	public static function distance($lat1, $lng1, $lat2, $lng2, $miles = false)
 	{//distanta dintre 2 coordonate in km
 		$pi80 = M_PI / 180;
@@ -727,6 +840,9 @@ class thfStrinGGGGGGGGGGGGGGGGGGGGGGGGGGGg
 		return ($miles ? ($km * 0.621371192) : $km);
 	}
 
+	/**
+	 * Coordonate dec to grade.
+	 */
 	public static function coordonate_dec_to_grade($coord, $ce_intorc = 'string')
 	{//bag coordonate 45.85634746757 scot 45 grade x min y sec ....
 		$out = array();

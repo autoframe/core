@@ -12,6 +12,7 @@ use ReflectionMethod;
 class AfrConfigFactory
 {
     /**
+     * Make instance from ns class.
      * @throws ReflectionException
      * @throws AfrConfigException
      */
@@ -44,6 +45,7 @@ class AfrConfigFactory
     }
 
     /**
+     * Get configured singleton from ns class.
      * @param string $sNamespaceClass
      * @param bool $bForce
      * @return AfrConfigurableInstanceInterface|false|mixed
@@ -76,6 +78,7 @@ class AfrConfigFactory
     }
 
     /**
+     * Apply static config to ns class.
      * @param string $sNamespaceClass
      * @param bool $bForce
      * @return bool|int

@@ -30,12 +30,16 @@ class UryMemcached
         throw new Exception('Cannot clone a singleton');
     }
 
+    /**
+     * Restore the instance after unserialization.
+     */
     public function __wakeup()
     {
         throw new Exception("Cannot unserialize singleton");
     }
 
     /**
+     * Has instance.
      * @return bool
      */
     public static function hasInstance()
@@ -44,6 +48,7 @@ class UryMemcached
     }
 
     /**
+     * Get instance.
      * @return UryMemcached
      */
     public static function getInstance()
@@ -58,6 +63,9 @@ class UryMemcached
     }
 
 
+    /**
+     * Connect.
+     */
     public function connect($ip = '127.0.0.1', $on_new_object_cb = '11211', $connection_str = 1)
     {
         if (!$this->bConnected) {
@@ -100,6 +108,9 @@ class UryMemcached
         }
     */
     // doar pe aici se acceseaza memcache-ul
+    /**
+     * Get.
+     */
     public function get($sKey)
     {
         $mRaspuns = $this->oConnection->get($sKey);
@@ -110,12 +121,18 @@ class UryMemcached
     }
 
     // doar pe aici se acceseaza memcache-ul
+    /**
+     * Get multi.
+     */
     public function getMulti($sKey)
     {
         return $this->oConnection->getMulti($sKey);
     }
 
     // doar pe aici se acceseaza memcache-ul
+    /**
+     * Set.
+     */
     public function set($sCheie, $mValue, $iTtl = 3600)
     {
         return $this->oConnection->set($sCheie, serialize($mValue), $iTtl);
@@ -129,16 +146,25 @@ class UryMemcached
         return $this->oConnection->flush();
     } // END func flush()
 
+    /**
+     * Get all keys.
+     */
     public function getAllKeys()
     {
         return $this->oConnection->getAllKeys();
     }
 
+    /**
+     * Fetch all.
+     */
     public function fetchAll()
     {
         return $this->oConnection->fetchAll();
     }
 
+    /**
+     * Get key by prefix.
+     */
     public function getKeyByPrefix($sCheie)
     {
         $iPrelixLen = strlen($sCheie);
@@ -151,6 +177,9 @@ class UryMemcached
         return $aFound;
     }
 
+    /**
+     * Get key containing.
+     */
     public function getKeyContaining($sCheie)
     {
         $aFound = [];
@@ -163,6 +192,7 @@ class UryMemcached
     }
 
     /**
+     * Get stats.
      * @return array|false
      */
     public function getStats()
@@ -171,6 +201,9 @@ class UryMemcached
     }
 
 
+    /**
+     * Print details.
+     */
     public function printDetails(){
         $aStats = $this->getStats();
         if(!$aStats){
@@ -245,6 +278,9 @@ class UryMemcached
 
     }
 
+    /**
+     * Get max keys.
+     */
     public function getMaxKeys()
     {
 

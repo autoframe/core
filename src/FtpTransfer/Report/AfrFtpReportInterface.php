@@ -8,6 +8,7 @@ use Autoframe\Core\FtpTransfer\AfrFtpBackupConfig;
 interface AfrFtpReportInterface
 {
     /**
+     * Ftp report.
      * @param AfrFtpBackupConfig $oFtpConfig
      * @return array
      * @throws AfrException

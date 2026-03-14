@@ -40,12 +40,18 @@ class AfrRouter extends AfrSingletonAbstractClass implements AfrRouterInterface,
 	protected array $aCodeRoutes = []; //main routes
 	protected array $aAfterRoutes = []; //run after code routes
 
+	/**
+	 * Set http status handler.
+	 */
 	public function setHttpStatusHandler(int $iHttpStatus, ?Closure $oClosure): self //TODO
 	{
 		static::$aStateHandlers[$iHttpStatus] = $oClosure;
 		return $this;
 	}
 
+	/**
+	 * Get http status handler.
+	 */
 	public function getHttpStatusHandler(int $iHttpStatus): ?Closure
 	{
 		$this->initDefaultHttpStatusHandlers();
@@ -66,6 +72,7 @@ class AfrRouter extends AfrSingletonAbstractClass implements AfrRouterInterface,
 	}
 
 	/**
+	 * Register httproutes from module.
 	 * @param array $aRoutes
 	 * @param string $baseRoute
 	 * @return int
@@ -153,6 +160,9 @@ class AfrRouter extends AfrSingletonAbstractClass implements AfrRouterInterface,
 		}
 	*/
 
+	/**
+	 * Debug routes.
+	 */
 	public function debugRoutes(bool $closureDump = false): array
 	{
 		//TODO: reactoru using AfrArrExportArrayAsStringClass::getInstance()->exportPhpArrayAsString()

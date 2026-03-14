@@ -29,6 +29,9 @@ final class AfrCronJob
 		AfrCronJobDaemon::skipped => false, //line starts with #
 	];
 
+	/**
+	 * Parse line.
+	 */
 	public static function parseLine(string $sLine): array
 	{
 		$sLine = trim($sLine);
@@ -63,6 +66,7 @@ final class AfrCronJob
 	}
 
 	/**
+	 * Parse lines.
 	 * @param string $sLines
 	 * @return AfrCronJob[]
 	 */
@@ -79,6 +83,9 @@ final class AfrCronJob
 		return $aJobs;
 	}
 
+	/**
+	 * Export lines.
+	 */
 	public static function exportLines(array $aJobs): string
 	{
 		$aOut = [];
@@ -94,6 +101,9 @@ final class AfrCronJob
 		return implode("\n", $aOut);
 	}
 
+	/**
+	 * Create a new instance.
+	 */
 	public function __construct($sLine_OR_aJob = null)
 	{
 		if (!empty($sLine_OR_aJob)) {
@@ -107,12 +117,18 @@ final class AfrCronJob
 	}
 
 
+	/**
+	 * Export line.
+	 */
 	public function exportLine(): string
 	{
 		return json_encode($this->aJob);
 	}
 
 
+	/**
+	 * Has flag.
+	 */
 	public function hasFlag(string $sFlag): bool
 	{
 		if (empty($this->aJob[AfrCronJobDaemon::flags])) {
@@ -121,6 +137,9 @@ final class AfrCronJob
 		return strpos($this->aJob[AfrCronJobDaemon::flags], $sFlag) !== false;
 	}
 
+	/**
+	 * Get flag val.
+	 */
 	public function getFlagVal(string $sFlag): ?string
 	{
 		if (empty($this->aJob[AfrCronJobDaemon::flags])) {
@@ -135,6 +154,9 @@ final class AfrCronJob
 		return null;
 	}
 
+	/**
+	 * Set flag.
+	 */
 	public function setFlag(string $sFlag, bool $bOn, $mValue = null): self
 	{
 		$sFoundVal = '';
@@ -163,17 +185,24 @@ final class AfrCronJob
 		return $this;
 	}
 
+	/**
+	 * Set run on startup.
+	 */
 	public function setRunOnStartup(bool $bOn): self
 	{
 		return $this->setFlag('S', $bOn);
 	}
 
+	/**
+	 * Is run on startup.
+	 */
 	public function isRunOnStartup(): bool
 	{
 		return $this->hasFlag('S');
 	}
 
 	/**
+	 * Set time limited seconds.
 	 * @throws AfrException
 	 */
 	public function setTimeLimitedSeconds(bool $bOn, float $fSleepAfterJobDone = null): self
@@ -184,26 +213,41 @@ final class AfrCronJob
 		return $this->setFlag('T', $bOn, $fSleepAfterJobDone);
 	}
 
+	/**
+	 * Get time limited seconds.
+	 */
 	public function getTimeLimitedSeconds(): ?float
 	{
 		return (float)($this->getFlagVal('T') ?? null);
 	}
 
+	/**
+	 * Is time limited seconds.
+	 */
 	public function isTimeLimitedSeconds(): bool
 	{
 		return $this->hasFlag('T');
 	}
 
+	/**
+	 * Set turn off log.
+	 */
 	public function setTurnOffLog(bool $bOn): self
 	{
 		return $this->setFlag('O', $bOn);
 	}
 
+	/**
+	 * Is turn off log.
+	 */
 	public function isTurnOffLog(): bool
 	{
 		return $this->hasFlag('O');
 	}
 
+	/**
+	 * Set always run service.
+	 */
 	public function setAlwaysRunService(bool $bOn, string $sRestartAtUnixTime = null): self
 	{
 		//unix * * * * *
@@ -213,11 +257,17 @@ final class AfrCronJob
 		return $this->setFlag('A', $bOn, $sRestartAtUnixTime);
 	}
 
+	/**
+	 * Get always run service unix cron time value.
+	 */
 	public function getAlwaysRunServiceUnixCronTimeValue(): ?string
 	{
 		return $this->getFlagVal('A');
 	}
 
+	/**
+	 * Can trigger always run service restart time.
+	 */
 	public function canTriggerAlwaysRunServiceRestartTime(array $aNow = null): bool
 	{
 		if (empty($snValue = $this->getAlwaysRunServiceUnixCronTimeValue())) {
@@ -230,42 +280,66 @@ final class AfrCronJob
 			AfrUnixCronTrigger::getInstance()->triggerUnixCron($snValue, $aNow ?? getdate());
 	}
 
+	/**
+	 * Is always run service.
+	 */
 	public function isAlwaysRunService(): bool
 	{
 		return $this->hasFlag('A');
 	}
 
+	/**
+	 * Set allow parallel run.
+	 */
 	public function setAllowParallelRun(bool $bOn): self
 	{
 		return $this->setFlag('P', $bOn);
 	}
 
+	/**
+	 * Is allow parallel run.
+	 */
 	public function isAllowParallelRun(): bool
 	{
 		return $this->hasFlag('P');
 	}
 
+	/**
+	 * Set tenant insensitive job.
+	 */
 	public function setTenantInsensitiveJob(bool $bOn): self
 	{
 		return $this->setFlag('I', $bOn);
 	}
 
+	/**
+	 * Is tenant insensitive job.
+	 */
 	public function isTenantInsensitiveJob(): bool
 	{
 		return $this->hasFlag('I');
 	}
 
+	/**
+	 * Get alias.
+	 */
 	public function getAlias(): ?string
 	{
 		return $this->aJob[AfrCronJobDaemon::alias];
 	}
 
+	/**
+	 * Set alias.
+	 */
 	public function setAlias(string $sAlias = null): self
 	{
 		$this->aJob[AfrCronJobDaemon::alias] = $sAlias;
 		return $this;
 	}
 
+	/**
+	 * Is valid config.
+	 */
 	public function isValidConfig(): bool
 	{
 		return
@@ -275,6 +349,7 @@ final class AfrCronJob
 	}
 
 	/**
+	 * Can trigger.
 	 * @param array|null $aNow aNow = getdate();
 	 * @return bool
 	 * @throws AfrContainerException
@@ -287,6 +362,9 @@ final class AfrCronJob
 			AfrUnixCronTrigger::getInstance()->triggerUnixCron($this->getCronTime(), $aNow ?? getdate());
 	}
 
+	/**
+	 * Get cron time.
+	 */
 	public function getCronTime(): ?string
 	{
 		return $this->aJob[AfrCronJobDaemon::cronTime];
@@ -304,6 +382,9 @@ final class AfrCronJob
 		return $this;
 	}
 
+	/**
+	 * Get command.
+	 */
 	public function getCommand(): ?string
 	{
 		$sVendorBaseDir = AfrVendorPath::getBaseDirPath();
@@ -344,28 +425,43 @@ final class AfrCronJob
 		return $this;
 	}
 
+	/**
+	 * Get flags.
+	 */
 	public function getFlags(): ?string
 	{
 		return $this->aJob[AfrCronJobDaemon::flags];
 	}
 
+	/**
+	 * Set flags.
+	 */
 	public function setFlags(string $sFlags = null): self
 	{
 		$this->aJob[AfrCronJobDaemon::flags] = $sFlags;
 		return $this;
 	}
 
+	/**
+	 * Set skipped.
+	 */
 	public function setSkipped(bool $bSkipped): self
 	{
 		$this->aJob[AfrCronJobDaemon::skipped] = $bSkipped;
 		return $this;
 	}
 
+	/**
+	 * Is skipped.
+	 */
 	public function isSkipped(): bool
 	{
 		return $this->aJob[AfrCronJobDaemon::skipped];
 	}
 
+	/**
+	 * Get job.
+	 */
 	public function getJob(bool $bNullOnInvalid): ?array
 	{
 		if ($bNullOnInvalid) {
@@ -374,16 +470,25 @@ final class AfrCronJob
 		return $this->aJob;
 	}
 
+	/**
+	 * Return the string representation of the instance.
+	 */
 	public function __toString(): string
 	{
 		return json_encode($this->aJob);
 	}
 
+	/**
+	 * To array.
+	 */
 	public function toArray(): array
 	{
 		return $this->aJob;
 	}
 
+	/**
+	 * Get hash.
+	 */
 	public function getHash(): ?string
 	{
 		$cmd = $this->getCommand();

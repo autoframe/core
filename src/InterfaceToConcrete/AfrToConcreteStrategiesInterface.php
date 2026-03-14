@@ -14,6 +14,7 @@ interface AfrToConcreteStrategiesInterface
     public static function getLatestInstance(): AfrToConcreteStrategiesInterface;
 
 	/**
+	 * Set instance.
 	 * @param AfrToConcreteStrategiesInterface $oLatestInstance
 	 * @return AfrToConcreteStrategiesInterface
 	 */
@@ -27,12 +28,14 @@ interface AfrToConcreteStrategiesInterface
     public function getNotConcreteFQCN(): string;
 
     /**
+     * Set context.
      * @param string $sContext
      * @return AfrToConcreteStrategiesInterface
      */
     public function setContext(string $sContext): AfrToConcreteStrategiesInterface;
 
     /**
+     * Get context.
      * @return string
      */
     public function getContext(): string;
@@ -46,11 +49,13 @@ interface AfrToConcreteStrategiesInterface
     public function extendStrategyClosureFn(callable $closure): AfrToConcreteStrategiesInterface;
 
     /**
+     * Get closure fns.
      * @return array
      */
     public function getClosureFns(): array;
 
     /**
+     * Extend strategy context bound.
      * @param string $sNotConcrete
      * @param string $sConcrete
      * @param string $sContext
@@ -63,11 +68,13 @@ interface AfrToConcreteStrategiesInterface
     ): AfrToConcreteStrategiesInterface;
 
     /**
+     * Get context bounded.
      * @return array
      */
     public function getContextBounded(): array;
 
     /**
+     * Extend strategy context http request uri regex.
      * @param string $sNotConcrete
      * @param string $sConcrete
      * @param string $sRegex
@@ -82,11 +89,13 @@ interface AfrToConcreteStrategiesInterface
     ): AfrToConcreteStrategiesInterface;
 
     /**
+     * Get context http request uri regex.
      * @return array
      */
     public function getContextHttpRequestUriRegex(): array;
 
     /**
+     * Extend strategy strategy context namespace filter arr.
      * @param string $sNamespace
      * @param string $sContext
      * @return AfrToConcreteStrategiesInterface
@@ -97,6 +106,7 @@ interface AfrToConcreteStrategiesInterface
     ): AfrToConcreteStrategiesInterface;
 
     /**
+     * Get context namespace filter arr.
      * @return array
      */
     public function getContextNamespaceFilterArr(): array;
@@ -126,6 +136,7 @@ interface AfrToConcreteStrategiesInterface
     public function resolveMap(array $aMappings, string $notConcreteFQCN, bool $bCache = true): string;
 
     /**
+     * Set priority rule.
      * @param string $sPriorityRule
      * @return AfrToConcreteStrategiesInterface
      * @throws AfrInterfaceToConcreteException
@@ -133,16 +144,19 @@ interface AfrToConcreteStrategiesInterface
     public function setPriorityRule(string $sPriorityRule): AfrToConcreteStrategiesInterface;
 
     /**
+     * Get priority rule.
      * @return string
      */
     public function getPriorityRule(): string;
 
     /**
+     * Get priority rules.
      * @return array
      */
     public function getPriorityRules(): array;
 
     /**
+     * Add priority rules.
      * @param string $sName
      * @param array $aPriorities
      * @param bool $bSetPriorityRule
@@ -152,6 +166,7 @@ interface AfrToConcreteStrategiesInterface
     public function addPriorityRules(string $sName, array $aPriorities, bool $bSetPriorityRule = false): AfrToConcreteStrategiesInterface;
 
     /**
+     * Add strategy.
      * @param string $sName
      * @param callable $closure
      * @return AfrToConcreteStrategiesInterface
@@ -159,11 +174,13 @@ interface AfrToConcreteStrategiesInterface
     public function addStrategy(string $sName, callable $closure): AfrToConcreteStrategiesInterface;
 
     /**
+     * Get strategies.
      * @return array
      */
     public function getStrategies(): array;
 
 	/**
+	 * Xet tenant to concrete strategies config state.
 	 *
 	 * @param bool|null $bConfigLoaded
 	 * @return AfrToConcreteStrategiesInterface|bool

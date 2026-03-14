@@ -46,6 +46,7 @@ class AfrMultiClassMapper
 	protected static array $aNsClassMergedFromPathMap = []; //temp internal work cache
 
 	/**
+	 * Set afr config wired paths.
 	 * @param AfrInterfaceToConcreteInterface $oWiringPaths
 	 * @return void
 	 * @throws AfrInterfaceToConcreteException
@@ -94,6 +95,7 @@ class AfrMultiClassMapper
 	}
 
 	/**
+	 * Get interface to concrete.
 	 * @return array
 	 * @throws AfrInterfaceToConcreteException
 	 */
@@ -161,6 +163,7 @@ class AfrMultiClassMapper
 	}
 
 	/**
+	 * Class interface to concrete write.
 	 * @return array
 	 * @throws AfrInterfaceToConcreteException
 	 */
@@ -199,6 +202,7 @@ class AfrMultiClassMapper
 
 
 	/**
+	 * Get single ns class files map.
 	 * @param string $sPath
 	 * @return array
 	 * @throws AfrInterfaceToConcreteException
@@ -216,6 +220,7 @@ class AfrMultiClassMapper
 	}
 
 	/**
+	 * Get all ns class files map.
 	 * @return array
 	 * @throws AfrInterfaceToConcreteException
 	 */
@@ -541,6 +546,7 @@ class AfrMultiClassMapper
 	}
 
 	/**
+	 * Get cache dir.
 	 * @return string
 	 */
 	public static function getCacheDir(): string

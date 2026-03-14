@@ -10,6 +10,9 @@ final class AfrCheckExec
 	private static ?bool $bEchoTestExec = null;
 	private static ?array $aDisableFunctions = null;
 
+	/**
+	 * Echo test exec taking average15 ms.
+	 */
 	public static function echoTestExecTakingAverage15Ms(): bool
 	{
 		if (self::$bEchoTestExec === null) {
@@ -17,6 +20,9 @@ final class AfrCheckExec
 		}
 		return self::$bEchoTestExec;
 	}
+	/**
+	 * Echo test shell exec taking average15 ms.
+	 */
 	public static function echoTestShellExecTakingAverage15Ms(): bool
 	{
 		if (self::$bEchoTestExec === null) {
@@ -25,6 +31,9 @@ final class AfrCheckExec
 		return self::$bEchoTestExec;
 	}
 
+	/**
+	 * Is exec available.
+	 */
 	public static function isExecAvailable(): bool
 	{
 		if (self::$bExec === null) {
@@ -32,6 +41,9 @@ final class AfrCheckExec
 		}
 		return self::$bExec;
 	}
+	/**
+	 * Is popen close available.
+	 */
 	public static function isPOpenCloseAvailable(): bool
 	{
 		if (self::$bPOpenClose === null) {
@@ -39,6 +51,9 @@ final class AfrCheckExec
 		}
 		return self::$bPOpenClose;
 	}
+	/**
+	 * Is proc open close available.
+	 */
 	public static function isProcOpenCloseAvailable(): bool
 	{
 		if (self::$bPOpenClose === null) {
@@ -48,6 +63,9 @@ final class AfrCheckExec
 	}
 
 
+	/**
+	 * Is shell exec available.
+	 */
 	public static function isShellExecAvailable(): bool
 	{
 		if (self::$bShellExec === null) {
@@ -56,6 +74,9 @@ final class AfrCheckExec
 		return self::$bShellExec;
 	}
 
+	/**
+	 * Is function enabled.
+	 */
 	public static function isFunctionEnabled(string $f): bool
 	{
 		if (self::$aDisableFunctions === null) {

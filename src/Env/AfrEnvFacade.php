@@ -41,6 +41,7 @@ final class AfrEnvFacade
 	protected static string $sEnvFQCN = AfrEnv::class;
 
 	/**
+	 * Xet env class.
 	 * @param string|null $sEnvFQCN
 	 * @return string FQCN implementing AfrEnvInterface
 	 * @throws AfrEnvException
@@ -60,6 +61,7 @@ final class AfrEnvFacade
 	}
 
 	/**
+	 * Get env instance.
 	 * @return AfrEnv|AfrEnvInterface
 	 */
 	public static function getEnvInstance(): AfrEnvInterface
@@ -68,6 +70,7 @@ final class AfrEnvFacade
 	}
 
 	/**
+	 * Handle calls to inaccessible static methods.
 	 * @param $method
 	 * @param $args
 	 * @return mixed

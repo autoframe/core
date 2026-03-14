@@ -21,12 +21,16 @@ class AfrFtpPutBigDataFacade implements AfrFtpBusinessLogicInterface
     protected AfrDirPathInterface $oDirPath;
     protected AfrLockInterface $oLock;
 
+    /**
+     * Create a new instance.
+     */
     public function __construct(AfrFtpBackupConfig $oConfig)
     {
         $this->oFtpConfig = $oConfig;
     }
 
     /**
+     * Make backup.
      * @throws AfrException
      */
     public function makeBackup(): void
@@ -78,6 +82,7 @@ class AfrFtpPutBigDataFacade implements AfrFtpBusinessLogicInterface
 
 
     /**
+     * Xet afr ftp log.
      * @param AfrFtpLogInterface|null $oLog
      * @return AfrFtpLogInterface
      */
@@ -93,6 +98,7 @@ class AfrFtpPutBigDataFacade implements AfrFtpBusinessLogicInterface
     }
 
     /**
+     * Xet afr lock.
      * @param AfrLockInterface|null $oLock
      * @return AfrLockInterface
      */
@@ -110,6 +116,7 @@ class AfrFtpPutBigDataFacade implements AfrFtpBusinessLogicInterface
     }
 
     /**
+     * Xet dir path.
      * @param AfrDirPathInterface|null $oDirPath
      * @return AfrDirPathInterface
      */

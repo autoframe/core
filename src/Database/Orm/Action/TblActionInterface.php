@@ -7,42 +7,81 @@ use Doctrine\DBAL\Types\Types;
 
 interface TblActionInterface extends AfrOrmBlueprintInterface, EscapeInterface
 {
+	/**
+	 * Get instance with conn alias and database and table.
+	 */
 	public static function getInstanceWithConnAliasAndDatabaseAndTable(
 		string $sAlias,
 		string $sDatabaseName,
 		string $sTableName
 	);
 
+	/**
+	 * Get instance using dbi table.
+	 */
 	public static function getInstanceUsingDbiTable(
 		DbActionInterface $oDbActionInterface,
 		string            $sTableName
 	);
 
+	/**
+	 * Get instance using cnxi and database and table.
+	 */
 	public static function getInstanceUsingCnxiAndDatabaseAndTable(
 		CnxActionInterface $oCnxActionInterface,
 		string             $sDatabaseName,
 		string             $sTableName
 	);
 
+	/**
+	 * Get connexion instance.
+	 */
 	public function getConnexionInstance(): CnxActionInterface;
 
+	/**
+	 * Get database instance.
+	 */
 	public function getDatabaseInstance(): DbActionInterface;
 
+	/**
+	 * Get name conn alias.
+	 */
 	public function getNameConnAlias(): string; //singleton info
 
+	/**
+	 * Get name database.
+	 */
 	public function getNameDatabase(): string; //singleton info
 
+	/**
+	 * Get name table.
+	 */
 	public function getNameTable(): string; //singleton info
 
+	/**
+	 * Tbl list all siblings.
+	 */
 	public function tblListAllSiblings(bool $bSelfInclusive = true): array;
 
+	/**
+	 * Tbl list all siblings with charset.
+	 */
 	public function tblListAllSiblingsWithCharset(bool $bSelfInclusive = true): array;
 
 	//obvious it exists, otherwise no entity :D
+	/**
+	 * Tbl exists.
+	 */
 	public function tblExists(string $sTblName, string $sDbName): bool;
 
+	/**
+	 * Tbl get charset and collation.
+	 */
 	public static function tblGetCharsetAndCollation(): array;
 
+	/**
+	 * Tbl set charset and collation.
+	 */
 	public static function tblSetCharsetAndCollation(string $sCharset, string $sCollation = ''): bool;
 
 
@@ -53,21 +92,42 @@ interface TblActionInterface extends AfrOrmBlueprintInterface, EscapeInterface
 
 //todo o clasa de datatype de coloana cu o metoda to sql care sa fie plugged in aici si sa aiba / faca manage la primary data types
 	/** Poate fac aici o singura metoda cu cheia sa fie numele db-ului la returen */
+	/**
+	 * Col list all.
+	 */
 	public static function colListAll(): array; //numai numele
 
+	/**
+	 * Col list all with properties.
+	 */
 	public static function colListAllWithProperties(): array;//???? wtf
 
+	/**
+	 * Col exists.
+	 */
 	public static function colExists(string $sColName): bool;
 
+	/**
+	 * Col rename.
+	 */
 	public static function colRename(string $sColNameFrom, string $sColNameTo): bool;
 
 	//flags primary key
+	/**
+	 * Col create type.
+	 */
 	public static function colCreateType(string $sColName, string $sDataType, array $aOptions = []): bool;
 
+	/**
+	 * Col create int.
+	 */
 	public static function colCreateInt(string $sColName, string $sDataType = Types::INTEGER, array $aOptions = []): bool;
 
 	// SHOW CREATE DATABASE|TABLE ****
 
+	/**
+	 * Col create full.
+	 */
 	public static function colCreateFull(
 		string $sColName,
 		string $sType,
@@ -76,6 +136,9 @@ interface TblActionInterface extends AfrOrmBlueprintInterface, EscapeInterface
 		array  $aOptions = []
 	): bool;
 
+	/**
+	 * Pdo interact.
+	 */
 	public function pdoInteract(): PdoInteractInterface;
 
 

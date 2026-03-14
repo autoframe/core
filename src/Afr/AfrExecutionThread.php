@@ -272,6 +272,9 @@ final class AfrExecutionThread
 	}
 
 
+	/**
+	 * Get report.
+	 */
 	public function getReport(): array
 	{
 		return $this->aRulateReturn;
@@ -319,12 +322,16 @@ final class AfrExecutionThread
 		return $aReturn;
 	}
 
+	/**
+	 * Get step.
+	 */
 	public function getStep(string $sStepName): ?Closure
 	{
 		return $this->aStep[$sStepName] ?? null;
 	}
 
 	/**
+	 * Run bootstrap.
 	 * @throws \ReflectionException
 	 * @throws AfrEventException
 	 */
@@ -335,6 +342,7 @@ final class AfrExecutionThread
 	}
 
 	/**
+	 * Run context.
 	 * @throws \ReflectionException
 	 * @throws AfrEventException
 	 */
@@ -345,6 +353,7 @@ final class AfrExecutionThread
 	}
 
 	/**
+	 * Run request route render.
 	 * @throws \ReflectionException
 	 * @throws AfrEventException
 	 */
@@ -354,17 +363,26 @@ final class AfrExecutionThread
 		return $this->runStepGroup(self::$aStep3RequestRouteRender, $oAfr);
 	}
 
+	/**
+	 * Overwrite step.
+	 */
 	public function overwriteStep(string $sStep, ?Closure $closure)
 	{
 		self::getInstance()->aStep[$sStep] = $closure;
 	}
 
+	/**
+	 * Execute before step.
+	 */
 	public function executeBeforeStep(string $sStep, Closure $closure)
 	{
 		self::getInstance()->aExecuteBeforeStep[$sStep][] = $closure;
 	}
 
 
+	/**
+	 * Execute after step.
+	 */
 	public function executeAfterStep(string $sStep, Closure $closure)
 	{
 		self::getInstance()->aExecuteAfterStep[$sStep][] = $closure;

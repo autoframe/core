@@ -8,6 +8,7 @@ use Autoframe\Core\Database\Connection\Exception\AfrDatabaseConnectionException;
 class TblActionFacade
 {
 	/**
+	 * With conn alias and database and table.
 	 * @param string $sConnAlias
 	 * @param string $sDatabaseName
 	 * @param string $sTableName

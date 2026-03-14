@@ -57,6 +57,7 @@ trait AfrBackgroundWorkerTrait
 	}
 
 	/**
+	 * Exec cli.
 	 * @throws AfrException
 	 */
 	public static function execCli(string $sCliCommand): void

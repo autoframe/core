@@ -16,6 +16,9 @@ class AfrDbConnectionManagerFacade
 	 */
 	protected static $mImplementation = null;
 
+	/**
+	 * Get instance.
+	 */
 	public static function getInstance(): AfrDbConnectionManagerInterface
 	{
 		if (!empty(self::$oConnectionManager)) {

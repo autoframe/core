@@ -11,6 +11,9 @@ class AfrArrCompareClass extends AfrSingletonAbstractClass implements AfrArrComp
 	 */
 	protected int $maxDepth = 20;
 
+	/**
+	 * Assert same contents.
+	 */
 	public function assertSameContents(
 		$a,
 		$b,

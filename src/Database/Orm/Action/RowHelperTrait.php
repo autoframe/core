@@ -7,11 +7,17 @@ use Autoframe\Core\Database\Connection\Exception\AfrDatabaseConnectionException;
 trait RowHelperTrait
 {
 
+	/**
+	 * Row to array.
+	 */
 	public static function rowToArray($objOrArr): array
 	{
 		return is_object($objOrArr) ? get_object_vars($objOrArr) : (array)$objOrArr;
 	}
 
+	/**
+	 * Rows to array.
+	 */
 	public static function rowsToArray($traversable): array
 	{
 		$aOut = [];
@@ -24,11 +30,17 @@ trait RowHelperTrait
 		return $aOut;
 	}
 
+	/**
+	 * Row to std class.
+	 */
 	public static function rowToStdClass($objOrArr): object
 	{
 		return is_object($objOrArr) ? $objOrArr : (object)$objOrArr;
 	}
 
+	/**
+	 * Rows to std class.
+	 */
 	public static function rowsToStdClass($traversable, bool $bReference = true)
 	{
 		if ($bReference) {

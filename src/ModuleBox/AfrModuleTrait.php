@@ -11,9 +11,15 @@ trait AfrModuleTrait
 {
 	protected static array $aAfrModuleNaming = [];
 
+	/**
+	 * Register module instance.
+	 */
 	public function registerModuleInstance(): void {}
 
 
+	/**
+	 * Get default module config.
+	 */
 	public static function getDefaultModuleConfig(): array
 	{
 		return [
@@ -25,11 +31,17 @@ trait AfrModuleTrait
 	}
 
 
+	/**
+	 * Get module name space.
+	 */
 	public static function getModuleNameSpace(): string
 	{
 		return static::parseModuleNaming()['ns'];
 	}
 
+	/**
+	 * Get module name.
+	 */
 	public static function getModuleName(): string
 	{
 		return static::parseModuleNaming()['name'];
@@ -73,12 +85,18 @@ trait AfrModuleTrait
 		));
 	}
 
+	/**
+	 * Get module fqcn.
+	 */
 	public static function getModuleFQCN(): string
 	{
 		return static::class;
 	}
 
 
+	/**
+	 * Get module dir path.
+	 */
 	public static function getModuleDirPath(): string
 	{
 		// This assumes one module per file and __FILE__ corresponds to the main class.
@@ -86,6 +104,9 @@ trait AfrModuleTrait
 		return static::$aAfrModuleNaming[static::class][__FUNCTION__] ??= dirname(static::getModuleClassFilePath());
 	}
 
+	/**
+	 * Get module class file path.
+	 */
 	public static function getModuleClassFilePath(): string
 	{
 		// In real usage, this could be hard-coded or injected.

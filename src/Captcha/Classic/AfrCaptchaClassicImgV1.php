@@ -19,6 +19,9 @@ class AfrCaptchaClassicImgV1 extends AfrCaptchaClassicImg
 
 
 
+    /**
+     * Create image.
+     */
     public function createImage(string $sCode)
     {
         $iCodeLength = strlen($sCode);

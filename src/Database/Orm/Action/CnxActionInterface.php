@@ -10,6 +10,7 @@ interface CnxActionInterface extends AfrOrmBlueprintInterface, EscapeInterface
 {
 
 	/**
+	 * Get instance with conn alias.
 	 * @param string $sAlias
 	 * @return self
 	 * @throws AfrDatabaseConnectionException
@@ -17,14 +18,19 @@ interface CnxActionInterface extends AfrOrmBlueprintInterface, EscapeInterface
 	public static function getInstanceWithConnAlias(string $sAlias): self;
 
 	/**
+	 * Get name driver.
 	 * @return string
 	 * @throws AfrDatabaseConnectionException
 	 */
 	public function getNameDriver(): string; //from cnx manager
 
+	/**
+	 * Get name conn alias.
+	 */
 	public function getNameConnAlias(): string; //singleton info
 
 	/**
+	 * Cnx get all database names.
 	 * @param string $sDbNameLike filter database name like or %startsWith or containing %part%
 	 * @return array
 	 */
@@ -39,17 +45,35 @@ interface CnxActionInterface extends AfrOrmBlueprintInterface, EscapeInterface
 	 */
 	public function cnxGetAllDatabaseNamesWithCharset(string $sDbNameLike = ''): array;
 
+	/**
+	 * Get database instance.
+	 */
 	public function getDatabaseInstance(string $sDbName): DbActionInterface;
 
+	/**
+	 * Cnx database exists.
+	 */
 	public function cnxDatabaseExists(string $sDbName): bool;
 
+	/**
+	 * Cnx get database charset and collation.
+	 */
 	public function cnxGetDatabaseCharsetAndCollation(string $sDbName): array;
 
+	/**
+	 * Cnx set database charset and collation.
+	 */
 	public function cnxSetDatabaseCharsetAndCollation(string $sDbName, string $sCharset, string $sCollation = ''): bool;
 
 
+	/**
+	 * Cnx create database using default charset.
+	 */
 	public function cnxCreateDatabaseUsingDefaultCharset(string $sDbName, array $aOptions = [], bool $bIfNotExists = false): bool;
 
+	/**
+	 * Cnx create database using charset.
+	 */
 	public function cnxCreateDatabaseUsingCharset(
 		string $sDbName,
 		string $sCharset = 'utf8mb4',           //todo: _900_ai_ci  compatibility
@@ -60,6 +84,7 @@ interface CnxActionInterface extends AfrOrmBlueprintInterface, EscapeInterface
 
 
 	/**
+	 * Cnx get all collation charsets.
 	 * @param string $sLike
 	 * @param bool $bWildcard
 	 * @return array
@@ -85,11 +110,15 @@ interface CnxActionInterface extends AfrOrmBlueprintInterface, EscapeInterface
 	public function cnxGetAllCollations(): array; //SHOW COLLATION     //SELECT * FROM `information_schema`.`CHARACTER_SETS` ORDER BY `CHARACTER_SETS`.`CHARACTER_SET_NAME` DESC;
 
 	/**
+	 * Cnx get connection charset and collation.
 	 * @return string[]
 	 * @throws AfrDatabaseConnectionException
 	 */
 	public function cnxGetConnectionCharsetAndCollation(): array;
 
+	/**
+	 * Cnx set connection charset and collation.
+	 */
 	public function cnxSetConnectionCharsetAndCollation(string $sCharset = 'utf8mb4',
 	                                                    string $sCollation = 'utf8mb4_general_ci',
 	                                                    bool   $character_set_server = true,
@@ -97,6 +126,7 @@ interface CnxActionInterface extends AfrOrmBlueprintInterface, EscapeInterface
 	): bool;
 
 	/**
+	 * Cnx show create database.
 	 * @param string $sDbName
 	 * @return string
 	 */
@@ -106,10 +136,19 @@ interface CnxActionInterface extends AfrOrmBlueprintInterface, EscapeInterface
 	//https://phoenixnap.com/kb/change-mysql-time-zone
 	//https://www.db4free.net/
 
+	/**
+	 * Cnx set timezone.
+	 */
 	public function cnxSetTimezone(string $sTimezone = '+00:00'): bool;
 
+	/**
+	 * Cnx get timezone.
+	 */
 	public function cnxGetTimezone(): string; //'+00:00';
 
+	/**
+	 * Pdo interact.
+	 */
 	public function pdoInteract(): PdoInteractInterface;
 
 
@@ -129,14 +168,29 @@ interface CnxActionInterface extends AfrOrmBlueprintInterface, EscapeInterface
 	 */
 	public function cnxUsedDatabase(): ?string;
 
+	/**
+	 * Get afr db connection manager instance.
+	 */
 	public function getAfrDbConnectionManagerInstance(): AfrDbConnectionManagerInterface;
 
+	/**
+	 * Cnx drop database.
+	 */
 	public function cnxDropDatabase(string $sDbName): bool;
 
+	/**
+	 * Syntax geta data type map.
+	 */
 	public function syntaxGetaDataTypeMap(): array;
 
+	/**
+	 * Cnx flush orm cache.
+	 */
 	public function cnxFlushOrmCache(): bool;
 
+	/**
+	 * Get orm type descriptor.
+	 */
 	public function getOrmTypeDescriptor(): OrmTypeDescriptor;
 
 }

@@ -9,11 +9,13 @@ interface AfrFtpLogInterface
     public const MESSAGE = 2;
 
     /**
+     * New log.
      * @return $this
      */
     public function newLog(): self;
 
     /**
+     * Log message.
      * @param string $sMessage
      * @param int $iType
      * @return $this
@@ -21,6 +23,7 @@ interface AfrFtpLogInterface
     public function logMessage(string $sMessage, int $iType): self;
 
     /**
+     * Close log.
      * @return $this
      */
     public function closeLog(): self;

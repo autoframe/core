@@ -15,6 +15,7 @@ interface AfrBase64InlineDataInterface
     public function getBase64InlineData(string $sFullImagePath): string;
 
     /**
+     * Get base64 inline one px.
      * @return string
      */
     public function getBase64InlineOnePx(): string;

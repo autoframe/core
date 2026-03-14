@@ -9,6 +9,7 @@ trait AfrConfigurableStaticTrait
     private static int $countAfrStaticConfiguredComponents = 0;
 
     /**
+     * Apply afr static config.
      * @param bool $bForce
      * @return int
      */

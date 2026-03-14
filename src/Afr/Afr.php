@@ -69,6 +69,7 @@ class Afr
 	];
 
 	/**
+	 * Make app.
 	 * @param string|null $sAppBaseDirectory
 	 * @param array|null $aAltConfig
 	 * @return Afr
@@ -104,6 +105,9 @@ class Afr
 	}
 
 
+	/**
+	 * Make instance available.
+	 */
 	public static function makeInstanceAvailable(Afr $oThis): void
 	{
 		static::$oAfr ??= $oThis;
@@ -146,17 +150,24 @@ class Afr
 
 	}
 
+	/**
+	 * Get app base directory.
+	 */
 	public function getAppBaseDirectory(): string
 	{
 		return $this->sAppBaseDirectory;
 	}
 
+	/**
+	 * App.
+	 */
 	public static function app(): ?self
 	{
 		return static::$oAfr ?? null;
 	}
 
 	/**
+	 * Thread.
 	 * @return AfrExecutionThread
 	 */
 	public function thread(): AfrExecutionThread
@@ -166,6 +177,7 @@ class Afr
 	}
 
 	/**
+	 * Container.
 	 * @return AfrLiteContainer|AfrContainerInterface
 	 */
 	public function container(): AfrContainerInterface //AfrLiteContainer
@@ -174,6 +186,7 @@ class Afr
 	}
 
 	/**
+	 * Box.
 	 * @return AfrModuleBoxClass|AfrModuleBoxInterface
 	 * @throws AfrException
 	 */
@@ -183,6 +196,7 @@ class Afr
 	}
 
 	/**
+	 * Env.
 	 * @return AfrEnv|AfrEnvInterface
 	 * @throws AfrContainerException
 	 * @throws \Autoframe\Core\Env\Exception\AfrEnvException
@@ -198,6 +212,7 @@ class Afr
 	}
 
 	/**
+	 * Set request.
 	 * @param AfrRequestClass|AfrRequestInterface $oAfrRequest
 	 * @return $this
 	 */
@@ -208,6 +223,7 @@ class Afr
 	}
 
 	/**
+	 * Request.
 	 * @throws AfrContainerException
 	 */
 	public function request(): AfrRequestInterface
@@ -223,6 +239,7 @@ class Afr
 	}
 
 	/**
+	 * Router.
 	 * @return AfrRouter|AfrRouterInterface
 	 * @throws AfrContainerException
 	 * @throws AfrEventException
@@ -246,6 +263,7 @@ class Afr
 	}
 
 	/**
+	 * Handle calls to inaccessible static methods.
 	 * @param $name
 	 * @param $arguments
 	 * @return mixed

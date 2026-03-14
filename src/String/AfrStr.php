@@ -111,6 +111,7 @@ class AfrStr
     }
 
     /**
+     * Uh.
      * @param string $sHtml
      * @param string $sEncoding
      * @return string
@@ -124,6 +125,7 @@ class AfrStr
     }
 
     /**
+     * Short str.
      * @param string $txt
      * @param int $len
      * @param array $aIgnore
@@ -138,6 +140,7 @@ class AfrStr
     }
 
     /**
+     * Prea.
      * @param mixed $mixed
      * @param bool $print
      * @return string
@@ -152,6 +155,7 @@ class AfrStr
     }
 
     /**
+     * Extract between.
      * @param string $str
      * @param string $start_char
      * @param string $end_char
@@ -191,6 +195,7 @@ class AfrStr
 
 
     /**
+     * Array remove.
      * @param array $sourceArray
      * @param array $excludeKeys
      * @return array
@@ -211,6 +216,7 @@ class AfrStr
     }
 
     /**
+     * Round decimal.
      * @param float $float
      * @param int $decimals
      * @param string $decSep
@@ -223,6 +229,9 @@ class AfrStr
     }
 
 
+	/**
+	 * Round decimal.
+	 */
 	public static function round_decimal($float,$decimals=2){
 		if(is_numeric($float)){
 			$tmp=explode('.',$float);
@@ -239,6 +248,7 @@ class AfrStr
 	}
 
     /**
+     * Substri count.
      * @param string $haystack
      * @param string $needle
      * @param int $offset
@@ -254,6 +264,7 @@ class AfrStr
     }
 
     /**
+     * Clear spaces.
      * @param string $str
      * @return string
      */
@@ -263,6 +274,7 @@ class AfrStr
     }
 
     /**
+     * Get class namespace.
      * @param string $class
      * @return string
      */
@@ -272,6 +284,7 @@ class AfrStr
     }
 
     /**
+     * Get class basename.
      * @param string $class
      * @return string
      */
@@ -281,6 +294,9 @@ class AfrStr
     }
 
 
+    /**
+     * Escape.
+     */
     public static function escape(string $string, string $esc_type = 'html', string $char_set = '')
     {
         if (!$char_set) {

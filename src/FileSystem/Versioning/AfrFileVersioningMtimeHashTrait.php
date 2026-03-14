@@ -14,6 +14,7 @@ use function dechex;
 trait AfrFileVersioningMtimeHashTrait
 {
     /**
+     * File versioning mtime hash.
      * @param string $sDirPath
      * @param bool $bCanThrowException
      * @return string

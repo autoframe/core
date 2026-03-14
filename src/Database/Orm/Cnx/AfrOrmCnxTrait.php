@@ -14,6 +14,7 @@ use PDO;
 trait AfrOrmCnxTrait
 {
     /**
+     * Orm cnx alias.
      * @return string
      * @throws AfrOrmException
      */
@@ -49,6 +50,7 @@ trait AfrOrmCnxTrait
     }
 
     /**
+     * Orm cnx pdo.
      * @return PDO
      * @throws AfrDatabaseConnectionException
      */

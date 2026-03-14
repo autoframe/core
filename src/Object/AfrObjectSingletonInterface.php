@@ -9,6 +9,7 @@ use ReflectionException;
 interface AfrObjectSingletonInterface
 {
     /**
+     * Restore the instance after unserialization.
      * @throws AfrException
      */
     public function __wakeup();
@@ -35,6 +36,7 @@ interface AfrObjectSingletonInterface
     public static function renewInstanceArrayOfArgs(array $arguments): object;
 
     /**
+     * Has instance.
      * @return bool
      */
     public static function hasInstance(): bool;

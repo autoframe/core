@@ -18,6 +18,7 @@ class AfrHttpCurlSimple  extends AfrSingletonAbstractClass
     use AfrHttpCurlSimpleMethods;
 
 	/**
+     * Do http stream request.
 	 * @param string $sUrl
 	 * @param string $sMethod
 	 * @param array $aPostData

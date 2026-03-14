@@ -18,6 +18,7 @@ interface AfrHttpRoutesContract extends AfrHttpConstantsInterface{
 	//OPTIMISE LOADING: INCLUDE Target constant that returns an array with 1-3 subtypes:
 
 	/**
+	 * Invoke the instance as a callable.
 	 * @throws AfrContainerException
 	 * @throws AfrEventException
 	 * @throws AfrRouterException
@@ -28,6 +29,7 @@ interface AfrHttpRoutesContract extends AfrHttpConstantsInterface{
 	 */
 	public function __invoke():int;
 	/**
+	 * Register http routes.
 	 * @throws AfrContainerException
 	 * @throws AfrEventException
 	 * @throws AfrRouterException
@@ -37,8 +39,12 @@ interface AfrHttpRoutesContract extends AfrHttpConstantsInterface{
 	 * @throws \ReflectionException
 	 */
 	public function registerHttpRoutes():int;
+	/**
+	 * Get http routes.
+	 */
 	public function getHttpRoutes():?array;
 	/**
+	 * Xet httpsub routing path.
 	 * @throws AfrModuleException
 	 * @throws AfrEventException
 	 * @throws AfrException

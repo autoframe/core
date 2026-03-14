@@ -40,6 +40,7 @@ class AfrCache
     protected static CacheManager $instance;
 
     /**
+     * Set manager.
      * @param CacheManager|AfrCacheManager $oCacheManager
      * @return CacheManager|AfrCacheManager
      */
@@ -49,6 +50,7 @@ class AfrCache
     }
 
     /**
+     * Get manager.
      * @return CacheManager
      */
     public static function getManager(): CacheManager
@@ -64,6 +66,7 @@ class AfrCache
     }
 
     /**
+     * Handle calls to inaccessible static methods.
      * @param $method
      * @param $args
      * @return mixed

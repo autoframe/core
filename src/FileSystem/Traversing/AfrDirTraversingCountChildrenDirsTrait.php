@@ -14,6 +14,7 @@ trait AfrDirTraversingCountChildrenDirsTrait
     use AfrDirTraversingDependency;
 
     /**
+     * Count all children dirs.
      * @param string $sDirPath
      * @return int
      * @throws AfrFileSystemDirPathException

@@ -8,6 +8,7 @@ use Autoframe\Core\FileSystem\Versioning\Exception\AfrFileSystemVersioningExcept
 interface AfrFileVersioningMtimeHashInterface
 {
     /**
+     * File versioning mtime hash.
      * @param string $sDirPath
      * @param bool $bCanThrowException
      * @return string

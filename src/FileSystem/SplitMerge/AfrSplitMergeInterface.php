@@ -8,6 +8,7 @@ use Autoframe\Core\FileSystem\SplitMerge\Exception\AfrFileSystemSplitMergeExcept
 interface AfrSplitMergeInterface
 {
     /**
+     * Split.
      * @param string $sSourceFullFilePath
      * @param int $iPartSize
      * @param bool $bOverwrite
@@ -25,6 +26,7 @@ interface AfrSplitMergeInterface
     ): int;
 
     /**
+     * Merge.
      * @param string $sFirstPartPath
      * @param string $sOtherDestinationDirectoryPath
      * @param bool $bOverWriteDestination
@@ -42,6 +44,7 @@ interface AfrSplitMergeInterface
     ): int;
 
     /**
+     * Blind merge.
      * @param string $sDestinationFilePath
      * @param array $aParts
      * @return void
@@ -50,6 +53,7 @@ interface AfrSplitMergeInterface
     public function blindMerge(string $sDestinationFilePath, array $aParts): bool;
 
     /**
+     * Is file first of merge shards.
      * @param string $sFullFilePath
      * @return bool
      */

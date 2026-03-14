@@ -8,6 +8,7 @@ use Autoframe\Core\Database\Orm\Exception\AfrOrmException;
 trait AfrOrmDbTrait
 {
     /**
+     * Orm db name.
      * @return string Database name. For Sqlite return empty string ''
      * @throws AfrOrmException
      */

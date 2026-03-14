@@ -108,6 +108,7 @@ class AfrHttpCookie implements AfrHttpCookieInterface
 	}
 
 	/**
+	 * Get cookie manager.
 	 * @return AfrHttpCookieManagerClass
 	 */
 	public function getCookieManager(): AfrHttpCookieManagerClass
@@ -147,6 +148,7 @@ class AfrHttpCookie implements AfrHttpCookieInterface
 	}
 
 	/**
+	 * Set.
 	 * @return bool
 	 * @throws AfrHttpCookieException
 	 */
@@ -170,6 +172,7 @@ class AfrHttpCookie implements AfrHttpCookieInterface
 	}
 
 	/**
+	 * Set if missing.
 	 * @return bool
 	 * @throws AfrHttpCookieException
 	 */
@@ -182,6 +185,7 @@ class AfrHttpCookie implements AfrHttpCookieInterface
 	}
 
 	/**
+	 * Unset.
 	 * @return bool
 	 * @throws AfrHttpCookieException
 	 */

@@ -24,6 +24,7 @@ class AfrLiteContainer implements AfrContainerInterface
 	protected function __construct() {}
 
 	/**
+	 * Get instance.
 	 * @return AfrContainerInterface
 	 */
 	public static function getInstance(): AfrContainerInterface
@@ -35,6 +36,7 @@ class AfrLiteContainer implements AfrContainerInterface
 	}
 
 	/**
+	 * Get.
 	 * @param string $id
 	 * @return object|mixed
 	 * @throws AfrContainerException
@@ -58,6 +60,7 @@ class AfrLiteContainer implements AfrContainerInterface
 	}
 
 	/**
+	 * Make.
 	 * @param string $abstract
 	 * @param array $parameters
 	 * @return mixed|object
@@ -136,6 +139,7 @@ class AfrLiteContainer implements AfrContainerInterface
 	}
 
 	/**
+	 * Has.
 	 * @param string $abstract
 	 * @return bool
 	 */
@@ -145,6 +149,7 @@ class AfrLiteContainer implements AfrContainerInterface
 	}
 
 	/**
+	 * Bind.
 	 * @param string $abstract
 	 * @param callable|string $concrete
 	 * @param bool $shared
@@ -163,6 +168,7 @@ class AfrLiteContainer implements AfrContainerInterface
 	}
 
 	/**
+	 * Register instance.
 	 * @param string $abstract
 	 * @param object $instance
 	 * @return object
@@ -173,6 +179,9 @@ class AfrLiteContainer implements AfrContainerInterface
 	}
 
 
+	/**
+	 * Flush.
+	 */
 	public static function flush(): void
 	{
 		self::$aClassMap = self::$aShared = [];
@@ -197,6 +206,9 @@ class AfrLiteContainer implements AfrContainerInterface
 	 * @throws AfrContainerException
 	 */
 	#[\ReturnTypeWillChange]
+	/**
+	 * Offset get.
+	 */
 	public function offsetGet($offset)
 	{
 		return $this->get($offset);

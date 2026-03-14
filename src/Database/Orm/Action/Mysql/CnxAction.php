@@ -21,6 +21,7 @@ class CnxAction implements CnxActionInterface, PdoInteractInterface
 	protected ?string $mDefaultDatabase = null;
 
 	/**
+	 * Cnx get all database names.
 	 * @param string $sDbNameLike
 	 * @return array
 	 * @throws AfrDatabaseConnectionException
@@ -59,6 +60,7 @@ class CnxAction implements CnxActionInterface, PdoInteractInterface
 	}
 
 	/**
+	 * Cnx database exists.
 	 * @param string $sDbName
 	 * @return bool
 	 * @throws AfrDatabaseConnectionException
@@ -70,6 +72,7 @@ class CnxAction implements CnxActionInterface, PdoInteractInterface
 	}
 
 	/**
+	 * Cnx get database charset and collation.
 	 * @param string $sDbName
 	 * @return array
 	 * @throws AfrDatabaseConnectionException
@@ -86,6 +89,7 @@ class CnxAction implements CnxActionInterface, PdoInteractInterface
 	}
 
 	/**
+	 * Cnx set database charset and collation.
 	 * @param string $sDbName
 	 * @param string $sCharset
 	 * @param string $sCollation
@@ -99,6 +103,7 @@ class CnxAction implements CnxActionInterface, PdoInteractInterface
 	}
 
 	/**
+	 * Cnx create database using default charset.
 	 * @throws AfrDatabaseConnectionException
 	 */
 	public function cnxCreateDatabaseUsingDefaultCharset(string $sDbName, array $aOptions = [], bool $bIfNotExists = false): bool
@@ -124,6 +129,7 @@ class CnxAction implements CnxActionInterface, PdoInteractInterface
 
 
 	/**
+	 * Cnx create database using charset.
 	 * @param string $sDbName
 	 * @param string $sCharset
 	 * @param string $sCollate
@@ -202,6 +208,7 @@ class CnxAction implements CnxActionInterface, PdoInteractInterface
 	// public function dbRename(string $sDbFrom, string $sDbTo): bool { }
 
 	/**
+	 * Cnx get all collation charsets.
 	 * @param string $sLike
 	 * @param bool $bWildcard
 	 * @return array
@@ -255,6 +262,7 @@ class CnxAction implements CnxActionInterface, PdoInteractInterface
 	}
 
 	/**
+	 * Cnx get connection charset and collation.
 	 * @return string[]
 	 * @throws AfrDatabaseConnectionException
 	 */
@@ -268,6 +276,7 @@ class CnxAction implements CnxActionInterface, PdoInteractInterface
 	}
 
 	/**
+	 * Cnx set connection charset and collation.
 	 * @throws AfrDatabaseConnectionException
 	 */
 	public function cnxSetConnectionCharsetAndCollation(
@@ -309,6 +318,7 @@ class CnxAction implements CnxActionInterface, PdoInteractInterface
 	}
 
 	/**
+	 * Cnx show create database.
 	 * @throws AfrDatabaseConnectionException
 	 */
 	public function cnxShowCreateDatabase(string $sDbName): string
@@ -321,6 +331,7 @@ class CnxAction implements CnxActionInterface, PdoInteractInterface
 	//https://phoenixnap.com/kb/change-mysql-time-zone
 	//https://www.db4free.net/
 	/**
+	 * Cnx set timezone.
 	 * @param string $sTimezone +00:00 or +02:00 ...
 	 * @return bool
 	 * @throws AfrDatabaseConnectionException
@@ -342,6 +353,7 @@ class CnxAction implements CnxActionInterface, PdoInteractInterface
 	}
 
 	/**
+	 * Cnx get timezone.
 	 * @throws AfrDatabaseConnectionException
 	 */
 	public function cnxGetTimezone(int $iSnapHourInto = 2): string //'+00:00';
@@ -376,6 +388,7 @@ class CnxAction implements CnxActionInterface, PdoInteractInterface
 	}
 
 	/**
+	 * Get database instance.
 	 * @param string $sDbName
 	 * @return DbActionInterface
 	 * @throws AfrDatabaseConnectionException
@@ -418,6 +431,7 @@ class CnxAction implements CnxActionInterface, PdoInteractInterface
 	}
 
 	/**
+	 * Cnx drop database.
 	 * @param string $sDbName
 	 * @return bool
 	 * @throws AfrDatabaseConnectionException
@@ -429,16 +443,25 @@ class CnxAction implements CnxActionInterface, PdoInteractInterface
 		return (bool)$this->execPdoStatement("DROP DATABASE " . self::escapeDbName($sDbName));
 	}
 
+	/**
+	 * Pdo interact.
+	 */
 	public function pdoInteract(): PdoInteractInterface
 	{
 		return $this;
 	}
 
+	/**
+	 * Get afr db connection manager instance.
+	 */
 	public function getAfrDbConnectionManagerInstance(): AfrDbConnectionManagerInterface
 	{
 		return AfrDbConnectionManagerFacade::getInstance();
 	}
 
+	/**
+	 * Syntax geta data type map.
+	 */
 	public function syntaxGetaDataTypeMap(): array
 	{
 		return static::$__aDataTypeMap;

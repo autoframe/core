@@ -11,6 +11,7 @@ final class AfrConfigRegister extends AfrObjectSingletonAbstractClass
 	private array $aInternalCache = [];  //TODO make private
 
 	/**
+	 * Get instance.
 	 * @return AfrConfigRegister
 	 */
 	public static function getInstance(): AfrConfigRegister
@@ -19,6 +20,7 @@ final class AfrConfigRegister extends AfrObjectSingletonAbstractClass
 	}
 
 	/**
+	 * Register config.
 	 * @param AfrConfig $oConfigObject
 	 * @return bool
 	 */
@@ -32,6 +34,7 @@ final class AfrConfigRegister extends AfrObjectSingletonAbstractClass
 	}
 
 	/**
+	 * Get config.
 	 * @param object $oClassInstance
 	 * @return AfrConfig[]
 	 */
@@ -42,6 +45,7 @@ final class AfrConfigRegister extends AfrObjectSingletonAbstractClass
 	}
 
 	/**
+	 * Get static config.
 	 * @param string $sClassName
 	 * @return AfrConfig[]
 	 */
@@ -51,6 +55,7 @@ final class AfrConfigRegister extends AfrObjectSingletonAbstractClass
 	}
 
 	/**
+	 * Get data config.
 	 * @param string $sRegKey
 	 * @return array
 	 */
@@ -62,6 +67,7 @@ final class AfrConfigRegister extends AfrObjectSingletonAbstractClass
 	}
 
 	/**
+	 * Get config by key.
 	 * @param string $sRegKey
 	 * @return AfrConfig|null
 	 */

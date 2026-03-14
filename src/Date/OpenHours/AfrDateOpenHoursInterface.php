@@ -6,6 +6,7 @@ namespace Autoframe\Core\Date\OpenHours;
 interface AfrDateOpenHoursInterface
 {
     /**
+     * Open hours value sweep.
      * @param int $iFromHour
      * @param int $iToHour
      * @param int $iSplitHourIn
@@ -14,6 +15,7 @@ interface AfrDateOpenHoursInterface
     public function openHoursValueSweep(int $iFromHour = 8, int $iToHour = 17, int $iSplitHourIn = 4): array;
 
     /**
+     * Open hours html options sweep.
      * @param int $iFromHour
      * @param int $iToHour
      * @param int $iSplitHourIn

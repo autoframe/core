@@ -12,6 +12,7 @@ trait AfrDirTraversingDependency
     protected static AfrDirPathInterface $AfrDirPathInstance;
 
     /**
+     * Set afr dir path interface.
      * @param AfrDirPathInterface $AfrDirPathInstance
      * @return void
      */

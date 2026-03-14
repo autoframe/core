@@ -6,6 +6,7 @@ namespace Autoframe\Core\Arr\Sort;
 interface AfrArrXSortInterface
 {
     /**
+     * Array xsort.
      * @param array $aArray
      * @param callable|int $mDirectionOrCallableFn SORT_ASC|SORT_DESC|callable
      * @param mixed $mSortByKey

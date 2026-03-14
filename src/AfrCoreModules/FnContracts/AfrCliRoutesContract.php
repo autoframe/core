@@ -9,7 +9,13 @@ use Autoframe\Core\Http\Request\AfrRequestInterface;
 interface AfrCliRoutesContract extends AfrCliConstantsInterface {
 	//OPTIMISE LOADING: INCLUDE CLI_FILENAME that returns an array with 1-3 subtypes:
 
+	/**
+	 * Register cli routes.
+	 */
 	public function registerCliRoutes(AfrRequestInterface $oRequest = null,array $aFilterOnly = []):int;
+	/**
+	 * Get cli routes.
+	 */
 	public function getCliRoutes():?array;
 
 }

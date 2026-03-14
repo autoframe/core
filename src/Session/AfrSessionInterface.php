@@ -12,6 +12,7 @@ interface AfrSessionInterface
 {
 
 	/**
+	 * Get.
 	 * @param string $sKey
 	 * @param string $sNameSpace
 	 * @return mixed|null
@@ -19,6 +20,7 @@ interface AfrSessionInterface
 	public function get(string $sKey, string $sNameSpace = 'default');
 
 	/**
+	 * Set.
 	 * @param string $sKey
 	 * @param mixed $value
 	 * @param string $sNameSpace

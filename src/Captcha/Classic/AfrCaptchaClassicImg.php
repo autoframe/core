@@ -42,6 +42,9 @@ abstract class AfrCaptchaClassicImg extends AfrCaptcha
     protected string $sFontsDir = __DIR__ . DIRECTORY_SEPARATOR . 'Fonts' . DIRECTORY_SEPARATOR;
 
 
+    /**
+     * Create a new instance.
+     */
     public function __construct(array $aParams = [])
     {
         parent::__construct($aParams);
@@ -220,6 +223,9 @@ abstract class AfrCaptchaClassicImg extends AfrCaptcha
         return !empty($_SESSION[$this->sSessionKey]) ? $_SESSION[$this->sSessionKey] : '';
     }
 
+    /**
+     * New captcha resource.
+     */
     public function newCaptchaResource(bool $bExitAfterFlush = true): void
     {
         $sCode = $this->prepareCode();
@@ -270,6 +276,9 @@ abstract class AfrCaptchaClassicImg extends AfrCaptcha
         }
     }
 
+    /**
+     * Generate code.
+     */
     public function generateCode(): string
     {
         list($minLen, $maxLen, $v) = $this->codeLength();

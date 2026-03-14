@@ -17,6 +17,7 @@ use function rename;
 trait AfrOverWriteTrait
 {
     /**
+     * Over write file.
      * @param string $sFilePath
      * @param string $sData
      * @param int $iMaxRetryMs

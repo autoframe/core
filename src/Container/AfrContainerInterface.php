@@ -10,11 +10,13 @@ use ArrayAccess;
 interface AfrContainerInterface extends ArrayAccess
 {
 	/**
+	 * Get instance.
 	 * @return AfrLiteContainer|AfrContainerInterface
 	 */
 	public static function getInstance(): AfrContainerInterface;
 
 	/**
+	 * Get.
 	 * @param string $id
 	 * @return object|mixed
 	 * @throws AfrContainerException
@@ -22,6 +24,7 @@ interface AfrContainerInterface extends ArrayAccess
 	public function get(string $id);
 
 	/**
+	 * Make.
 	 * @param string $abstract
 	 * @param array $parameters
 	 * @return mixed
@@ -30,12 +33,14 @@ interface AfrContainerInterface extends ArrayAccess
 	public function make(string $abstract, array $parameters = []);
 
 	/**
+	 * Has.
 	 * @param string $abstract
 	 * @return bool
 	 */
 	public function has(string $abstract): bool;
 
 	/**
+	 * Bind.
 	 * @param string $abstract
 	 * @param callable|string $concrete
 	 * @param bool $shared
@@ -45,6 +50,7 @@ interface AfrContainerInterface extends ArrayAccess
 	public function bind(string $abstract, $concrete, bool $shared = false): void;
 
 	/**
+	 * Register instance.
 	 * @param string $abstract
 	 * @param object $instance
 	 * @return object

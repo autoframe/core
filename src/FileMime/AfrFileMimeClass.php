@@ -11,6 +11,7 @@ class AfrFileMimeClass  extends AfrSingletonAbstractClass implements AfrFileMime
 	use AfrFileMimeTypes;
 
 	/**
+	 * Get file mime types.
 	 * @return array
 	 */
 	public function getFileMimeTypes(): array
@@ -19,6 +20,7 @@ class AfrFileMimeClass  extends AfrSingletonAbstractClass implements AfrFileMime
 	}
 
 	/**
+	 * Get file mime extensions.
 	 * @return array
 	 */
 	public function getFileMimeExtensions(): array
@@ -27,6 +29,7 @@ class AfrFileMimeClass  extends AfrSingletonAbstractClass implements AfrFileMime
 	}
 
 	/**
+	 * Get file mime fallback.
 	 * @return string 'application/octet-stream'
 	 */
 	public function getFileMimeFallback(): string

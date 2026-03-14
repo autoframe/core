@@ -5,12 +5,18 @@ namespace Autoframe\Core\String\Obj;
 final class AfrFqcn
 {
 
+	/**
+	 * Get class base name from instance.
+	 */
 	public static function getClassBaseNameFromInstance(object $sInstance): ?string
 	{
 		$sFQCN = get_class($sInstance);
 		return $sFQCN ? self::getClassBaseNameFromFQCN($sFQCN) : null;
 	}
 
+	/**
+	 * Get class base name from fqcn.
+	 */
 	public static function getClassBaseNameFromFQCN(string $sFQCN): ?string
 	{
 		if(empty($sFQCN = trim($sFQCN))) return null;
@@ -20,6 +26,7 @@ final class AfrFqcn
 	}
 
 	/**
+	 * Get class base name from object or fqcn.
 	 * @param string|object $soClass
 	 * @return string|null
 	 */

@@ -8,6 +8,7 @@ use Autoframe\Core\Database\Connection\Exception\AfrDatabaseConnectionException;
 class DbActionFacade
 {
 	/**
+	 * With conn alias and database.
 	 * @param string $sConnAlias
 	 * @param string $sDatabaseName
 	 * @return DbActionInterface
@@ -21,6 +22,7 @@ class DbActionFacade
 	}
 
 	/**
+	 * Using cnxi and database.
 	 * @param CnxActionInterface $oCnx
 	 * @param string $sDatabaseName
 	 * @return DbActionInterface

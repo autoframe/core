@@ -8,6 +8,7 @@ class AfrUrlUtils extends AfrSingletonAbstractClass
 {
 
 	/**
+	 * Get ntlm link contents.
 	 * @param string $user
 	 * @param string $pass
 	 * @param string $sUrl
@@ -24,6 +25,9 @@ class AfrUrlUtils extends AfrSingletonAbstractClass
 		));
 	}
 
+	/**
+	 * Add ntlm credentials to url.
+	 */
 	public function addNtlmCredentialsToUrl(string $user, string $pass, string $sUrl): string
 	{
 		$aParts = explode('://', $sUrl);
@@ -31,6 +35,7 @@ class AfrUrlUtils extends AfrSingletonAbstractClass
 		return implode('://', $aParts);
 	}
 	/**
+	 * Get url scheme host up to path.
 	 * @param string $sUrl
 	 * @return string https://hostname.com or https://username:password@hostname:9090
 	 */
@@ -47,6 +52,7 @@ class AfrUrlUtils extends AfrSingletonAbstractClass
 	}
 
 	/**
+	 * Is url protocol https.
 	 * @param string $sUrl
 	 * @return bool
 	 */
@@ -55,11 +61,17 @@ class AfrUrlUtils extends AfrSingletonAbstractClass
 		return strtolower(substr($sUrl, 0, 6)) === 'https:';
 	}
 
+	/**
+	 * Is url protocol http.
+	 */
 	public function isUrlProtocolHttp(string $sUrl): bool
 	{
 		return strtolower(substr($sUrl, 0, 5)) === 'http:';
 	}
 
+	/**
+	 * Is url protocol ftp.
+	 */
 	public function isUrlProtocolFtp(string $sUrl): bool
 	{
 		return strtolower(substr($sUrl, 0, 4)) === 'ftp:';

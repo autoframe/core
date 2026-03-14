@@ -7,17 +7,20 @@ use Autoframe\Core\Entity\Exception\AfrEntityException;
 interface AfrEntityInterface
 {
     /**
+     * Create a new instance.
      * @param $mProperties
      */
     public function __construct($mProperties = []);
 
     /**
+     * Is public.
      * @param string $sProperty
      * @return bool
      */
     public function isPublic(string $sProperty): bool;
 
     /**
+     * Get entity public vars.
      * @return array
      */
     public function getEntityPublicVars(): array;
@@ -34,6 +37,7 @@ interface AfrEntityInterface
     public function setAssoc($aProperty): int;
 
     /**
+     * Set an inaccessible property value.
      * @param string $sProperty
      * @param $mValue
      * @return void
@@ -42,23 +46,27 @@ interface AfrEntityInterface
     public function __set(string $sProperty, $mValue): void;
 
     /**
+     * Determine if an inaccessible property is set.
      * @param string $sProperty
      * @return bool
      */
     public function __isset(string $sProperty);
 
     /**
+     * Retrieve an inaccessible property value.
      * @param $name
      * @return mixed
      */
     public function __get($name);
 
     /**
+     * Return the string representation of the instance.
      * @return string
      */
     public function __toString(): string;
 
     /**
+     * Get.
      * @param string $sProperty
      * @return mixed Entity value if exist or Null
      */
@@ -72,16 +80,19 @@ interface AfrEntityInterface
     public function getReferenced(string $sProperty);
 
     /**
+     * Is dirty.
      * @return bool
      */
     public function isDirty(): bool;
 
     /**
+     * Not dirty.
      * @return void
      */
     public function notDirty(): void;
 
     /**
+     * Get dirty properties.
      * @return array
      */
     public function getDirtyProperties(): array;
@@ -95,6 +106,7 @@ interface AfrEntityInterface
     public function castProperty(string $sProperty, $mValue): void;
 
     /**
+     * Cast to data type.
      * @param string $sProperty
      * @param $mValue
      * @return array|bool|float|int|string|null|object|resource|mixed
@@ -102,23 +114,27 @@ interface AfrEntityInterface
     public function castToDataType(string $sProperty, $mValue);
 
     /**
+     * Get default value.
      * @param string $sProperty
      * @return array|false|float|int|object|string|null
      */
     public function getDefaultValue(string $sProperty);
 
     /**
+     * Reset defaults.
      * @return int
      */
     public function resetDefaults(): int;
 
     /**
+     * Copy public properties.
      * @param object $oSourceObject
      * @return bool
      */
     public function copyPublicProperties(object $oSourceObject): bool;
 
     /**
+     * Cast for database.
      * @param bool $bOnlyDirty
      * @return array
      */

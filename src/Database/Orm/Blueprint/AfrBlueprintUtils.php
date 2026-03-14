@@ -30,6 +30,9 @@ trait AfrBlueprintUtils
 	}
 
 
+	/**
+	 * Export array as string.
+	 */
 	public static function exportArrayAsString(
 		array  $aData,
 		string $sQuot = "'",

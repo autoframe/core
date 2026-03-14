@@ -15,6 +15,7 @@ trait AfrConfigurableInstanceTrait
 
 
     /**
+     * Apply afr instance config.
      * @param bool $bForce
      * @return int
      */
@@ -38,6 +39,7 @@ trait AfrConfigurableInstanceTrait
 
 
     /**
+     * Apply afr instance config static.
      * @param bool $bForce
      * @return int
      */

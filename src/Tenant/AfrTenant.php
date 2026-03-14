@@ -58,6 +58,7 @@ class AfrTenant
 
 
 	/**
+	 * Create a new instance.
 	 * @throws AfrException
 	 */
 	public function __construct(string $sTenantAlias)
@@ -71,6 +72,9 @@ class AfrTenant
 		$this->sTenantAlias = $sTenantAlias;
 	}
 
+	/**
+	 * Push default tenant configs.
+	 */
 	public static function pushDefaultTenantConfigs(array $aFQCN_implementing_AfrDefaultTenantConfigsInterface = [])
 	{
 		if (!$aFQCN_implementing_AfrDefaultTenantConfigsInterface) return;
@@ -82,6 +86,7 @@ class AfrTenant
 	}
 
 	/**
+	 * Get tenant arg in cli.
 	 * @param bool $bCheckExistence
 	 * @return string|null
 	 * @throws AfrContainerException
@@ -100,6 +105,9 @@ class AfrTenant
 		return empty($sTenant) || $bCheckExistence && empty(static::$aTenantCfgIns[$sTenant]) ? null : $sTenant;
 	}
 
+	/**
+	 * Set root.
+	 */
 	public function setRoot(string $ROOT = '/'): self
 	{
 		$this->sRoot = $ROOT;
@@ -107,6 +115,9 @@ class AfrTenant
 	}
 
 
+	/**
+	 * Set env.
+	 */
 	public function setEnv(string $AFR_ENV = null): self
 	{
 		if ($AFR_ENV === null) {
@@ -116,6 +127,9 @@ class AfrTenant
 		return $this;
 	}
 
+	/**
+	 * Set temp dir.
+	 */
 	public function setTempDir(string $TMP_DIR = null, bool $bSystemTemp = false): self
 	{
 		if (empty($TMP_DIR)) {
@@ -126,6 +140,9 @@ class AfrTenant
 		return $this;
 	}
 
+	/**
+	 * Set html dir.
+	 */
 	public function setHtmlDir(string $HTML_DIR = null): self
 	{
 		if (empty($HTML_DIR)) {
@@ -135,6 +152,9 @@ class AfrTenant
 		return $this;
 	}
 
+	/**
+	 * Set logs dir.
+	 */
 	public function setLogsDir(string $LOGS_DIR = null): self
 	{
 		if (empty($LOGS_DIR)) {
@@ -145,6 +165,9 @@ class AfrTenant
 		return $this;
 	}
 
+	/**
+	 * Set assets dir.
+	 */
 	public function setAssetsDir(string $ASSETS_DIR = null, array $aMapExtra = [], bool $bMapAnyAsset = false): self
 	{
 		if (empty($ASSETS_DIR)) {
@@ -163,6 +186,9 @@ class AfrTenant
 	}
 
 
+	/**
+	 * Set debug.
+	 */
 	public function setDebug(bool $AFR_DEBUG = null): self
 	{
 		if ($AFR_DEBUG === null) {
@@ -181,6 +207,9 @@ class AfrTenant
 	}
 
 
+	/**
+	 * Set protocol domain name.
+	 */
 	public function setProtocolDomainName(array $aProtocolDomain = []): self
 	{
 		if (empty($aProtocolDomain)) {
@@ -197,6 +226,9 @@ class AfrTenant
 		return $this;
 	}
 
+	/**
+	 * Auto setup and push tenant config.
+	 */
 	public function autoSetupAndPushTenantConfig(): self
 	{
 		($this->sEnv ?? $this->setEnv());
@@ -210,19 +242,37 @@ class AfrTenant
 		return static::$aTenantCfgIns[$this->sTenantAlias] = $this;
 	}
 
+	/**
+	 * Is cli.
+	 */
 	public static function isCli(): bool
 	{
 		return AfrCliHttpDetect::isCli();
 	}
 
+	/**
+	 * Get tenant env file path.
+	 */
 	public static function getTenantEnvFilePath(): string { return self::$sTenantEnvFilePath; }
 
+	/**
+	 * Get protocol host.
+	 */
 	public static function getProtocolHost(): string { return self::$sProtocolHost; }
 
+	/**
+	 * Get host.
+	 */
 	public static function getHost(): string { return explode('://', self::getProtocolHost())[1] ?? ''; }
 
+	/**
+	 * Get base dir path.
+	 */
 	public static function getBaseDirPath(): ?string { return self::$sBaseDirPath ?? null; }
 
+	/**
+	 * Get tenant alias.
+	 */
 	public static function getTenantAlias(): ?string { return self::$sAppTenantAlias ?? null; }
 
 	/**
@@ -246,29 +296,63 @@ class AfrTenant
 
 //	public static function getTenantRoutesFilePath(): string { return self::$sTenantRoutesFilePath; }
 
+	/**
+	 * Get public html dir.
+	 */
 	public static function getPublicHtmlDir(): string { return self::$sPublicHtmlDir; }
 
+	/**
+	 * Get public assets path.
+	 */
 	public static function getPublicAssetsPath(): string { return self::$sPublicAssetsPath; }
 
+	/**
+	 * Get public assets dirs.
+	 */
 	public static function getPublicAssetsDirs(): array { return self::$aPublicAssetsDirs; }
 
+	/**
+	 * Get public assets dir css web.
+	 */
 	public static function getPublicAssetsDirCssWeb(): string { return self::$sPublicAssetsDirCssWeb; }
 
+	/**
+	 * Get public assets dir js web.
+	 */
 	public static function getPublicAssetsDirJsWeb(): string { return self::$sPublicAssetsDirJsWeb; }
 
+	/**
+	 * Get public assets dir img web.
+	 */
 	public static function getPublicAssetsDirImgWeb(): string { return self::$sPublicAssetsDirImgWeb; }
 
+	/**
+	 * Get public assets dir media web.
+	 */
 	public static function getPublicAssetsDirMediaWeb(): string { return self::$sPublicAssetsDirMediaWeb; }
 
+	/**
+	 * Get public assets dir data web.
+	 */
 	public static function getPublicAssetsDirDataWeb(): string { return self::$sPublicAssetsDirDataWeb; }
 
+	/**
+	 * Get storage dir.
+	 */
 	public static function getStorageDir(): string { return self::$sStorageDir . DIRECTORY_SEPARATOR . self::getTenantAlias(); }
 
+	/**
+	 * Get logs dir.
+	 */
 	public static function getLogsDir(): string { return self::$sLogsDir; }
 
+	/**
+	 * Get cron logs dir.
+	 */
 	public static function getCronLogsDir(): string { return self::getLogsDir() . DIRECTORY_SEPARATOR . 'Cron'; }
 
 	/**
+	 * Get temp dir.
 	 * @param string|object|null $soAliasSubDir
 	 * @return string
 	 * @throws AfrException
@@ -289,8 +373,14 @@ class AfrTenant
 		);
 	}
 
+	/**
+	 * Get web root.
+	 */
 	public static function getWebRoot(): string { return self::$sWebRoot; }
 
+	/**
+	 * Get all tenants.
+	 */
 	public static function getAllTenants(): array { return static::$aTenantCfgIns; }
 
 	protected static string $sTenantEnvFilePath;
@@ -320,6 +410,7 @@ class AfrTenant
 
 
 	/**
+	 * Set base dir path.
 	 * @throws AfrException
 	 */
 	public static function setBaseDirPath(string $sBaseDirPath): void
@@ -330,6 +421,9 @@ class AfrTenant
 	}
 
 
+	/**
+	 * Include common tenant constants all from base dir.
+	 */
 	public static function includeCommonTenantConstantsAllFromBaseDir(): void //TODO test namespaces
 	{
 		if (defined(AfrExecutionThread::BOOTSTRAP_BASEDIR_CONSTANTS_FOR_ALL_TENANTS)) return;
@@ -347,6 +441,7 @@ class AfrTenant
 	}
 
 	/**
+	 * Load config resolve tenant alias process config or init sample.
 	 * @throws AfrException
 	 */
 	public static function loadConfigResolveTenantAliasProcessConfigOrInitSample(string $sBasePath = null): void
@@ -449,6 +544,7 @@ class AfrTenant
 	}
 
 	/**
+	 * Init file system.
 	 * @throws AfrException
 	 */
 	public static function initFileSystem(bool $bThrowErrorIfActionsDetected): array
@@ -535,6 +631,9 @@ class AfrTenant
 		}
 	}
 
+	/**
+	 * Get tenant env file.
+	 */
 	public static function getTenantEnvFile(): string
 	{
 		return self::getBaseDirPath() . DIRECTORY_SEPARATOR . self::getTenantAlias() . '.' . $_ENV['AFR_ENV'] . '.env';
@@ -641,6 +740,9 @@ class AfrTenant
 
 	}
 
+	/**
+	 * Get auto tenant select argv flags.
+	 */
 	public static function getAutoTenantSelectArgvFlags(): ?string
 	{
 		if (empty(static::$aTenantCfgIns)) return null;

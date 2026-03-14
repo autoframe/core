@@ -13,6 +13,7 @@ class AfrHttpHeaderFormattersCookie extends AfrSingletonAbstractClass
 	protected bool $bCookieLineEncodeSizeOptimize = true;
 
 	/**
+	 * Xet format cookie header enforce php over rfc6265.
 	 * @param null|bool $bSet
 	 * @return bool
 	 */
@@ -26,6 +27,7 @@ class AfrHttpHeaderFormattersCookie extends AfrSingletonAbstractClass
 
 
 	/**
+	 * Xet format cookie line encode size optimize.
 	 * @param null|bool $bSet
 	 * @return bool
 	 */
@@ -39,6 +41,7 @@ class AfrHttpHeaderFormattersCookie extends AfrSingletonAbstractClass
 
 
 	/**
+	 * Format into cookie header line.
 	 * @param $saData
 	 * @param bool $bCookiePrefix
 	 * @param bool $bSetCookie
@@ -109,6 +112,7 @@ class AfrHttpHeaderFormattersCookie extends AfrSingletonAbstractClass
 	}
 
 	/**
+	 * Format cookie line into associative array.
 	 * @param string $sCookies
 	 * @param bool $bStrictError
 	 * @return array
@@ -127,6 +131,7 @@ class AfrHttpHeaderFormattersCookie extends AfrSingletonAbstractClass
 	}
 
 	/**
+	 * Parse header cookie line.
 	 * @param string $sCookieLine
 	 * @param bool $bStrictError
 	 * @return array
@@ -176,6 +181,7 @@ class AfrHttpHeaderFormattersCookie extends AfrSingletonAbstractClass
 	}
 
 	/**
+	 * Parse header line set cookie info.
 	 * @param string $sHeaderDirective
 	 * @return array
 	 * @throws AfrHttpHeaderFormattersException
@@ -218,6 +224,7 @@ class AfrHttpHeaderFormattersCookie extends AfrSingletonAbstractClass
 	}
 
 	/**
+	 * Format cookie name for header.
 	 * @param string $sKey
 	 * @param bool $bUrlEncode
 	 * @return string
@@ -238,6 +245,7 @@ class AfrHttpHeaderFormattersCookie extends AfrSingletonAbstractClass
 	}
 
 	/**
+	 * Format cookie value for header.
 	 * @param string $sVal
 	 * @return string
 	 */

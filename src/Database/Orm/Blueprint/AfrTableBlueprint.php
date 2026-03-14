@@ -7,6 +7,9 @@ class AfrTableBlueprint implements AfrOrmBlueprintInterface
 	use AfrBlueprintUtils;
 
 
+	/**
+	 * Table blueprint.
+	 */
 	public static function tableBlueprint(array $aToMerge = []): array
 	{
 		return AfrDbBlueprint::mergeBlueprint([
@@ -41,6 +44,9 @@ class AfrTableBlueprint implements AfrOrmBlueprintInterface
 		], $aToMerge);
 	}
 
+	/**
+	 * Meta tbl blueprint.
+	 */
 	public static function metaTblBlueprint(array $aToMerge = []): array
 	{
 		return self::mergeBlueprint([
@@ -65,6 +71,9 @@ class AfrTableBlueprint implements AfrOrmBlueprintInterface
 		], $aToMerge);
 	}
 
+	/**
+	 * Meta pivot blueprint.
+	 */
 	public static function metaPivotBlueprint(array $aToMerge = []): array
 	{
 		return self::mergeBlueprint([ // static::FK_RELATIONSHIP =>'N-N',//predefined N-N only for N-N relationships

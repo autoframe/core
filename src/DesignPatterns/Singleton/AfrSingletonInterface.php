@@ -19,6 +19,7 @@ interface AfrSingletonInterface
     public function __clone();
 
     /**
+     * Restore the instance after unserialization.
      * @throws AfrException
      */
     public function __wakeup();
@@ -41,6 +42,7 @@ interface AfrSingletonInterface
     public static function getInstanceNoContainerBindings(): self;
 
     /**
+     * Has instance.
      * @return bool
      */
     public static function hasInstance(): bool;

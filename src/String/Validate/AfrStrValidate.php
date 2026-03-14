@@ -9,6 +9,9 @@ class AfrStrValidate
     //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     //http://www.portabilitate.ro/getnumber.aspx?lang=ro&number=0742601660
     //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    /**
+     * Is mobile.
+     */
     public static function is_mobile($tel)
     {
         if (strlen($tel) != 12) {
@@ -27,6 +30,9 @@ class AfrStrValidate
         }
     }
 
+    /**
+     * Is tel.
+     */
     public static function is_tel($tel)
     {
         if (strlen($tel) < 13) {
@@ -45,6 +51,9 @@ class AfrStrValidate
         }
     }
 
+    /**
+     * Validate tel.
+     */
     public static function validate_tel($tel){//prefixe 02 romtelecom, 03 upc, rds, rcs, zaptelfix, vdf acasa 07 mobil;
         if($tel[0]=='4'){$tel='+'.$tel;}//fix convertion to number
         if(strlen($tel)<10){return '';}	$replace='.,- \'"*%#`	~()[\]|<>?/';

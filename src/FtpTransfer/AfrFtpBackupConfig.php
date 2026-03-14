@@ -14,6 +14,7 @@ class AfrFtpBackupConfig
     protected string $sBusinessLogicClass = AfrFtpPutBigData::class;
 
     /**
+     * Set business logic.
      * @param string $BusinessLogicClass
      * @return void
      * @throws AfrException
@@ -70,6 +71,7 @@ class AfrFtpBackupConfig
     public int $iLogUploadProgressEveryXSeconds = 60;
 
     /**
+     * Create a new instance.
      * @param string|null $sTodayFolderName
      */
     public function __construct(string $sTodayFolderName = null)
@@ -86,6 +88,7 @@ class AfrFtpBackupConfig
     protected ?string $sReportClass = null;
 
     /**
+     * Set report class.
      * @param string $sReportClass
      * @return void
      * @throws AfrException

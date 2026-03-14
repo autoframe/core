@@ -9,12 +9,14 @@ use Autoframe\Core\DesignPatterns\Singleton\AfrSingletonInterface;
 interface AfrEnvParserInterface extends AfrSingletonInterface
 {
     /**
+     * Parse str.
      * @param string $sEnvLines
      * @return array
      */
     public function parseStr(string $sEnvLines): array;
 
     /**
+     * Parse file.
      * @param string $sPath
      * @return array
      * @throws AfrEnvException

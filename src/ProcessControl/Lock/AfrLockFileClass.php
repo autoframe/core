@@ -13,6 +13,9 @@ class AfrLockFileClass implements AfrLockInterface
     protected $writeLockedFilePointer = null;
 
 
+    /**
+     * Create a new instance.
+     */
     public function __construct(string $sLockName, array $aContextData = [])
     {
         /*$sTempDir = (string)ini_get('sys_temp_dir');
@@ -34,6 +37,9 @@ class AfrLockFileClass implements AfrLockInterface
 
     }
 
+    /**
+     * Clean up resources before the instance is destroyed.
+     */
     public function __destruct()
     {
 	    if ($this->writeLockedFilePointer) {
@@ -140,6 +146,9 @@ class AfrLockFileClass implements AfrLockInterface
     }
 
 	protected static int $iPid = -1;
+	/**
+	 * Get my pid.
+	 */
 	public static function getMyPid(): int
 	{
 		if(self::$iPid === -1) {

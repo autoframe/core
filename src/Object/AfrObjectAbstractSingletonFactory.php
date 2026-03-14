@@ -72,6 +72,7 @@ abstract class AfrObjectAbstractSingletonFactory
 
 
 	/**
+	 * Get instance.
 	 * @throws AfrException
 	 */
 	public static function getInstance(): object

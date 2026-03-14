@@ -15,6 +15,7 @@ class AfrEnvParserClass extends AfrSingletonAbstractClass implements AfrEnvParse
 
 
 	/**
+	 * Parse str.
 	 * @param string $sEnvLines
 	 * @return array
 	 */
@@ -161,6 +162,7 @@ class AfrEnvParserClass extends AfrSingletonAbstractClass implements AfrEnvParse
 	}
 
 	/**
+	 * Parse file.
 	 * @param string $sPath
 	 * @return array
 	 * @throws AfrEnvException

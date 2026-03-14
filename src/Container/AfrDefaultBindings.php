@@ -63,6 +63,7 @@ class AfrDefaultBindings implements AfrDefaultTenantConfigsInterface
 	protected static array $aSet = [];
 
 	/**
+	 * Set autoframe default container bindings.
 	 * @throws AfrContainerException
 	 */
 	public static function setAutoframeDefaultContainerBindings(bool $bForce = false): void
@@ -73,6 +74,7 @@ class AfrDefaultBindings implements AfrDefaultTenantConfigsInterface
 	}
 
 	/**
+	 * Apply default tenant config.
 	 * @throws AfrContainerException
 	 */
 	public static function applyDefaultTenantConfig(bool $bForce = false): void
@@ -89,12 +91,16 @@ class AfrDefaultBindings implements AfrDefaultTenantConfigsInterface
 		static::bind(include $sBindingsFile);
 	}
 
+	/**
+	 * Sample tenant default config.
+	 */
 	public static function sampleTenantDefaultConfig(): ?string
 	{
 		return file_get_contents(__DIR__ . DIRECTORY_SEPARATOR . 'config.sample.AfrDefaultBindings.php');
 	}
 
 	/**
+	 * Bind.
 	 * @throws AfrContainerException
 	 */
 	public static function bind(array $aBound): void

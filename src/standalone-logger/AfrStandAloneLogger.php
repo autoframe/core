@@ -82,6 +82,7 @@ class AfrStandAloneLogger
     }
 
     /**
+     * Check set time float.
      * @return float
      */
     public static function checkSetTimeFloat()
@@ -93,6 +94,7 @@ class AfrStandAloneLogger
     }
 
     /**
+     * Hr micro time.
      * @return float
      */
     public static function hrMicroTime()
@@ -104,6 +106,7 @@ class AfrStandAloneLogger
     }
 
     /**
+     * Memory usage.
      * @return float
      */
     public static function memoryUsage()
@@ -116,6 +119,7 @@ class AfrStandAloneLogger
     }
 
     /**
+     * Mark.
      * @param string|null $name
      * @param array $aArgs
      * @param int $iUpperTraceLimit
@@ -151,6 +155,7 @@ class AfrStandAloneLogger
     }
 
     /**
+     * Elapsed time.
      * @param $point1
      * @param $point2
      * @return float
@@ -168,6 +173,7 @@ class AfrStandAloneLogger
     }
 
     /**
+     * Wall time.
      * @param bool $bDiff
      * @return array
      */
@@ -191,6 +197,7 @@ class AfrStandAloneLogger
     }
 
     /**
+     * Array to string.
      * @param array $aData
      * @return string
      */
@@ -228,6 +235,7 @@ class AfrStandAloneLogger
     }
 
     /**
+     * Get minified backtrace.
      * @param int $iSkip
      * @param int $iUpperTraceLimit
      * @param int $traceLevel
@@ -272,6 +280,7 @@ class AfrStandAloneLogger
     }
 
     /**
+     * Get report array.
      * @param bool $bRequestParameters
      * @return array
      */
@@ -296,6 +305,7 @@ class AfrStandAloneLogger
     }
 
     /**
+     * From what path.
      * @param bool $bFilename
      * @return string
      */
@@ -310,6 +320,7 @@ class AfrStandAloneLogger
     }
 
     /**
+     * Request parameters as string.
      * @return string
      */
     public static function requestParametersAsString()
@@ -327,6 +338,7 @@ class AfrStandAloneLogger
     }
 
     /**
+     * Get client ip addr.
      * @return string
      */
     public static function getClientIpAddr()
@@ -349,6 +361,7 @@ class AfrStandAloneLogger
     }
 
     /**
+     * Dump to file.
      * @param string $sDirPath
      * @param bool $bRequestParameters
      * @param bool $bNameByExecTime
@@ -368,6 +381,7 @@ class AfrStandAloneLogger
     }
 
     /**
+     * Dump to sql.
      * @param bool $bRequestParameters
      * @param bool $bJson
      * @param string $sTbl

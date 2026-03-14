@@ -52,6 +52,7 @@ final class AfrConJobSources extends AfrSingletonAbstractClass
 	}
 
 	/**
+	 * Add file source.
 	 * @param string $sAliasKey
 	 * @param string $sFullFilePath
 	 * @param resource|null $rFileGetContentsResourceContext
@@ -63,12 +64,16 @@ final class AfrConJobSources extends AfrSingletonAbstractClass
 		return $this->flushJobsForAlias($sAliasKey);
 	}
 
+	/**
+	 * Get file sources.
+	 */
 	public function getFileSources(): array
 	{
 		return $this->getFilteredSources(self::FGC);
 	}
 
 	/**
+	 * Add url source.
 	 * @param string $sAliasKey
 	 * @param string $sUrl
 	 * @param array|null $aCurlSetOptArray
@@ -81,6 +86,9 @@ final class AfrConJobSources extends AfrSingletonAbstractClass
 	}
 
 
+	/**
+	 * Get url sources.
+	 */
 	public function getUrlSources(): array
 	{
 		return $this->getFilteredSources(self::URL_S);
@@ -88,6 +96,7 @@ final class AfrConJobSources extends AfrSingletonAbstractClass
 	}
 
 	/**
+	 * Add source from closure.
 	 * @param string $sAliasKey
 	 * @param \Closure $closure The closure must return a multiline string with the correct job description
 	 * @return $this
@@ -98,6 +107,9 @@ final class AfrConJobSources extends AfrSingletonAbstractClass
 		return $this->flushJobsForAlias($sAliasKey);
 	}
 
+	/**
+	 * Get closure sources.
+	 */
 	public function getClosureSources(): array
 	{
 		return $this->getFilteredSources(self::CLOSURE_FN);
@@ -114,12 +126,16 @@ final class AfrConJobSources extends AfrSingletonAbstractClass
 		return $aReturn;
 	}
 
+	/**
+	 * Get all sources.
+	 */
 	public function getAllSources(): array
 	{
 		return $this->aSources;
 	}
 
 	/**
+	 * Get all jobs.
 	 * @param bool $bRefreshInstanceCache
 	 * @return AfrCronJob[][] Layered array of having key aliases for class AfrCronJobDaemon
 	 * @throws AfrEnvException
@@ -144,6 +160,9 @@ final class AfrConJobSources extends AfrSingletonAbstractClass
 	}
 
 
+	/**
+	 * Move alias first.
+	 */
 	public function moveAliasFirst(string $sAliasKey): bool
 	{
 		if (empty($this->aSources[$sAliasKey])) {
@@ -155,6 +174,9 @@ final class AfrConJobSources extends AfrSingletonAbstractClass
 		return true;
 	}
 
+	/**
+	 * Move alias last.
+	 */
 	public function moveAliasLast(string $sAliasKey): bool
 	{
 		if (empty($this->aSources[$sAliasKey])) {
@@ -166,6 +188,9 @@ final class AfrConJobSources extends AfrSingletonAbstractClass
 		return true;
 	}
 
+	/**
+	 * Move alias after.
+	 */
 	public function moveAliasAfter(string $sAliasKeyFirst, $sAliasKeySecond): bool
 	{
 		if (empty($this->aSources[$sAliasKeyFirst]) || empty($this->aSources[$sAliasKeySecond])) {
@@ -185,6 +210,9 @@ final class AfrConJobSources extends AfrSingletonAbstractClass
 		return true;
 	}
 
+	/**
+	 * Flush sources.
+	 */
 	public function flushSources(): self
 	{
 		foreach ($this->aSources as $sAliasKey => $aSources) {
@@ -194,6 +222,9 @@ final class AfrConJobSources extends AfrSingletonAbstractClass
 		return $this;
 	}
 
+	/**
+	 * Flush alias source.
+	 */
 	public function flushAliasSource(string $sAliasKey): self
 	{
 		if (!empty($this->aSources[$sAliasKey])) {
@@ -204,6 +235,7 @@ final class AfrConJobSources extends AfrSingletonAbstractClass
 	}
 
 	/**
+	 * Flush jobs for alias.
 	 * @param string $sSourceAlias
 	 * @return void
 	 */
@@ -222,6 +254,9 @@ final class AfrConJobSources extends AfrSingletonAbstractClass
 		return $this;
 	}
 
+	/**
+	 * Set afr cron logger.
+	 */
 	public function setAfrCronLogger(?AfrCronLoggerInterface $oAfrCronLogger): self
 	{
 		$this->oAfrCronLogger = $oAfrCronLogger;
@@ -229,6 +264,9 @@ final class AfrConJobSources extends AfrSingletonAbstractClass
 	}
 
 	//TODO:  fallback logger from DAEMON / WORKER if a instance is found there!!!!
+	/**
+	 * Log.
+	 */
 	public function log(string $sMessage, bool $bError = false, int $exitCode = null): void
 	{
 		if (!$this->oAfrCronLogger) {

@@ -16,6 +16,7 @@ class AfrHttpDownload extends AfrSingletonAbstractClass
 {
 
 	/**
+	 * Stream file.
 	 * @param string $sFilePath
 	 * @param int $iCache 0=no, 1=yes, -1= session cache default
 	 * @param bool $bUseEtag
@@ -85,6 +86,7 @@ class AfrHttpDownload extends AfrSingletonAbstractClass
 	}
 
 	/**
+	 * Get afr http header.
 	 * @return AfrHttpHeader
 	 * @throws AfrContainerException
 	 * @throws AfrEventException
@@ -139,6 +141,7 @@ class AfrHttpDownload extends AfrSingletonAbstractClass
 
 
 	/**
+	 * Http file cache.
 	 * @param string $sFileName_OR_FullFilePath
 	 * @param int $iCacheExpire
 	 * @param bool $bImmutable
@@ -174,6 +177,7 @@ class AfrHttpDownload extends AfrSingletonAbstractClass
 	}
 
 	/**
+	 * Http stream data.
 	 * @param string $sFileContents
 	 * @param string $sFileNameAndMime
 	 * @param int $iCacheExpire

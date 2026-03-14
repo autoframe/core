@@ -6,6 +6,9 @@ class AfrDbBlueprint implements AfrOrmBlueprintInterface
 {
 	use AfrBlueprintUtils;
 
+	/**
+	 * Db blueprint.
+	 */
 	public static function dbBlueprint(array $aToMerge = []): array
 	{
 

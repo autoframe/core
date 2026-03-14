@@ -48,6 +48,7 @@ trait AfrRouterRegisterTrait
 	}
 
 	/**
+	 * Register route any method.
 	 * @throws AfrRouterException|AfrEventException
 	 */
 	public function registerRouteAnyMethod(string $pattern, $fn, array $routeOptions = []): self
@@ -145,6 +146,7 @@ trait AfrRouterRegisterTrait
 
 
 	/**
+	 * Register code route.
 	 * @param array $methods ['GET','POST',...]
 	 * @param string $pattern REGEX pattern such as /about/system
 	 * @param $fn
@@ -159,6 +161,7 @@ trait AfrRouterRegisterTrait
 	}
 
 	/**
+	 * Register after route.
 	 * @param array $methods ['GET','POST',...]
 	 * @param string $pattern REGEX pattern such as /about/system
 	 * @param $fn
@@ -231,6 +234,7 @@ trait AfrRouterRegisterTrait
 
 
 	/**
+	 * Register redirect middleware.
 	 * @throws AfrRouterException|AfrEventException
 	 */
 	public function registerRedirectMiddleware(string $fromPattern, string $toFixed, int $code = 302, bool $strip_params = false, array $build_query = []): self
@@ -244,6 +248,7 @@ trait AfrRouterRegisterTrait
 	}
 
 	/**
+	 * Register redirect permanent middleware.
 	 * @throws AfrRouterException|AfrEventException
 	 */
 	public function registerRedirectPermanentMiddleware(string $fromPattern, string $toFixed): self

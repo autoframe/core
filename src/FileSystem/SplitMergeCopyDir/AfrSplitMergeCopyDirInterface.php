@@ -10,6 +10,7 @@ interface AfrSplitMergeCopyDirInterface
 {
 
     /**
+     * Split copy dir.
      * @param string $sSourceDir
      * @param string $sDestinationDir
      * @param int $iPartSize
@@ -26,6 +27,7 @@ interface AfrSplitMergeCopyDirInterface
     ): int;
 
     /**
+     * Merge copy dir.
      * @param string $sSourceDir
      * @param string $sDestinationDir
      * @param bool $bOverwriteFiles

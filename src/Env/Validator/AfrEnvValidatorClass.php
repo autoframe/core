@@ -12,6 +12,7 @@ class AfrEnvValidatorClass implements AfrEnvValidatorInterface
 	protected array $aDataSet = [];
 
 	/**
+	 * Validate all.
 	 * @param array $aDataSet
 	 * @return bool
 	 * @throws AfrEnvException
@@ -47,6 +48,7 @@ class AfrEnvValidatorClass implements AfrEnvValidatorInterface
 	}
 
 	/**
+	 * Required.
 	 * @param array $aKeys
 	 * @return self
 	 */
@@ -65,6 +67,7 @@ class AfrEnvValidatorClass implements AfrEnvValidatorInterface
 	}
 
 	/**
+	 * If present.
 	 * @param array $aKeys
 	 * @return self
 	 */
@@ -88,6 +91,7 @@ class AfrEnvValidatorClass implements AfrEnvValidatorInterface
 
 
 	/**
+	 * Custom closure.
 	 * @param callable $fX
 	 * @return void
 	 */
@@ -99,6 +103,7 @@ class AfrEnvValidatorClass implements AfrEnvValidatorInterface
 	}
 
 	/**
+	 * Allowed values.
 	 * @param array $aAllowed
 	 * @return void
 	 */
@@ -125,6 +130,7 @@ class AfrEnvValidatorClass implements AfrEnvValidatorInterface
 
 
 	/**
+	 * Reset.
 	 * @return self
 	 */
 	public function reset(): self
@@ -134,6 +140,7 @@ class AfrEnvValidatorClass implements AfrEnvValidatorInterface
 	}
 
 	/**
+	 * Unrequire.
 	 * @param array $aKeys
 	 * @return self
 	 */
@@ -150,6 +157,7 @@ class AfrEnvValidatorClass implements AfrEnvValidatorInterface
 	}
 
 	/**
+	 * Is integer.
 	 * @return void
 	 */
 	public function isInteger(): void
@@ -166,6 +174,7 @@ class AfrEnvValidatorClass implements AfrEnvValidatorInterface
 	}
 
 	/**
+	 * Is float.
 	 * @return void
 	 */
 	public function isFloat(): void
@@ -182,6 +191,7 @@ class AfrEnvValidatorClass implements AfrEnvValidatorInterface
 	}
 
 	/**
+	 * Is boolean.
 	 * @return void
 	 */
 	public function isBoolean(): void
@@ -198,6 +208,7 @@ class AfrEnvValidatorClass implements AfrEnvValidatorInterface
 	}
 
 	/**
+	 * Is array.
 	 * @return void
 	 */
 	public function isArray(): void
@@ -214,6 +225,7 @@ class AfrEnvValidatorClass implements AfrEnvValidatorInterface
 	}
 
 	/**
+	 * Is string.
 	 * @return void
 	 */
 	public function isString(): void
@@ -230,6 +242,7 @@ class AfrEnvValidatorClass implements AfrEnvValidatorInterface
 	}
 
 	/**
+	 * Not empty.
 	 * @return void
 	 */
 	public function notEmpty(): void
@@ -246,6 +259,7 @@ class AfrEnvValidatorClass implements AfrEnvValidatorInterface
 	}
 
 	/**
+	 * Is date time.
 	 * @return void
 	 */
 	public function isDateTime(): void
