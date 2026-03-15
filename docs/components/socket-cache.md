@@ -1,432 +1,282 @@
-# Autoframe is a low level framework that is oriented on SOLID flexibility
+# Socket Cache (`Autoframe\\Core\\SocketCache`)
 
-[![Build Status](https://github.com/autoframe/components-socket-cache/workflows/PHPUnit-tests/badge.svg)](https://github.com/autoframe/components-socket-cache/actions?query=branch:main)
-[![License: The 3-Clause BSD License](https://img.shields.io/github/license/autoframe/components-socket-cache)](https://opensource.org/license/bsd-3-clause/)
-![Packagist Version](https://img.shields.io/packagist/v/autoframe/components-socket-cache?label=packagist%20stable)
-[![Downloads](https://img.shields.io/packagist/dm/autoframe/components-socket-cache.svg)](https://packagist.org/packages/autoframe/components-socket-cache)
+> **Purpose**: document the multi-adaptor cache system in `src/SocketCache/`, including repository management, adapter configuration, the proprietary `afrsock` client-server cache, and Laravel-port cache/redis internals.
 
-*PHP socket client - cache server manager app*
+---
 
-**Examples**
+## 1) Component Snapshot
+
+- **Namespace**: `Autoframe\\Core\\SocketCache`
+- **Source root**: `src/SocketCache/`
+- **Primary role**: provide a unified cache manager that can run multiple cache channels for the same project.
+- **Main architecture**:
+  - app-level config container (`AfrCacheApp`),
+  - manager/facade entrypoints (`AfrCacheManager`, `Facade\\AfrCache`),
+  - adapter stores from Laravel-port cache layer,
+  - optional local socket cache daemon (`afrsock`) via `AfrSocketClient` + `AfrSocketServer`.
+
+### 1.1 Supported adapter families
+
+This component is designed to work with these store types:
+- `array`
+- `null`
+- `file`
+- `apc` / `apcu`
+- `memcached`
+- `redis`
+- `database` (through Laravel-port driver surface)
+- `afrsock` (proprietary socket client/server cache channel)
+
+---
+
+## 2) AI-Friendly Index (Machine-Readable)
+
+```yaml
+doc_id: socket-cache
+namespace: Autoframe\\Core\\SocketCache
+source_dir: src/SocketCache
+entrypoints:
+  - class: AfrCacheManager
+    method: store
+  - class: Facade\\AfrCache
+    method: __callStatic
+  - class: App\\AfrCacheApp
+    methods:
+      - setNullConfig
+      - setArrayConfig
+      - setFileConfig
+      - setApcConfig
+      - setMemcachedConfig
+      - setRedisConfig
+      - setSockConfig
+capabilities:
+  - multi_channel_cache_repositories
+  - per_driver_runtime_config
+  - laravel_style_repository_contract
+  - lock_and_rate_limiter_primitives
+  - proprietary_socket_cache_client_server
+  - redis_connector_abstraction_phpredis_and_predis
+important_subsystems:
+  - manager: AfrCacheManager
+  - app_config: App\\AfrCacheApp
+  - facade: Facade\\AfrCache
+  - repo_selector: Facade\\AfrRepositoryAutoSelector
+  - afrsock_client: Client\\AfrSocketClient
+  - afrsock_store: Client\\AfrClientStore
+  - afrsock_server: Server\\AfrSocketServer
+  - redis_manager: LaravelPort\\Redis\\RedisManager
+```
+
+---
+
+## 3) Core building blocks
+
+### 3.1 `AfrCacheApp` (runtime config + driver wiring)
+
+`App\\AfrCacheApp` is the configuration nucleus. It stores cache config, supported repository types, and helper methods to register each backend.
+
+Key methods include:
+- `setNullConfig(...)`
+- `setArrayConfig(...)`
+- `setFileConfig(...)`
+- `setApcConfig(...)`
+- `setMemcachedConfig(...)`
+- `setRedisConfig(...)`
+- `setSockConfig(...)`
+
+`setSockConfig(...)` injects an `extend` closure that builds an `AfrClientStore` with `AfrCacheSocketConfig`, allowing afrsock repositories to be selected like any other cache store.
+
+### 3.2 `AfrCacheManager` (store resolver)
+
+`AfrCacheManager` extends Laravel-port `CacheManager` and customizes `resolve($name)`:
+- obtains config for named store,
+- checks native driver factory (`createXDriver`) or dynamic custom creators,
+- supports per-store `extend` / `closure` custom creation paths,
+- delegates back to parent resolver once wiring is prepared.
+
+### 3.3 `Facade\\AfrCache` and `Facade\\AfrRepositoryAutoSelector`
+
+- `AfrCache` is the static facade for manager/repository methods.
+- `AfrRepositoryAutoSelector` maps namespace prefixes to selected repositories so callers can route cache usage by key namespace and priority.
+
+### 3.4 afrsock channel (`Client`, `Server`, `Common`, `Integrity`)
+
+- `Client\\AfrSocketClient`: low-level socket request/response client.
+- `Client\\AfrClientStore`: cache store backed by afrsock protocol (put/get/many/flush/delete/increment/etc.).
+- `Server\\AfrSocketServer` + `Server\\AfrServerStore`: in-memory socket server-side cache storage.
+- `Common\\AfrCacheSocketStore` and traits: shared store behavior and client/server command helpers.
+- `Integrity\\AfrSocketIntegrityClass`: payload integrity helper.
+
+---
+
+## 4) Redis LaravelPort status and fixes
+
+The Redis layer in `src/SocketCache/LaravelPort/Redis/` is Laravel-inspired but adapted.
+
+### 4.1 What was fixed in this update
+
+1. **Removed hidden Laravel helper dependency in `PhpRedisConnection::hmset(...)`**
+   - Replaced `collect(...)` usage with native array-pair normalization.
+   - Prevents runtime failure in environments where global Laravel helpers are unavailable.
+
+2. **Fixed `PhpRedisConnection::set(...)` argument handling**
+   - No-expiry calls now execute as `set(key, value)` instead of passing a null options argument.
+   - Expiry/options payload is built only when resolution/TTL is provided.
+
+3. **Hardened `RedisManager` connector behavior**
+   - Initializes `$connections` as an array.
+   - Throws explicit `InvalidArgumentException` for unsupported Redis drivers.
+   - `connections()` now safely returns an array.
+
+4. **Improved `PhpRedisConnector` compatibility paths**
+   - Added safer Redis extension version checks.
+   - Added auth credential resolver supporting username+password form on newer phpredis versions.
+
+---
+
+## 5) Adapter usage examples (from tests)
+
+Below examples are adapted from:
+- `Tests/Unit/SocketCacheTest/AfrCacheManagerTest.php`
+- `Tests/Unit/SocketCacheTest/AfrClientStoreTest.php`
+
+### 5.1 Null store
 
 ```php
-use Autoframe\Core\SocketCache\Client\AfrClientStore;
+<?php
+
 use Autoframe\Core\SocketCache\App\AfrCacheApp;
 use Autoframe\Core\SocketCache\Facade\AfrCache;
-use Autoframe\Core\SocketCache\Facade\AfrRepositoryAutoSelector;
 
-$oApp = AfrCacheApp::getInstance();
+AfrCacheApp::getInstance()->setNullConfig(true);
+$repo = AfrCache::getManager()->store();
 
-        `null`
-        AfrCacheApp::getInstance()->setNullConfig(true);
-        $oRepo = AfrCache::getManager()->store()
-
-...
-
-        `afrsock`
-        if ($oApp->testSock()) {
-            $oApp->setSockConfig([ // AfrCacheSocketConfig
-                'driver' => 'afrsock',
-                'iAutoShutdownServerAfterXSeconds' => 40,
-                'bServerAutoPowerOnByConfigViaCliOnLocal' => true,
-                'bObfuscateCommunicationBetweenClientServer' => false,
-                'iServerMemoryMb' => 64,
-                //     'socketPort' =>  rand(11222, 13222);
-            ], $bDefault = true);
-            $oRepo = AfrCache::getManager()->store();  //instanceof \Autoframe\Core\SocketCache\LaravelPort\Contracts\Cache\Repository
-            $oRepo = AfrCache::getManager()->store('afrsock');
-        }
-
-...
-        `array`
-        $oApp = AfrCacheApp::getInstance()->setArrayConfig(
-            $bSerialize = true,
-            $bDefault = true
-        );
-        $oRepo = AfrCache::getManager()->store('array');
-
-...
-        `array`
-        $oApp = AfrCacheApp::getInstance()->setArrayConfig(
-            $bSerialize = true,
-            $bDefault = true
-        );
-        $oRepo = AfrCache::getManager()->store('array');
-
-...
-        `file`
-        $oApp = AfrCacheApp::getInstance()->setFileConfig(
-            $bDefault = true,
-            [ 'path' => __DIR__ . DIRECTORY_SEPARATOR . 'fileCache', ]
-        );
-        $oRepo = AfrCache::getManager()->store('file');
-        //And...
-        
-        $oApp = AfrCacheApp::getInstance()->setFileConfig(
-            $bDefault = false,
-            [
-                'driver' => 'file_nth_driver',
-                'path' => __DIR__ . DIRECTORY_SEPARATOR . 'fileCache_other_dir',
-            ]
-        );
-        $oRepo = AfrCache::getManager()->store('file_nth_driver');
-
-
-...
-
-        `memcached`
-        if ($oApp->testMemcached()) {
-            $oApp->setMemcachedConfig(
-                $bDefault = false,
-                [
-                //'driver' => 'memcached',
-                'servers' => $oApp->parseMemcachedServers('localhost:11211:100,...'),
-                ]
-            );
-            $oRepo = AfrCache::getManager()->store('memcached');
-        }
-
-
-
-...
-
-        `apc`  //apcu
-        if ($oApp->testApc()) {
-            $oApp->setApcConfig( $bDefault = false );
-            $oRepo = AfrCache::getManager()->store('apc');
-        }
-
-
-
+$repo->put('ff', 4, 5);   // bool
+$value = $repo->get('ff'); // null (NullStore behavior)
 ```
 
----
+### 5.2 Array store
 
 ```php
-`AfrRepositoryAutoSelector`
+<?php
 
-
-use Autoframe\Core\SocketCache\Client\AfrClientStore;
 use Autoframe\Core\SocketCache\App\AfrCacheApp;
 use Autoframe\Core\SocketCache\Facade\AfrCache;
-use Autoframe\Core\SocketCache\Facade\AfrRepositoryAutoSelector;
 
+AfrCacheApp::getInstance()->setArrayConfig(
+    true,  // serialize
+    true,  // default store
+    ['driver' => 'array']
+);
 
-        AfrRepositoryAutoSelector::setToUseRepositories(
-            //HIGH_LOAD::SECONDARY_LOAD::FILESYSTEM::FILESYSTEM2::RAM::NONE
-            AfrRepositoryAutoSelector::SECONDARY_LOAD, 
-            ['file'] //driver name
-        );
-        
-        $sKeyName = $sKeyVal = 'sKeyName';
-        $oRepo = AfrRepositoryAutoSelector::selectRepoByKeyNs(
-            AfrRepositoryAutoSelector::prefixKeyForRepo(
-                $sKeyName,
-                AfrRepositoryAutoSelector::SECONDARY_LOAD
-            )
-        );
-        $oRepo->set($sKeyName,$sKeyVal,60);
-        // 1-9 priority or null for auto
-        $oRepo = AfrRepositoryAutoSelector::selectRepoByKeyNs(AfrRepositoryAutoSelector::SECONDARY_LOAD.'\\1\\' . $sKeyName);
-        $this->assertSame(true, $oRepo instanceof \Autoframe\Core\SocketCache\LaravelPort\Contracts\Cache\Repository);
-        $this->assertSame($sKeyVal, $oRepo->get($sKeyName));
-        $oRepo->clear();//flush
-
+$repo = AfrCache::getManager()->store();
+$repo->put('k', ['a' => 1], 5);
+$data = $repo->get('k');
 ```
 
----
+### 5.3 File store
 
 ```php
-`AfrCache`
-
-namespace Autoframe\Core\SocketCache\Facade;
+<?php
 
 use Autoframe\Core\SocketCache\App\AfrCacheApp;
-use Autoframe\Core\SocketCache\LaravelPort\Cache\CacheManager;
-use Autoframe\Core\SocketCache\AfrCacheManager;
+use Autoframe\Core\SocketCache\Facade\AfrCache;
 
-/**
- * @method static \Autoframe\Core\SocketCache\LaravelPort\Cache\TaggedCache tags(array|mixed $names)
- * @method static \Autoframe\Core\SocketCache\LaravelPort\Cache\Lock lock(string $name, int $seconds = 0, mixed $owner = null)
- * @method static \Autoframe\Core\SocketCache\LaravelPort\Cache\Lock restoreLock(string $name, string $owner)
- * @method static \Autoframe\Core\SocketCache\LaravelPort\Contracts\Cache\Repository  store(string|null $name = null)
- * @method static \Autoframe\Core\SocketCache\LaravelPort\Contracts\Cache\Store getStore()
- * @method static bool add(string $key, $value, \DateTimeInterface|\DateInterval|int $ttl = null)
- * @method static bool flush()
- * @method static bool forever(string $key, $value)
- * @method static bool forget(string $key)
- * @method static bool has(string $key)
- * @method static bool missing(string $key)
- * @method static bool put(string $key, $value, \DateTimeInterface|\DateInterval|int $ttl = null)
- * @method static int|bool decrement(string $key, $value = 1)
- * @method static int|bool increment(string $key, $value = 1)
- * @method static mixed get(string $key, mixed $default = null)
- * @method static mixed pull(string $key, mixed $default = null)
- * @method static mixed remember(string $key, \DateTimeInterface|\DateInterval|int $ttl, \Closure $callback)
- * @method static mixed rememberForever(string $key, \Closure $callback)
- * @method static mixed sear(string $key, \Closure $callback)
- *
- * @see \Autoframe\Core\SocketCache\AfrCacheManager
- * @see \Autoframe\Core\SocketCache\LaravelPort\Cache\CacheManager
- * @see \Autoframe\Core\SocketCache\LaravelPort\Cache\Repository
- */
-class AfrCache
-{
-    /**
-     * @var CacheManager|AfrCacheManager
-     */
-    protected static CacheManager $instance;
+AfrCacheApp::getInstance()->setFileConfig(true, [
+    'driver' => 'file',
+    'path' => __DIR__ . '/fileCache',
+]);
 
-    /**
-     * @param CacheManager|AfrCacheManager $oCacheManager
-     * @return CacheManager|AfrCacheManager
-     */
-    public static function setManager(CacheManager $oCacheManager): CacheManager
-    {
-        return static::$instance = $oCacheManager;
-    }
+$repo = AfrCache::getManager()->store();
+$repo->put('file:key', 'payload', 50);
+```
 
-    /**
-     * @return CacheManager
-     */
-    public static function getManager(): CacheManager
-    {
-        if (empty(static::$instance)) {
-            static::setManager(
-                new AfrCacheManager(
-                    AfrCacheApp::getInstance()
-                )
-            );
-        }
-        return static::$instance;
-    }
+### 5.4 afrsock store through manager
 
-    /**
-     * @param $method
-     * @param $args
-     * @return mixed
-     */
-    public static function __callStatic($method, $args)
-    {
-        return static::getManager()->$method(...$args);
-    }
+```php
+<?php
 
+use Autoframe\Core\SocketCache\App\AfrCacheApp;
+use Autoframe\Core\SocketCache\Facade\AfrCache;
+
+$app = AfrCacheApp::getInstance();
+
+if ($app->testSock()) {
+    $app->setSockConfig([
+        'driver' => 'afrsock',
+        'iAutoShutdownServerAfterXSeconds' => 40,
+        'bServerAutoPowerOnByConfigViaCliOnLocal' => true,
+        'iServerMemoryMb' => 16,
+    ], true);
+
+    $repo = AfrCache::getManager()->store();
+    $repo->put('sock:key', 'value', 5);
 }
+```
 
+### 5.5 afrsock direct client store operations
+
+```php
+<?php
+
+use Autoframe\Core\SocketCache\AfrCacheSocketConfig;
+use Autoframe\Core\SocketCache\Client\AfrClientStore;
+
+$config = new AfrCacheSocketConfig('afrsock');
+$config->iAutoShutdownServerAfterXSeconds = 60;
+$config->bServerAutoPowerOnByConfigViaCliOnLocal = true;
+$config->iServerMemoryMb = 16;
+$config->socketPort = 27499;
+
+AfrCacheSocketConfig::serverUp($config);
+$store = new AfrClientStore($config);
+
+$store->putMany(['a' => 1, 'b' => 'x'], 1);
+$items = $store->many(['a', 'b']);
+$store->increment('counter', 5);
+$store->delete('a');
+$store->flush();
+```
+
+### 5.6 Repository auto-selector
+
+```php
+<?php
+
+use Autoframe\Core\SocketCache\Facade\AfrRepositoryAutoSelector;
+
+AfrRepositoryAutoSelector::setToUseRepositories(
+    AfrRepositoryAutoSelector::SECONDARY_LOAD,
+    ['file']
+);
+
+$key = AfrRepositoryAutoSelector::prefixKeyForRepo(
+    'sKeyName',
+    AfrRepositoryAutoSelector::SECONDARY_LOAD
+);
+
+$repo = AfrRepositoryAutoSelector::selectRepoByKeyNs($key);
+$repo->set('sKeyName', 'sKeyVal', 2);
 ```
 
 ---
 
-```php
+## 6) Operational notes
 
-namespace Autoframe\Core\SocketCache\LaravelPort\Contracts\Cache;
+| Scenario | Behavior |
+|---|---|
+| Missing PHP extension for a driver | `AfrCacheApp::test*()` helpers gate setup and may throw `AfrException` on forced setup. |
+| Redis driver unavailable (`ext-redis` and `predis/predis` both missing) | `setRedisConfig(...)` throws with guidance text. |
+| afrsock on environments without sockets extension | `setSockConfig(...)` throws; tests skip through `testSock()`. |
+| Memcached service down | tests probe port 11211 before running memcached assertions. |
+| APC differences | tests normalize `false` payload expectations because APC can map false-like values differently. |
 
-use Closure;
+---
 
-interface Repository
-{
-    // use Psr\SimpleCache\CacheInterface;
-    /**
-     * Fetches a value from the cache.
-     *
-     * @param string $key     The unique key of this item in the cache.
-     * @param mixed  $default Default value to return if the key does not exist.
-     *
-     * @return mixed The value of the item from the cache, or $default in case of cache miss.
-     *
-     *   MUST be thrown if the $key string is not a legal value.
-     */
-    public function get($key, $default = null);
+## 7) Practical guidance
 
-    /**
-     * Persists data in the cache, uniquely referenced by a key with an optional expiration TTL time.
-     *
-     * @param string                 $key   The key of the item to store.
-     * @param mixed                  $value The value of the item to store, must be serializable.
-     * @param null|int|\DateInterval $ttl   Optional. The TTL value of this item. If no value is sent and
-     *                                      the driver supports TTL then the library may set a default value
-     *                                      for it or let the driver take care of that.
-     *
-     * @return bool True on success and false on failure.
-     *
-     *   MUST be thrown if the $key string is not a legal value.
-     */
-    public function set($key, $value, $ttl = null);
-
-    /**
-     * Delete an item from the cache by its unique key.
-     *
-     * @param string $key The unique cache key of the item to delete.
-     *
-     * @return bool True if the item was successfully removed. False if there was an error.
-     *
-     *   MUST be thrown if the $key string is not a legal value.
-     */
-    public function delete($key);
-
-    /**
-     * Wipes clean the entire cache's keys.
-     *
-     * @return bool True on success and false on failure.
-     */
-    public function clear();
-
-    /**
-     * Obtains multiple cache items by their unique keys.
-     *
-     * @param iterable $keys    A list of keys that can obtained in a single operation.
-     * @param mixed    $default Default value to return for keys that do not exist.
-     *
-     * @return iterable A list of key => value pairs. Cache keys that do not exist or are stale will have $default as value.
-     *
-     *   MUST be thrown if $keys is neither an array nor a Traversable,
-     *   or if any of the $keys are not a legal value.
-     */
-    public function getMultiple($keys, $default = null);
-
-    /**
-     * Persists a set of key => value pairs in the cache, with an optional TTL.
-     *
-     * @param iterable               $values A list of key => value pairs for a multiple-set operation.
-     * @param null|int|\DateInterval $ttl    Optional. The TTL value of this item. If no value is sent and
-     *                                       the driver supports TTL then the library may set a default value
-     *                                       for it or let the driver take care of that.
-     *
-     * @return bool True on success and false on failure.
-     *
-     *   MUST be thrown if $values is neither an array nor a Traversable,
-     *   or if any of the $values are not a legal value.
-     */
-    public function setMultiple($values, $ttl = null);
-
-    /**
-     * Deletes multiple cache items in a single operation.
-     *
-     * @param iterable $keys A list of string-based keys to be deleted.
-     *
-     * @return bool True if the items were successfully removed. False if there was an error.
-     *
-     *   MUST be thrown if $keys is neither an array nor a Traversable,
-     *   or if any of the $keys are not a legal value.
-     */
-    public function deleteMultiple($keys);
-
-    /**
-     * Determines whether an item is present in the cache.
-     *
-     * NOTE: It is recommended that has() is only to be used for cache warming type purposes
-     * and not to be used within your live applications operations for get/set, as this method
-     * is subject to a race condition where your has() will return true and immediately after,
-     * another script can remove it making the state of your app out of date.
-     *
-     * @param string $key The cache item key.
-     *
-     * @return bool
-     *
-     *   MUST be thrown if the $key string is not a legal value.
-     */
-    public function has($key);
-    
-    /**
-     * Retrieve an item from the cache and delete it.
-     *
-     * @param  string  $key
-     * @param  mixed  $default
-     * @return mixed
-     */
-    public function pull($key, $default = null);
-
-    /**
-     * Store an item in the cache.
-     *
-     * @param  string  $key
-     * @param  mixed  $value
-     * @param  \DateTimeInterface|\DateInterval|int|null  $ttl
-     * @return bool
-     */
-    public function put($key, $value, $ttl = null);
-
-    /**
-     * Store an item in the cache if the key does not exist.
-     *
-     * @param  string  $key
-     * @param  mixed  $value
-     * @param  \DateTimeInterface|\DateInterval|int|null  $ttl
-     * @return bool
-     */
-    public function add($key, $value, $ttl = null);
-
-    /**
-     * Increment the value of an item in the cache.
-     *
-     * @param  string  $key
-     * @param  mixed  $value
-     * @return int|bool
-     */
-    public function increment($key, $value = 1);
-
-    /**
-     * Decrement the value of an item in the cache.
-     *
-     * @param  string  $key
-     * @param  mixed  $value
-     * @return int|bool
-     */
-    public function decrement($key, $value = 1);
-
-    /**
-     * Store an item in the cache indefinitely.
-     *
-     * @param  string  $key
-     * @param  mixed  $value
-     * @return bool
-     */
-    public function forever($key, $value);
-
-    /**
-     * Get an item from the cache, or execute the given Closure and store the result.
-     *
-     * @param  string  $key
-     * @param  \DateTimeInterface|\DateInterval|int|null  $ttl
-     * @param  \Closure  $callback
-     * @return mixed
-     */
-    public function remember($key, $ttl, Closure $callback);
-
-    /**
-     * Get an item from the cache, or execute the given Closure and store the result forever.
-     *
-     * @param  string  $key
-     * @param  \Closure  $callback
-     * @return mixed
-     */
-    public function sear($key, Closure $callback);
-
-    /**
-     * Get an item from the cache, or execute the given Closure and store the result forever.
-     *
-     * @param  string  $key
-     * @param  \Closure  $callback
-     * @return mixed
-     */
-    public function rememberForever($key, Closure $callback);
-
-    /**
-     * Remove an item from the cache.
-     *
-     * @param  string  $key
-     * @return bool
-     */
-    public function forget($key);
-
-    /**
-     * Get the cache store implementation.
-     *
-     * @return \Autoframe\Core\SocketCache\LaravelPort\Contracts\Cache\Store
-     */
-    public function getStore();
-}
-
-
-
-```
+- Use `AfrCacheApp` for explicit per-driver setup before calling the manager facade.
+- Treat `afrsock` as a local high-performance cache channel when you control both client and server process lifecycle.
+- Keep multiple named stores configured and route usage with `AfrRepositoryAutoSelector` where workload classes differ.
+- For Redis usage, prefer explicit client config (`phpredis` or `predis`) and verify connection options in `database.redis`.
+- Validate adapter availability at runtime (`testSock`, `testMemcached`, `testApc`, `testRedis`) before promoting a driver to default.

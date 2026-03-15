@@ -83,11 +83,16 @@ class PhpRedisConnection extends Connection implements ConnectionContract
      */
     public function set($key, $value, $expireResolution = null, $expireTTL = null, $flag = null)
     {
-        return $this->command('set', [
-            $key,
-            $value,
-            $expireResolution ? [$flag, $expireResolution => $expireTTL] : null,
-        ]);
+        if ($expireResolution === null) {
+            return $this->command('set', [$key, $value]);
+        }
+
+        $options = [$expireResolution => $expireTTL];
+        if ($flag !== null) {
+            array_unshift($options, $flag);
+        }
+
+        return $this->command('set', [$key, $value, $options]);
     }
 
     /**
@@ -130,9 +135,16 @@ class PhpRedisConnection extends Connection implements ConnectionContract
         if (count($dictionary) === 1) {
             $dictionary = $dictionary[0];
         } else {
-            $input = collect($dictionary);
+            $flatDictionary = $dictionary;
+            $dictionary = [];
+            $limit = count($flatDictionary);
 
-            $dictionary = $input->nth(2)->combine($input->nth(2, 1))->toArray();
+            for ($i = 0; $i < $limit; $i += 2) {
+                if (!array_key_exists($i + 1, $flatDictionary)) {
+                    continue;
+                }
+                $dictionary[$flatDictionary[$i]] = $flatDictionary[$i + 1];
+            }
         }
 
         return $this->command('hmset', [$key, $dictionary]);
