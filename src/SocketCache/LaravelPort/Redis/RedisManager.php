@@ -71,6 +71,7 @@ class RedisManager implements Factory
         $this->app = $app;
         $this->driver = $driver;
         $this->config = $config;
+        $this->connections = [];
     }
 
     /**
@@ -174,6 +175,8 @@ class RedisManager implements Factory
             case 'phpredis':
                 return new PhpRedisConnector;
         }
+
+        throw new InvalidArgumentException("Redis driver [{$this->driver}] is not supported.");
     }
 
     /**
@@ -204,7 +207,7 @@ class RedisManager implements Factory
      */
     public function connections()
     {
-        return $this->connections;
+        return $this->connections ?? [];
     }
 
     /**

@@ -76,7 +76,7 @@ class PhpRedisConnector implements Connector
             $this->establishConnection($client, $config);
 
             if (! empty($config['password'])) {
-                $client->auth($config['password']);
+                $client->auth($this->resolveAuthCredentials($config));
             }
 
             if (isset($config['database'])) {
@@ -132,11 +132,11 @@ class PhpRedisConnector implements Connector
             Arr::get($config, 'retry_interval', 0),
         ];
 
-        if (version_compare(phpversion('redis'), '3.1.3', '>=')) {
+        if ($this->redisVersionAtLeast('3.1.3')) {
             $parameters[] = Arr::get($config, 'read_timeout', 0.0);
         }
 
-        if (version_compare(phpversion('redis'), '5.3.0', '>=')) {
+        if ($this->redisVersionAtLeast('5.3.0')) {
             if (! is_null($context = Arr::get($config, 'context'))) {
                 $parameters[] = $context;
             }
@@ -162,11 +162,11 @@ class PhpRedisConnector implements Connector
             isset($options['persistent']) && $options['persistent'],
         ];
 
-        if (version_compare(phpversion('redis'), '4.3.0', '>=')) {
+        if ($this->redisVersionAtLeast('4.3.0')) {
             $parameters[] = $options['password'] ?? null;
         }
 
-        if (version_compare(phpversion('redis'), '5.3.2', '>=')) {
+        if ($this->redisVersionAtLeast('5.3.2')) {
             if (! is_null($context = Arr::get($options, 'context'))) {
                 $parameters[] = $context;
             }
@@ -223,5 +223,25 @@ class PhpRedisConnector implements Connector
         $quoted = preg_quote($prefix, '/');
 
         return $prefix.preg_replace('/^(?:'.$quoted.')+/u', '', $value);
+    }
+
+    /**
+     * @param array $config
+     * @return string|array
+     */
+    protected function resolveAuthCredentials(array $config)
+    {
+        if (!empty($config['username']) && $this->redisVersionAtLeast('5.3.0')) {
+            return [$config['username'], $config['password']];
+        }
+
+        return $config['password'];
+    }
+
+    protected function redisVersionAtLeast(string $version): bool
+    {
+        $redisVersion = phpversion('redis');
+
+        return is_string($redisVersion) && version_compare($redisVersion, $version, '>=');
     }
 }
