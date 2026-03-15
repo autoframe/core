@@ -11,6 +11,9 @@
 - **Pattern families**:
   - Singleton
   - SingletonArray
+  - Facade
+  - Factory
+  - Adapter
   - ArrayAccess object wrappers
   - Closure bind/call helpers
   - Tap pattern helpers
@@ -21,6 +24,9 @@
 |---|---|
 | `Singleton` | `AfrSingletonInterface`, `AfrSingletonTrait`, `AfrSingletonResolveTrait`, `AfrSingletonClassicTrait`, `AfrSingletonAbstractClass` |
 | `SingletonArray` | `AfrSingletonArrAbstractClass` |
+| `Facade` | `AfrFacadeResolverInterface`, `AfrFacadeInterface`, `AfrFacadeTrait`, `AfrFacadeAbstractClass` |
+| `Factory` | `AfrFactoryInterface`, `AfrFactoryMapTrait`, `AfrFactoryAbstractClass` |
+| `Adapter` | `AfrAdapterInterface`, `AfrAdapterForwardCallsTrait`, `AfrAdapterAbstractClass` |
 | `ArrayAccess` | `AfrObjectArrayAccessClass`, `AfrObjectArrayAccessTrait` |
 | `ClosureBind` | `AfrBindAndCallClosureInterface`, `AfrBindAndCallClosureTrait` |
 | `Tap` | `Tap`, `HigherOrderTapProxy` |
@@ -36,6 +42,9 @@ source_dir: src/DesignPatterns
 modules:
   - Singleton
   - SingletonArray
+  - Facade
+  - Factory
+  - Adapter
   - ArrayAccess
   - ClosureBind
   - Tap
@@ -128,6 +137,27 @@ because it can remain singleton-friendly while still participating in container-
 - execute callback on value,
 - keep fluent expression flow while returning proxied target.
 
+### 5.4 Facade module
+
+The facade helpers provide a reusable static entry point layer:
+- `AfrFacadeResolverInterface` defines how facades resolve service objects.
+- `AfrFacadeTrait` implements root resolution cache + `__callStatic` forwarding.
+- `AfrFacadeAbstractClass` is a ready-to-extend base for concrete facades.
+
+### 5.5 Factory module
+
+The factory helpers provide map-based object creation:
+- `AfrFactoryInterface` defines `canMake()` and `make()` contract.
+- `AfrFactoryMapTrait` provides registration + type-map checks.
+- `AfrFactoryAbstractClass` builds registered types with variadic constructor arguments.
+
+### 5.6 Adapter module
+
+The adapter helpers provide adaptee wrapping + call forwarding:
+- `AfrAdapterInterface` exposes the wrapped adaptee.
+- `AfrAdapterForwardCallsTrait` forwards method calls to adaptee.
+- `AfrAdapterAbstractClass` is a base implementation for object adapters.
+
 ---
 
 ## 6) PHP examples
@@ -214,6 +244,91 @@ Tap::tap($object, function ($o) {
 });
 ```
 
+### 6.6 Generic facade helper
+
+```php
+<?php
+
+use Autoframe\Core\DesignPatterns\Facade\AfrFacadeAbstractClass;
+use Autoframe\Core\DesignPatterns\Facade\AfrFacadeResolverInterface;
+
+final class ArrayResolver implements AfrFacadeResolverInterface
+{
+    /** @var array<string, object> */
+    private array $services;
+
+    /**
+     * @param array<string, object> $services
+     */
+    public function __construct(array $services)
+    {
+        $this->services = $services;
+    }
+
+    public function resolve(string $accessor): object
+    {
+        return $this->services[$accessor];
+    }
+}
+
+final class LoggerFacade extends AfrFacadeAbstractClass
+{
+    protected static function getFacadeAccessor(): string
+    {
+        return 'logger';
+    }
+}
+
+LoggerFacade::setFacadeResolver(new ArrayResolver([
+    'logger' => new class {
+        public function info(string $message): string
+        {
+            return $message;
+        }
+    },
+]));
+
+echo LoggerFacade::info('hello');
+```
+
+### 6.7 Generic factory helper
+
+```php
+<?php
+
+use Autoframe\Core\DesignPatterns\Factory\AfrFactoryAbstractClass;
+
+final class NotificationFactory extends AfrFactoryAbstractClass
+{
+    public function __construct()
+    {
+        $this->setFactoryMap([
+            'email' => EmailNotification::class,
+            'sms' => SmsNotification::class,
+        ]);
+    }
+}
+
+$factory = new NotificationFactory();
+$notification = $factory->make('email', ['subject', 'body']);
+```
+
+### 6.8 Generic adapter helper
+
+```php
+<?php
+
+use Autoframe\Core\DesignPatterns\Adapter\AfrAdapterAbstractClass;
+
+final class LegacyMailerAdapter extends AfrAdapterAbstractClass
+{
+    public function send(string $to, string $message): bool
+    {
+        return (bool) $this->forwardCallToAdaptee('dispatch', [$to, $message]);
+    }
+}
+```
+
 ---
 
 ## 7) Integration notes
@@ -231,4 +346,7 @@ Before changing `src/DesignPatterns/*`:
 - [ ] Update singleton section if container-resolution behavior changes.
 - [ ] Keep `getInstance` vs `getInstanceNoContainerBindings` semantics clearly documented.
 - [ ] Add/update examples for any new helper trait or pattern class.
+- [ ] Keep Facade resolver and static call-forwarding behavior documented.
+- [ ] Keep Factory type-map registration and exception behavior documented.
+- [ ] Keep Adapter forwarding approach and adaptee contract documented.
 - [ ] Document behavioral impacts on SOLID/substitution assumptions.
