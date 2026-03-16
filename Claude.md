@@ -10,20 +10,21 @@ For comprehensive framework documentation and specifications, refer to:
 
 ### Core Components Documentation
 Components are stand-alone classes and interfaces that solve specific problems independently.
-- @docs/components/arr-utilities.md - Array manipulation utilities
-- @docs/components/class-dependency.md - Class dependency analysis tools
-- @docs/components/cli-tools.md - CLI utilities and text formatting
-- @docs/components/design-patterns-tap.md - Tap design pattern implementation
-- @docs/components/env-management.md - Environment and configuration management
+- @docs/components/arr-utilities.md - blueprint for all classes and interfaces under `src/Arr/`.
+- @docs/components/class-dependency.md - document how `AfrClassDependency` builds and exposes dependency relationships between PHP symbols (classes, interfaces, traits, enums), and how that mapping can support interface-to-concrete resolution in DI workflows.
+- @docs/components/cli-tools.md - document the CLI/runtime utility classes under `src/CliTools`, with a structure that is easy for humans and AI systems to index.
+- @docs/components/container.md - dependency container classes under `src/Container/`, including object resolution, singleton handling, and interface-to-concrete integration
+- @docs/components/design-patterns.md - document reusable design-pattern utilities under `src/DesignPatterns/`, with emphasis on the framework-specific singleton behavior.
+- @docs/components/env-management.md - document environment loading, parsing, validation, registration, and runtime access for classes under `src/Env/`.
 - @docs/components/exception-handling.md - Exception handling framework
-- @docs/components/file-mime.md - MIME type detection and management
-- @docs/components/file-system.md - File system operations
-- @docs/components/ftp-transfer.md - FTP transfer utilities
-- @docs/components/git-exec-hook.md - Git execution hooks
-- @docs/components/interface-to-concrete.md - Interface to concrete implementation resolution
+- @docs/components/file-mime.md - document MIME lookup and MIME map generation utilities in `src/FileMime/`.
+- @docs/components/file-system.md - document path, write, traversal, versioning, split/merge, and cache helpers in `src/FileSystem/`.
+- @docs/components/ftp-transfer.md - document resumable local-to-FTP backup workflows, transfer business logic, connection abstractions, logging, and optional reporting from `src/FtpTransfer/`.
+- @docs/components/git-exec-hook.md - document webhook parsing and git command automation helpers from `src/GitExecHook/`.
+- @docs/components/interface-to-concrete.md - document how classes in `src/InterfaceToConcrete/` discover symbols and resolve a non-concrete type (interface/abstract/trait target) to a concrete class candidate, with strategy-based priority rules and container-friendly integration.
 - @docs/components/lightquery-js.md - LightQuery JavaScript library documentation
-- @docs/components/process-control.md - Process control and management
-- @docs/components/socket-cache.md - Socket-based caching layer
+- @docs/components/process-control.md - document process-locking and background-worker helpers in `src/ProcessControl/`.
+- @docs/components/socket-cache.md - document the multi-adaptor cache system in `src/SocketCache/`, including repository management, adapter configuration, the proprietary `afrsock` client-server cache, and Laravel-port cache/redis internals.
 
 ### Database & ORM Documentation
 - @docs/database/orm-requirements.md - ORM implementation requirements and roadmap
