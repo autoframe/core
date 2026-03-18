@@ -2,6 +2,8 @@
 
 namespace Autoframe\Core\Bank\ExchangeRate;
 
+use Autoframe\Core\DesignPatterns\Singleton\AfrSingletonAbstractClass;
+
 /**
  * ECB-based currency exchange class.
  *
@@ -23,7 +25,7 @@ namespace Autoframe\Core\Bank\ExchangeRate;
  * - days['2026-03-05']['RON'] = 4.9714  means 1 EUR = 4.9714 RON
  * - days['2026-03-05']['EUR'] = 1.0     (base)
  */
-class AfrCurrencyExchangeEcb implements AfrCurrencyExchangeInterface
+class AfrCurrencyExchangeEcb extends AfrSingletonAbstractClass implements AfrCurrencyExchangeInterface
 {
 	use AfrCurrencyExchangeTrait;
 
@@ -31,12 +33,6 @@ class AfrCurrencyExchangeEcb implements AfrCurrencyExchangeInterface
 	 * @var string
 	 */
 	protected string $sEcbApiUrl = 'https://data-api.ecb.europa.eu/service/data/EXR';
-
-
-	/**
-	 * @var string
-	 */
-	protected string $sDefaultToCurrency = self::EUR;
 
 	/**
 	 * @var int
@@ -54,14 +50,19 @@ class AfrCurrencyExchangeEcb implements AfrCurrencyExchangeInterface
 	protected int $iHttpTimeout = 12;
 
 	/**
-	 * @var array|null
+	 * Returns EUR as the default target currency for this ECB implementation.
 	 */
+	protected function getDefaultCurrency(): string
+	{
+		return self::EUR;
+	}
 
 	/**
+	 * Initializes cache directory and default currency on first singleton construction.
 	 * @param string|null $sCacheDir Cache directory; defaults to __DIR__.'/cache/'.
 	 * @param string|null $sDefaultToCurrency Default target currency for convert(); defaults to EUR.
 	 */
-	public function __construct(
+	protected function __construct(
 		?string $sCacheDir = null,
 		?string $sDefaultToCurrency = null
 	)

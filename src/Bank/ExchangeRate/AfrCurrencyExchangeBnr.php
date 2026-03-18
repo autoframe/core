@@ -2,6 +2,7 @@
 
 namespace Autoframe\Core\Bank\ExchangeRate;
 
+use Autoframe\Core\DesignPatterns\Singleton\AfrSingletonAbstractClass;
 use InvalidArgumentException;
 
 /**
@@ -29,15 +30,11 @@ use InvalidArgumentException;
  * - BNR publishes <Rate currency="HUF" multiplier="100">1.3029</Rate>
  *   which is normalised to HUF => 1.3029 / 100 = 0.013029 (RON per 1 HUF)
  */
-class AfrCurrencyExchangeBnr implements AfrCurrencyExchangeInterface
+class AfrCurrencyExchangeBnr extends AfrSingletonAbstractClass implements AfrCurrencyExchangeInterface
 {
 	use AfrCurrencyExchangeTrait;
 
 	protected string $sBnrXmlUrl = 'https://www.bnr.ro/nbrfxrates.xml';
-
-
-	/** Default target currency — RON for BNR since the feed is RON-based.*/
-	protected string $sDefaultToCurrency = self::RON;
 
 	protected int $iMaxCacheAge = 3600;
 
@@ -47,15 +44,24 @@ class AfrCurrencyExchangeBnr implements AfrCurrencyExchangeInterface
 
 
 	/**
-	 * @param string|null $sCacheDir         Cache directory; defaults to __DIR__.'/cache/'.
-	 * @param string      $sDefaultToCurrency Default target currency for convert(); defaults to RON.
+	 * Returns RON as the default target currency for this BNR implementation.
 	 */
-	public function __construct(
+	protected function getDefaultCurrency(): string
+	{
+		return self::RON;
+	}
+
+	/**
+	 * Initializes cache directory and default currency on first singleton construction.
+	 * @param string|null $sCacheDir         Cache directory; defaults to __DIR__.'/cache/'.
+	 * @param string|null $sDefaultToCurrency Default target currency for convert(); defaults to RON.
+	 */
+	protected function __construct(
 		?string $sCacheDir = null,
-		string $sDefaultToCurrency = self::RON
+		?string $sDefaultToCurrency = null
 	) {
 		$this->setCacheDir($sCacheDir);
-		if($sDefaultToCurrency) $this->setDefaultToCurrency($sDefaultToCurrency);
+		if ($sDefaultToCurrency) $this->setDefaultToCurrency($sDefaultToCurrency);
 	}
 
 	/**

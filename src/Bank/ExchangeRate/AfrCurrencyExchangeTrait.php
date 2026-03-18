@@ -10,31 +10,38 @@ use Throwable;
  * Shared cache, HTTP fetch, date, and utility methods for currency exchange classes.
  *
  * The using class MUST declare these properties:
- *   protected string $sCacheDir
- *   protected string $sDefaultToCurrency
- *   protected int    $iMaxCacheAge
- *   protected int    $iHourlyRefreshSecond
- *   protected int    $iHttpTimeout
- *   protected ?array $aData
+ *   protected int $iMaxCacheAge
+ *   protected int $iHourlyRefreshSecond
+ *   protected int $iHttpTimeout
  *
  * The using class MUST implement these abstract methods:
  *   protected function getBaseCurrency(): string
+ *   protected function getDefaultCurrency(): string
  *   protected function validateData(array $aData): void
  *   protected function convertUsingRates(float $fAmount, string $sFrom, string $sTo, array $aRates): float
  *   protected function getRateFromArray(string $sCurrency, array $aRates): float
  *   public    function refresh(): self
+ *
+ * Static per-class state (keyed by static::class):
+ *   static::$aData[static::class]          — in-memory monthly data cache
+ *   static::$sCacheDir[static::class]      — resolved cache directory path
+ *   static::$sDefaultToCurrency[static::class] — default target currency
  */
 trait AfrCurrencyExchangeTrait
 {
 
 	protected string $sYmPattern = 'Y-m';
-	protected string $sCacheDir;
-	protected static ?array $aData = null;
+	protected static array $sCacheDir = [];
+	protected static array $sDefaultToCurrency = [];
+	protected static array $aData = [];
 
 	// --- Abstract requirements that the using class must satisfy ---
 
 	/** Returns the ISO currency code used internally as the base for all stored rates. */
 	abstract protected function getBaseCurrency(): string;
+
+	/** Returns the default target currency constant for this implementation (e.g. self::RON or self::EUR). */
+	abstract protected function getDefaultCurrency(): string;
 
 	/** Validates the full monthly data structure and throws on invalid data. */
 	abstract protected function validateData(array $aData): void;
@@ -60,7 +67,7 @@ trait AfrCurrencyExchangeTrait
 	 */
 	public function setCacheDir(?string $sCacheDir): self
 	{
-		$this->sCacheDir = $this->normalizeCacheDir($sCacheDir);
+		static::$sCacheDir[static::class] = $this->normalizeCacheDir($sCacheDir);
 		$this->ensureCacheDirExists();
 		static::$aData[static::class] = null;
 		return $this;
@@ -71,8 +78,8 @@ trait AfrCurrencyExchangeTrait
 	 */
 	public function getCacheDir(): string
 	{
-		if(empty($this->sCacheDir)) $this->setCacheDir(null);
-		return $this->sCacheDir;
+		if (empty(static::$sCacheDir[static::class])) $this->setCacheDir(null);
+		return static::$sCacheDir[static::class];
 	}
 
 	/**
@@ -80,7 +87,7 @@ trait AfrCurrencyExchangeTrait
 	 */
 	public function setDefaultToCurrency(string $sCurrency): self
 	{
-		$this->sDefaultToCurrency = $this->normalizeCurrencyCode($sCurrency);
+		static::$sDefaultToCurrency[static::class] = $this->normalizeCurrencyCode($sCurrency);
 		return $this;
 	}
 
@@ -89,7 +96,10 @@ trait AfrCurrencyExchangeTrait
 	 */
 	public function getDefaultToCurrency(): string
 	{
-		return $this->sDefaultToCurrency;
+		if (empty(static::$sDefaultToCurrency[static::class])) {
+			static::$sDefaultToCurrency[static::class] = $this->getDefaultCurrency();
+		}
+		return static::$sDefaultToCurrency[static::class];
 	}
 
 	/**
@@ -97,11 +107,10 @@ trait AfrCurrencyExchangeTrait
 	 * using the latest available UTC date from the loaded monthly cache.
 	 * @throws Throwable
 	 */
-	public function getExchangeRate(string $sCurrency): float
+	public function getExchangeRateBaseCurrency(string $sCurrency): float
 	{
 		$sCurrency = $this->normalizeCurrencyCode($sCurrency);
 		if ($sCurrency === $this->getBaseCurrency()) return 1.0;
-
 
 		$aData = $this->getFreshData();
 		$sLatestDate = $this->getLatestAvailableDate($aData);
@@ -146,7 +155,7 @@ trait AfrCurrencyExchangeTrait
 	public function convert(float $fAmount, string $sFromCurrency, ?string $sToCurrency = null): float
 	{
 		$sFromCurrency = $this->normalizeCurrencyCode($sFromCurrency);
-		$sToCurrency = $this->normalizeCurrencyCode($sToCurrency ?? $this->sDefaultToCurrency);
+		$sToCurrency = $this->normalizeCurrencyCode($sToCurrency ?? $this->getDefaultToCurrency());
 		if ($sFromCurrency === $sToCurrency) return $fAmount;
 
 
@@ -167,11 +176,11 @@ trait AfrCurrencyExchangeTrait
 		string  $sFromCurrency,
 		string  $sDate,
 		?string $sToCurrency = null,
-		bool $bUseCurrentExchangeRateIfHistoryIsMissing = true
+		bool    $bUseCurrentExchangeRateIfHistoryIsMissing = true
 	): float
 	{
 		$sFromCurrency = $this->normalizeCurrencyCode($sFromCurrency);
-		$sToCurrency = $this->normalizeCurrencyCode($sToCurrency ?? $this->sDefaultToCurrency);
+		$sToCurrency = $this->normalizeCurrencyCode($sToCurrency ?? $this->getDefaultToCurrency());
 		if ($sFromCurrency === $sToCurrency) return $fAmount;
 
 		$sDate = $this->normalizeDate($sDate);
@@ -202,7 +211,8 @@ trait AfrCurrencyExchangeTrait
 	 */
 	protected function getFreshData(): array
 	{
-		if (static::$aData[static::class] !== null && !$this->isDataExpired(static::$aData[static::class])) return static::$aData[static::class];
+		if (!empty(static::$aData[static::class]) && !$this->isDataExpired(static::$aData[static::class]))
+			return static::$aData[static::class];
 
 		$aData = $this->readCacheFile();
 		if ($aData !== null && !$this->isDataExpired($aData)) return static::$aData[static::class] = $aData;
@@ -217,11 +227,9 @@ trait AfrCurrencyExchangeTrait
 			}
 			throw $e;
 		}
-
-		if (static::$aData[static::class] === null) {
+		if (empty(static::$aData[static::class])) {
 			throw new RuntimeException('Unable to load exchange rate data.');
 		}
-
 		return static::$aData[static::class];
 	}
 
@@ -360,10 +368,10 @@ trait AfrCurrencyExchangeTrait
 			],
 		]);
 
-		$sFallbackPath = __DIR__ . DIRECTORY_SEPARATOR . substr(strrchr('\\' . static::class, '\\'), 1).'.xml';
+		$sFallbackPath = __DIR__ . DIRECTORY_SEPARATOR . substr(strrchr('\\' . static::class, '\\'), 1) . '.xml';
 		// 1. Try remote first
 		$sBody = (string)(@file_get_contents($sUrl, false, $rContext));
-		if (strlen($sBody)>50 && strpos($sBody,'USD') && strpos($sBody,'EUR')) {
+		if (strlen($sBody) > 50 && strpos($sBody, 'USD') && strpos($sBody, 'EUR')) {
 			// Save last known good remote XML locally
 			@file_put_contents($sFallbackPath, $sBody, LOCK_EX);
 		}
@@ -514,9 +522,9 @@ trait AfrCurrencyExchangeTrait
 	 */
 	protected function ensureCacheDirExists(): void
 	{
-		if (is_dir($this->sCacheDir)) return;
-		if (!mkdir($this->sCacheDir, 0775, true) && !is_dir($this->sCacheDir)) {
-			throw new RuntimeException('Unable to create cache directory: ' . $this->sCacheDir);
+		if (is_dir(static::$sCacheDir[static::class])) return;
+		if (!mkdir(static::$sCacheDir[static::class], 0775, true) && !is_dir(static::$sCacheDir[static::class])) {
+			throw new RuntimeException('Unable to create cache directory: ' . static::$sCacheDir[static::class]);
 		}
 	}
 }

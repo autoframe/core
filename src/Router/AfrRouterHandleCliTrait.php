@@ -12,6 +12,7 @@ use Autoframe\Core\Cron\AfrCronJobDaemon;
 use Autoframe\Core\Cron\Log\Channel\AfrCronLogChannelSharedLogBuffer;
 use Autoframe\Core\Event\Exception\AfrEventException;
 use Autoframe\Core\Exception\AfrException;
+use Autoframe\Core\Http\Request\AfrRequestClass;
 use Autoframe\Core\Http\Request\AfrRequestInterface;
 
 
@@ -25,7 +26,7 @@ trait AfrRouterHandleCliTrait
 {
 	/**
 	 * Handle cli routes.
-	 * @param AfrRequestInterface $oRequest
+	 * @param AfrRequestInterface|AfrRequestClass $oRequest
 	 * @param Closure|null $oClosureAfterRoute
 	 * @return int
 	 * @throws AfrContainerException

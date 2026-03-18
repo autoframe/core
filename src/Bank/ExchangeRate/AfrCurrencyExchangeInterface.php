@@ -31,7 +31,7 @@ interface AfrCurrencyExchangeInterface extends AfrCurrencyCodeInterface
 	 *
 	 * Use convert() for cross-currency conversion between arbitrary currency pairs.
 	 */
-	public function getExchangeRate(string $sCurrency): float;
+	public function getExchangeRateBaseCurrency(string $sCurrency): float;
 
 	/**
 	 * Returns the raw stored rate for $sCurrency relative to the base currency
