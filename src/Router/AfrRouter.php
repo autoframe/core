@@ -134,7 +134,7 @@ class AfrRouter extends AfrSingletonAbstractClass implements AfrRouterInterface,
 		{
 			$iRegistered = 0;
 			foreach ($aRoutes as $sType => $aRouteClusterInfo) {
-				if (!in_array($sType, [static::CLI_CRON_JOB_REQUEST, static::CLI_INLINE, static::CLI_QA_REQUEST])) {
+				if (!in_array($sType, [static::CLI_CRON_JOB_REQUEST, static::CLI_CLOSURE_ROUTES_STACK, static::CLI_QA_ROUTES_STACK])) {
 					throw new AfrModuleException('Invalid routes type group: ' . $sType);
 				} elseif (!is_array($aRouteClusterInfo)) {
 					throw new AfrModuleException("Routes group `$sType` should be an array");
@@ -148,7 +148,7 @@ class AfrRouter extends AfrSingletonAbstractClass implements AfrRouterInterface,
 					}
 				}
 				// php index.php --QA=initTenantFileSystem OR php index.php QA
-				if ($sType === static::CLI_QA_REQUEST) {
+				if ($sType === static::CLI_QA_ROUTES_STACK) {
 					foreach ($aRouteClusterInfo as $sKeyCluster => $mStack) {
 						// $mStack should be an array of closures OR Closure that returns array of closures
 						$iRegistered += AfrCliQaRouter::addActionGroup($sKeyCluster, $mStack, $bMergeQA);

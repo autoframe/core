@@ -1,5 +1,7 @@
 <?php
 
+use Autoframe\Core\CliTools\AfrCliHttpDetect;
+use Autoframe\Core\Cron\AfrCronJob;
 use Autoframe\Core\Http\Request\AfrCliConstantsInterface;
 
 use Autoframe\Core\Afr\Afr;
@@ -50,16 +52,41 @@ $aActions['cronJobs'] = function () {
 
 	return [
 		'View live logs' => function () {
-			AfrCronLogChannelSharedLogBuffer::getInstance()->viewLogs(2,false);
+			AfrCronLogChannelSharedLogBuffer::getInstance()->viewLogs(2, false);
 			//return '';
 			return true;
 		},
 	];
 };
 
+$aActions['Tenant'] = function () {
+	return [
+		'List all tenant aliases:' => function () {
+			return 'Listing all tenant aliases:' . PHP_EOL .
+				implode(PHP_EOL, array_keys(Afr::app()::getAllTenants()));
+		}, 'List CLI variants:' => function () {
+			$r = '';
+			foreach (AfrCronJob::getReplaceMatrix() as $k => $v) $r.= PHP_EOL. $k."=\t".$v;
+			return
+				'php bootstrap.php examples... '.PHP_EOL.
+				'php index.php '.AfrCliConstantsInterface::QA_ARGV_KEY.' ❰ Navigable menu ❱'.PHP_EOL.
+				'php index.php '.AfrCliConstantsInterface::QA_ARGV_KEY.'=Tenant -T=www ❰ Opens "Tenant" menu on AfrCliQaRouter❱'.PHP_EOL.
+				"php index.php ".AfrCliConstantsInterface::CLI_EXECUTE_ARGV_KEY.'="echo 22;"  -T=www'.' ❰ eval(...) ❱'.PHP_EOL.
+				"php index.php ".AfrCliConstantsInterface::CLI_INVOKE_ARGV_KEY.'=Autoframe.Core.Tenant.AfrPrintTenantNameInCli'.
+				' ❰ calls cliInvoke() method on Autoframe\Core\Tenant\AfrPrintTenantNameInCli class ❱'.PHP_EOL.
+				"php index.php ".AfrCliConstantsInterface::CRON_LIVE_LOGS_ARGV_KEY.'=5'.' ❰ seconds.timeout of 5 seconds between reads ❱'.PHP_EOL.
+				"php index.php ".AfrCliConstantsInterface::CRON_DAEMON_ARGV_KEY.' ❰ open cron daemon ❱'.PHP_EOL.
+				"php index.php ".AfrCliConstantsInterface::CRON_WORKER_ARGV_KEY.'=base64...'.' ❰ call daemon worker ❱'.PHP_EOL.
+				"\n\tCron job sources constants from AfrCronJob::getReplaceMatrix():".$r.PHP_EOL;
+
+		},
+	];
+};
+
 
 return [
-	AfrCliConstantsInterface::CLI_QA_REQUEST => $aActions,
-//	AfrCliConstantsInterface::CLI_INLINE => [],
+	AfrCliConstantsInterface::CLI_QA_ROUTES_STACK => $aActions,
+	//closure having associative keys
+	AfrCliConstantsInterface::CLI_CLOSURE_ROUTES_STACK => [ 'afr'=>function ($rq=null) { return true;},],
 //	AfrCliConstantsInterface::CLI_CRON_JOB_REQUEST => [],
 ];

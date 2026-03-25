@@ -12,7 +12,7 @@ interface AfrCliRoutesContract extends AfrCliConstantsInterface {
 	/**
 	 * Register cli routes.
 	 */
-	public function registerCliRoutes(AfrRequestInterface $oRequest = null,array $aFilterOnly = []):int;
+//	public function registerCliRoutes(AfrRequestInterface $oRequest = null,array $aFilterOnly = []):int;
 	/**
 	 * Get cli routes.
 	 */

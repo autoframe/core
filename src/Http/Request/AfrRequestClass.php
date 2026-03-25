@@ -645,6 +645,7 @@ class AfrRequestClass extends AfrSingletonAbstractClass implements AfrRequestInt
 	protected bool $bIsCli;
 
 	// Get the 'argv' parameter from SERVER
+
 	/**
 	 * Get argv param.
 	 */
@@ -665,6 +666,7 @@ class AfrRequestClass extends AfrSingletonAbstractClass implements AfrRequestInt
 	}
 
 	// Get a GET parameter
+
 	/**
 	 * Get query param.
 	 */
@@ -697,6 +699,7 @@ class AfrRequestClass extends AfrSingletonAbstractClass implements AfrRequestInt
 	}
 
 	// Check if a GET parameter exists
+
 	/**
 	 * Has query param.
 	 */
@@ -706,6 +709,7 @@ class AfrRequestClass extends AfrSingletonAbstractClass implements AfrRequestInt
 	}
 
 	// Get a POST parameter
+
 	/**
 	 * Get post param.
 	 */
@@ -738,6 +742,7 @@ class AfrRequestClass extends AfrSingletonAbstractClass implements AfrRequestInt
 	}
 
 	// Check if a POST parameter exists
+
 	/**
 	 * Has post param.
 	 */
@@ -747,6 +752,7 @@ class AfrRequestClass extends AfrSingletonAbstractClass implements AfrRequestInt
 	}
 
 	// Get a FILES parameter
+
 	/**
 	 * Get file param.
 	 */
@@ -779,6 +785,7 @@ class AfrRequestClass extends AfrSingletonAbstractClass implements AfrRequestInt
 	}
 
 	// Check if a FILES parameter exists
+
 	/**
 	 * Has file param.
 	 */
@@ -788,6 +795,7 @@ class AfrRequestClass extends AfrSingletonAbstractClass implements AfrRequestInt
 	}
 
 	// Get a SERVER parameter
+
 	/**
 	 * Get server param.
 	 */
@@ -820,6 +828,7 @@ class AfrRequestClass extends AfrSingletonAbstractClass implements AfrRequestInt
 	}
 
 	// Check if a SERVER parameter exists
+
 	/**
 	 * Has server param.
 	 */
@@ -829,6 +838,7 @@ class AfrRequestClass extends AfrSingletonAbstractClass implements AfrRequestInt
 	}
 
 	// Get a COOKIE parameter
+
 	/**
 	 * Get cookie param.
 	 */
@@ -861,6 +871,7 @@ class AfrRequestClass extends AfrSingletonAbstractClass implements AfrRequestInt
 	}
 
 	// Check if a COOKIE parameter exists
+
 	/**
 	 * Has cookie param.
 	 */
@@ -870,6 +881,7 @@ class AfrRequestClass extends AfrSingletonAbstractClass implements AfrRequestInt
 	}
 
 	// Get all GET parameters
+
 	/**
 	 * Get all get params.
 	 */
@@ -879,6 +891,7 @@ class AfrRequestClass extends AfrSingletonAbstractClass implements AfrRequestInt
 	}
 
 	// Get all POST parameters
+
 	/**
 	 * Get all post params.
 	 */
@@ -888,6 +901,7 @@ class AfrRequestClass extends AfrSingletonAbstractClass implements AfrRequestInt
 	}
 
 	// Get all FILES parameters
+
 	/**
 	 * Get all file params.
 	 */
@@ -897,6 +911,7 @@ class AfrRequestClass extends AfrSingletonAbstractClass implements AfrRequestInt
 	}
 
 	// Get all SERVER parameters
+
 	/**
 	 * Get all server params.
 	 */
@@ -906,6 +921,7 @@ class AfrRequestClass extends AfrSingletonAbstractClass implements AfrRequestInt
 	}
 
 	// Get a REQUEST parameter
+
 	/**
 	 * Get request param.
 	 */
@@ -938,6 +954,7 @@ class AfrRequestClass extends AfrSingletonAbstractClass implements AfrRequestInt
 	}
 
 	// Check if a REQUEST parameter exists
+
 	/**
 	 * Has request param.
 	 */
@@ -947,6 +964,7 @@ class AfrRequestClass extends AfrSingletonAbstractClass implements AfrRequestInt
 	}
 
 	// Get all REQUEST parameters
+
 	/**
 	 * Get all request params.
 	 */
@@ -956,6 +974,7 @@ class AfrRequestClass extends AfrSingletonAbstractClass implements AfrRequestInt
 	}
 
 	// Get all COOKIE parameters
+
 	/**
 	 * Get all cookie params.
 	 */
@@ -1089,29 +1108,12 @@ class AfrRequestClass extends AfrSingletonAbstractClass implements AfrRequestInt
 		$bMatched = false;
 		$sDetectVal = null;
 		if ($this->isCli()) {
-
 			$aAllArgs = AfrGetOpt::getInstance()->setArgvFromRequest($this)->getoptDetectAllArgs(null, true);
-			return [array_key_exists($sArgvKey,$aAllArgs), $aAllArgs[$sArgvKey] ?? null];
+			$bMatched = array_key_exists($sArgvKey, $aAllArgs);
+			$sDetectVal = $aAllArgs[$sArgvKey] ?? null;
+			//return [array_key_exists($sArgvKey,$aAllArgs), $aAllArgs[$sArgvKey] ?? null];
 			//TODO: cleanup dupa ce testez cu AfrGetOpt la detect cu whildcard
 
-			$iKeyLen = strlen($sArgvKey);
-			foreach ($this->getServerParam('argv', []) as $sBlockValue) {
-				if ($sBlockValue === $sArgvKey) {
-					$bMatched = true;
-					break;
-				} elseif (substr($sBlockValue, 0, $iKeyLen + 1) === $sArgvKey . '=') {
-					$bMatched = true;
-					$sDetectVal = trim(substr($sBlockValue, $iKeyLen + 1));
-					break;
-				}
-			}
-			if (!$bMatched) {
-				$mQaOpt = $this->getopt('', [$sArgvKey . '::'])[$sArgvKey] ?? null;
-				if ($mQaOpt !== null) {
-					$bMatched = true;
-					$sDetectVal = $mQaOpt !== false && strlen((string)$mQaOpt) ? (string)$mQaOpt : null;
-				}
-			}
 		}
 		return [$bMatched, $sDetectVal];
 	}

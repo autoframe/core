@@ -387,28 +387,7 @@ final class AfrCronJob
 	 */
 	public function getCommand(): ?string
 	{
-		$sVendorBaseDir = AfrVendorPath::getBaseDirPath();
-		$sAppBaseDir = Afr::app() ?
-			Afr::app()->getAppBaseDirectory() :
-			$sVendorBaseDir; //fallback to vendor parent dir
-		$sTenantName = Afr::getTenantAlias() ? Afr::getTenantAlias() :
-			(defined($sTenantDefault = 'AFR_TENANT_DEFAULT') ? constant($sTenantDefault) : $sTenantDefault);
-		$sTenantNameArg = "--tenant='$sTenantName'";
-		$sIndexEntryPoint = $sAppBaseDir . DIRECTORY_SEPARATOR . 'index.php';
-		$sTenantEntryPoint = $sAppBaseDir . DIRECTORY_SEPARATOR . $sTenantName . '.php';
-
-		$aMatrix = array_merge(
-			[
-				'AFR_SELF_CLI_ENTRY_POINT_FILE' => AfrCliHttpDetect::getEntryPoint(null, false),
-				'AFR_SELF_CLI_ENTRY_POINT_FILE_AND_ARGS' => AfrCliHttpDetect::getEntryPoint(null, true),
-				'AFR_APP_BASE_DIR' => $sAppBaseDir,
-				'AFR_APP_VENDOR_BASE_DIR' => $sVendorBaseDir,
-				'AFR_APP_TENANT_ENTRY_PHP_FILE' => $sTenantEntryPoint,
-				'AFR_APP_INDEX_ENTRY_PHP_FILE' => $sIndexEntryPoint,
-				'AFR_APP_TENANT_NAME' => $sTenantName,
-				'AFR_APP_TENANT_NAME_ARG' => $sTenantNameArg,
-			], AfrCronJobGenericEntryPoints::getReplaceMatrix()
-		);
+		$aMatrix = self::getReplaceMatrix();
 		return str_replace(array_keys($aMatrix), array_values($aMatrix), $this->aJob[AfrCronJobDaemon::command]);
 	}
 
@@ -493,6 +472,36 @@ final class AfrCronJob
 	{
 		$cmd = $this->getCommand();
 		return $cmd ? AfrCronJobDaemon::computeHash($cmd) : null;
+	}
+
+	/**
+	 * @return array
+	 */
+	public static function getReplaceMatrix(): array
+	{
+		$sVendorBaseDir = AfrVendorPath::getBaseDirPath();
+		$sAppBaseDir = Afr::app() ?
+			Afr::app()->getAppBaseDirectory() :
+			$sVendorBaseDir; //fallback to vendor parent dir
+		$sTenantName = Afr::getTenantAlias() ? Afr::getTenantAlias() :
+			(defined($sTenantDefault = 'AFR_TENANT_DEFAULT') ? constant($sTenantDefault) : $sTenantDefault);
+		$sTenantNameArg = "--tenant='$sTenantName'";
+		$sIndexEntryPoint = $sAppBaseDir . DIRECTORY_SEPARATOR . 'index.php';
+		$sTenantEntryPoint = $sAppBaseDir . DIRECTORY_SEPARATOR . $sTenantName . '.php';
+
+		$aMatrix = array_merge(
+			[
+				'AFR_SELF_CLI_ENTRY_POINT_FILE' => AfrCliHttpDetect::getEntryPoint(null, false),
+				'AFR_SELF_CLI_ENTRY_POINT_FILE_AND_ARGS' => AfrCliHttpDetect::getEntryPoint(null, true),
+				'AFR_APP_BASE_DIR' => $sAppBaseDir,
+				'AFR_APP_VENDOR_BASE_DIR' => $sVendorBaseDir,
+				'AFR_APP_TENANT_ENTRY_PHP_FILE' => $sTenantEntryPoint,
+				'AFR_APP_INDEX_ENTRY_PHP_FILE' => $sIndexEntryPoint,
+				'AFR_APP_TENANT_NAME' => $sTenantName,
+				'AFR_APP_TENANT_NAME_ARG' => $sTenantNameArg,
+			], AfrCronJobGenericEntryPoints::getReplaceMatrix()
+		);
+		return $aMatrix;
 	}
 
 }

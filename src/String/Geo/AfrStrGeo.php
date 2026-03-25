@@ -60,7 +60,7 @@ class AfrStrGeo
      */
     public static function embedGoogleMapByAddress(
         string $address,
-        string $api_key = 'AIzaSyCE_JVq1AiNFNFv_Dx8pdv_c4lq6dG9cTs',
+        string $api_key = '',
         string $fullscreen = 'allowfullscreen'
     ): string
     {
@@ -80,7 +80,7 @@ class AfrStrGeo
      */
     public static function embedStreetViewByAddress(
         string $address,
-        string $api_key = 'AIzaSyCE_JVq1AiNFNFv_Dx8pdv_c4lq6dG9cTs',
+        string $api_key = '',
         string $fullscreen = 'allowfullscreen',
         int $heading = 210,
         int $pinch = 10,

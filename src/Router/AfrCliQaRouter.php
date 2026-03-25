@@ -123,7 +123,7 @@ class AfrCliQaRouter
 	 * @param string $sTitleInfo
 	 * @return bool|mixed|string|null
 	 * @throws AfrContainerException
-	 * @throws AfrEventException
+	 * @throws AfrEventException|\ReflectionException
 	 */
 	protected static function dispatchCliQA(array $aQuestionClosure, string $sTitleInfo = '')
 	{
