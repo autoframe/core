@@ -86,7 +86,7 @@ final class AfrConfigRegister extends AfrObjectSingletonAbstractClass
 	{
 		$aOut = $this->getComponents($oClassInstance);
 		$aOut[] = get_class($oClassInstance);
-		return $aOut;
+		return array_values(array_unique($aOut));
 	}
 
 
@@ -98,7 +98,7 @@ final class AfrConfigRegister extends AfrObjectSingletonAbstractClass
 	{
 		$aOut = $this->getComponents($sClassName);
 		$aOut[] = $sClassName;
-		return $aOut;
+		return array_values(array_unique($aOut));
 	}
 
 	/**
@@ -117,7 +117,12 @@ final class AfrConfigRegister extends AfrObjectSingletonAbstractClass
 			return $this->aInternalCache[$sCacheKey];
 		}
 
-		if (!is_object($mClass) && !class_exists($mClass)) {
+		if (
+			!is_object($mClass) &&
+			!class_exists($mClass) &&
+			!interface_exists($mClass) &&
+			!trait_exists($mClass)
+		) {
 			return $this->aInternalCache[$sCacheKey] = array_unique($aOut);
 		}
 		$aThisClass = [];
