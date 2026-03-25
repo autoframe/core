@@ -118,6 +118,12 @@ trait AfrConfigurableInstanceTrait
         if (!empty($aProps)) {
             $this->iAfrConfigurableInstanceComponents++;
             foreach ($aProps as $sProperty => $mValue) {
+                if (
+                    $oConfig->getPreventExistenceErrors() &&
+                    !property_exists($this, $sProperty)
+                ) {
+                    continue;
+                }
                 $this->$sProperty = $mValue;
             }
         }
