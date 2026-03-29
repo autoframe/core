@@ -67,6 +67,7 @@ $aActions['Tenant'] = function () {
 		}, 'List CLI variants:' => function () {
 			$r = '';
 			foreach (AfrCronJob::getReplaceMatrix() as $k => $v) $r.= PHP_EOL. $k."=\t".$v;
+			//TODO: confirm and update the use cases
 			return
 				'php bootstrap.php examples... '.PHP_EOL.
 				'php index.php '.AfrCliConstantsInterface::QA_ARGV_KEY.' ❰ Navigable menu ❱'.PHP_EOL.

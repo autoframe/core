@@ -1111,9 +1111,6 @@ class AfrRequestClass extends AfrSingletonAbstractClass implements AfrRequestInt
 			$aAllArgs = AfrGetOpt::getInstance()->setArgvFromRequest($this)->getoptDetectAllArgs(null, true);
 			$bMatched = array_key_exists($sArgvKey, $aAllArgs);
 			$sDetectVal = $aAllArgs[$sArgvKey] ?? null;
-			//return [array_key_exists($sArgvKey,$aAllArgs), $aAllArgs[$sArgvKey] ?? null];
-			//TODO: cleanup dupa ce testez cu AfrGetOpt la detect cu whildcard
-
 		}
 		return [$bMatched, $sDetectVal];
 	}

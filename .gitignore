@@ -6,6 +6,7 @@ composer.lock
 .idea/
 .claude/
 baseApp/
+src/Market/
 
 
 error_log
